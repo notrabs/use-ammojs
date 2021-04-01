@@ -1630,10 +1630,9 @@ ammo-debug-drawer@^1.0.1:
   resolved "https://registry.yarnpkg.com/ammo-debug-drawer/-/ammo-debug-drawer-1.0.1.tgz#c1d84d0342905cf7c08301e6551892a23c13955d"
   integrity sha512-oPvQh5CQKgFQpIuBMMKxT019aYoONOEnBLn91dAg3CrMWdSP/Om8rLWRX0VkAk45SEK/B0ybXB7nsjXsz8QEBw==
 
-ammo.js@^0.0.10:
-  version "0.0.10"
-  resolved "https://registry.yarnpkg.com/ammo.js/-/ammo.js-0.0.10.tgz#afd16e7186dd3cf784374464f3a4e58f37776950"
-  integrity sha1-r9FucYbdPPeEN0Rk86Tljzd3aVA=
+ammo.js@kripken/ammo.js:
+  version "0.0.2"
+  resolved "https://codeload.github.com/kripken/ammo.js/tar.gz/a32e94b553e22cf80d6a7775bfdd1ede2ac229b2"
 
 ansi-colors@^4.1.1:
   version "4.1.1"
