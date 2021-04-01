@@ -1,6 +1,8 @@
 # [WIP] use-ammojs
 
-*Fast* Physics hooks for use with [react-three-fiber](https://github.com/pmndrs/react-three-fiber). Using web-workers and wasm.
+*Fast* Physics hooks for use with [react-three-fiber](https://github.com/pmndrs/react-three-fiber).
+
+Built on top of [three-ammo](https://github.com/infinitelee/three-ammo), which runs the wasm ammo.js library in a seperate web-worker and syncs three objects using SharedArrayBuffers.
 
 ## Why not use [use-cannon](https://github.com/pmndrs/use-cannon) instead?
 
