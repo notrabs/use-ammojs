@@ -1625,6 +1625,11 @@ alphanum-sort@^1.0.0:
   resolved "https://registry.yarnpkg.com/alphanum-sort/-/alphanum-sort-1.0.2.tgz#97a1119649b211ad33691d9f9f486a8ec9fbe0a3"
   integrity sha1-l6ERlkmyEa0zaR2fn0hqjsn74KM=
 
+ammo.js@^0.0.10:
+  version "0.0.10"
+  resolved "https://registry.yarnpkg.com/ammo.js/-/ammo.js-0.0.10.tgz#afd16e7186dd3cf784374464f3a4e58f37776950"
+  integrity sha1-r9FucYbdPPeEN0Rk86Tljzd3aVA=
+
 ansi-colors@^4.1.1:
   version "4.1.1"
   resolved "https://registry.yarnpkg.com/ansi-colors/-/ansi-colors-4.1.1.tgz#cbb9ae256bf750af1eab344f229aa27fe94ba348"
@@ -7988,6 +7993,10 @@ text-table@^0.2.0:
   version "0.2.0"
   resolved "https://registry.yarnpkg.com/text-table/-/text-table-0.2.0.tgz#7f5ee823ae805207c00af2df4a84ec3fcfa570b4"
   integrity sha1-f17oI66AUgfACvLfSoTsP8+lcLQ=
+
+three-ammo@notrabs/three-ammo:
+  version "1.0.12"
+  resolved "https://codeload.github.com/notrabs/three-ammo/tar.gz/c305ffe9f7a159994dc8514a7af4c43bb4707b6b"
 
 throat@^5.0.0:
   version "5.0.0"
