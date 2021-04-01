@@ -8059,7 +8059,7 @@ text-table@^0.2.0:
 
 three-ammo@notrabs/three-ammo:
   version "1.0.12"
-  resolved "https://codeload.github.com/notrabs/three-ammo/tar.gz/ee6fa92588e026bb7696ca5c0c29d26fed3cc00e"
+  resolved "https://codeload.github.com/notrabs/three-ammo/tar.gz/6bd729b6be76a34389be45224be4d21b8227fe2c"
 
 three-to-ammo@^1.0.0:
   version "1.0.0"

@@ -13,12 +13,12 @@ At the time of writing however use-cannon is more mature and great for small pro
 
 ## Documentation [WIP]
 
-### 0. Make sure your environment supports wasm and web-workers
+### 0. Make sure your environment supports wasm
 
 <details> 
 <summary> Add support to react-scripts (create-react-app) using @craco/craco </summary>
 
-1. `yarn add @craco/craco worker-loader --dev`
+1. `yarn add @craco/craco --dev`
 2. Replace `react-scripts` with `craco` in your `package.json` (see [@craco/craco](https://www.npmjs.com/package/@craco/craco) documentation)
 3. Add `craco.config.js` to project root:
 ```js
@@ -45,11 +45,6 @@ module.exports = {
       };
 
       addBeforeLoader(webpackConfig, loaderByName("file-loader"), wasmLoader);
-
-      webpackConfig.module.rules.push({
-        test: /\.worker\.js$/,
-        use: { loader: "worker-loader" },
-      });
 
       return webpackConfig;
     },

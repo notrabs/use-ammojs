@@ -1,4 +1,4 @@
-import { AmmoWorker, CONSTANTS, WorkerHelpers } from "three-ammo";
+import { createAmmoWorker, CONSTANTS, WorkerHelpers } from "three-ammo";
 import {
   BufferAttribute,
   BufferGeometry,
@@ -46,7 +46,7 @@ export function Physics({
     const bodyOptions: Record<string, BodyOptions> = {};
     const shapes = {};
 
-    const ammoWorker: Worker = new AmmoWorker();
+    const ammoWorker: Worker = createAmmoWorker();
 
     const workerHelpers = new WorkerHelpers(ammoWorker);
 
@@ -149,6 +149,11 @@ export function Physics({
       delete object3Ds[uuid];
       workerHelpers.removeBody(uuid);
     }
+
+    return () => {
+      ammoWorker.terminate();
+      setPhysicsState(undefined);
+    };
   }, []);
 
   useFrame(() => {
