@@ -232,7 +232,7 @@ export function Physics({
       if (drawDebug) {
         workerHelpers.enableDebug(true, physicsState.debugSharedArrayBuffer);
       } else {
-        workerHelpers.enableDebug(true, physicsState.debugSharedArrayBuffer);
+        workerHelpers.enableDebug(false, physicsState.debugSharedArrayBuffer);
       }
     }
   }, [drawDebug, physicsState]);
