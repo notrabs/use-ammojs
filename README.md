@@ -12,7 +12,7 @@ At the time of writing however use-cannon is more mature and great for small pro
 
 
 ## Documentation [WIP]
-
+<!-- 
 ### 0. Make sure your environment supports wasm
 
 <details> 
@@ -71,7 +71,7 @@ webpackConfig.resolve.alias = {
 ```
 
 
-</details>
+</details> -->
 
 ### 1. Wrap your scene in a Physics Provider
 ```tsx
