@@ -44,7 +44,9 @@
     "pretty-quick": "^3.1.0",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
+    "react-three-fiber": "^5.3.22",
     "size-limit": "^4.10.2",
+    "three": "^0.127.0",
     "tsdx": "^0.14.1",
     "tslib": "^2.1.0",
     "typescript": "^4.2.3"
@@ -52,9 +54,8 @@
   "dependencies": {
     "ammo-debug-drawer": "^1.0.1",
     "ammo.js": "kripken/ammo.js",
-    "react-three-fiber": "^5.3.22",
-    "three": "^0.127.0",
-    "three-ammo": "notrabs/three-ammo"
+    "three-ammo": "notrabs/three-ammo",
+    "three-to-ammo": "^1.0.0"
   },
   "peerDependencies": {
     "react": ">=16",
