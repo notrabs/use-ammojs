@@ -17,9 +17,6 @@
     "size": "size-limit",
     "analyze": "size-limit --why"
   },
-  "peerDependencies": {
-    "react": ">=16"
-  },
   "husky": {
     "hooks": {
       "pre-commit": "pretty-quick --staged"
@@ -52,7 +49,15 @@
     "typescript": "^4.2.3"
   },
   "dependencies": {
+    "ammo-debug-drawer": "^1.0.1",
     "ammo.js": "^0.0.10",
+    "react-three-fiber": "^5.3.22",
+    "three": "^0.127.0",
     "three-ammo": "notrabs/three-ammo"
+  },
+  "peerDependencies": {
+    "react": ">=16",
+    "react-three-fiber": "^5.3.22",
+    "three": "^0.127.0"
   }
 }
