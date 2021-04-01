@@ -8058,8 +8058,8 @@ text-table@^0.2.0:
   integrity sha1-f17oI66AUgfACvLfSoTsP8+lcLQ=
 
 three-ammo@notrabs/three-ammo:
-  version "1.0.13"
-  resolved "https://codeload.github.com/notrabs/three-ammo/tar.gz/0978dc52e19190199837c33bd91753a2396744ad"
+  version "1.0.14"
+  resolved "https://codeload.github.com/notrabs/three-ammo/tar.gz/6276e16c60d13848f40064b83fe968aee39259f0"
 
 three-to-ammo@^1.0.0:
   version "1.0.0"
