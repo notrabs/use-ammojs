@@ -61,5 +61,20 @@
     "react": ">=16",
     "react-three-fiber": "^5.3.22",
     "three": "^0.127.0"
-  }
+  },
+  "keywords": [
+    "use",
+    "ammo",
+    "ammojs",
+    "ammo.js",
+    "hooks",
+    "hook",
+    "bullet",
+    "physics",
+    "react",
+    "react-three-fiber",
+    "r3f",
+    "three",
+    "typescript"
+  ]
 }

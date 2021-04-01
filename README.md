@@ -6,7 +6,7 @@ Built on top of [three-ammo](https://github.com/infinitelee/three-ammo), which r
 
 ## Why not use [use-cannon](https://github.com/pmndrs/use-cannon) instead?
 
-use-cannon is great and a inspiration for this package, but it is missing features and lacks performance with many objects or large gltf imports. ammo.js is a direct wrapper around the powerful [bullet](http://www.bulletphysics.org/) engine.
+use-cannon is great and a inspiration for this package, but it is missing features and lacks performance with many objects or large gltf imports. ammo.js is a direct wrapper around the powerful [Bullet Physics](http://www.bulletphysics.org/) engine.
 
 At the time of writing however use-cannon is more mature and great for small projects.
 
