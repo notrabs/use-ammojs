@@ -41,11 +41,29 @@ export interface BodyOptions {
   scaleAutoUpdate?: boolean;
 }
 
+export enum ShapeType {
+  BOX = "box",
+  CYLINDER = "cylinder",
+  SPHERE = "sphere",
+  CAPSULE = "capsule",
+  CONE = "cone",
+  HULL = "hull",
+  HACD = "hacd",
+  VHACD = "vhacd",
+  MESH = "mesh",
+  HEIGHTFIELD = "heightfield"
+}
+
+export interface ShapeOptions {
+  type: ShapeType;
+  includeInvisible?: boolean;
+}
+
 export interface AmmoPhysicsContext {
   addBody(uuid, mesh, options?: BodyOptions);
   removeBody(uuid);
 
-  addShapes(bodyUuid, shapesUuid, mesh, options?);
+  addShapes(bodyUuid, shapesUuid, mesh, options?: ShapeOptions);
   removeShapes(bodyUuid, shapesUuid);
 
   addConstraint(constraintId, bodyUuid, targetUuid, options?);

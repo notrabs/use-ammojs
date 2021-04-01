@@ -12,11 +12,15 @@ import { useFrame } from "react-three-fiber";
 import { AmmoDebugConstants, DefaultBufferSize } from "ammo-debug-drawer";
 import { AmmoPhysicsContext, BodyOptions } from "./physics-context";
 
-interface AmmoPhysicsProps {}
+interface AmmoPhysicsProps {
+  // Draw a collision debug mesh into the scene
+  drawDebug?: boolean;
+}
 
 interface PhysicsState {
   workerHelpers;
   debugGeometry;
+  debugSharedArrayBuffer;
   bodyOptions;
   uuids;
   headerIntArray;
@@ -28,7 +32,10 @@ interface PhysicsState {
   removeBody;
 }
 
-export function Physics({ children }: PropsWithChildren<AmmoPhysicsProps>) {
+export function Physics({
+  drawDebug,
+  children
+}: PropsWithChildren<AmmoPhysicsProps>) {
   const [physicsState, setPhysicsState] = useState<PhysicsState>();
 
   useEffect(() => {
@@ -103,10 +110,10 @@ export function Physics({ children }: PropsWithChildren<AmmoPhysicsProps>) {
     const workerInitPromise = new Promise<PhysicsState>(resolve => {
       ammoWorker.onmessage = async event => {
         if (event.data.type === CONSTANTS.MESSAGE_TYPES.READY) {
-          workerHelpers.enableDebug(true, debugSharedArrayBuffer);
           resolve({
             workerHelpers,
             debugGeometry,
+            debugSharedArrayBuffer,
             bodyOptions,
             uuids,
             headerIntArray,
@@ -220,6 +227,16 @@ export function Physics({ children }: PropsWithChildren<AmmoPhysicsProps>) {
     Atomics.store(debugIndex, 0, 0);
   });
 
+  useEffect(() => {
+    if (physicsState) {
+      if (drawDebug) {
+        workerHelpers.enableDebug(true, physicsState.debugSharedArrayBuffer);
+      } else {
+        workerHelpers.enableDebug(true, physicsState.debugSharedArrayBuffer);
+      }
+    }
+  }, [drawDebug, physicsState]);
+
   if (!physicsState) {
     return null;
   }
@@ -241,17 +258,19 @@ export function Physics({ children }: PropsWithChildren<AmmoPhysicsProps>) {
         activateBody: workerHelpers.activateBody
       }}
     >
-      <lineSegments
-        geometry={debugGeometry}
-        frustumCulled={false}
-        renderOrder={999}
-      >
-        <lineBasicMaterial
-          attach="material"
-          vertexColors={true}
-          depthTest={true}
-        />
-      </lineSegments>
+      {drawDebug && (
+        <lineSegments
+          geometry={debugGeometry}
+          frustumCulled={false}
+          renderOrder={999}
+        >
+          <lineBasicMaterial
+            attach="material"
+            vertexColors={true}
+            depthTest={true}
+          />
+        </lineSegments>
+      )}
       {children}
     </AmmoPhysicsContext.Provider>
   );
