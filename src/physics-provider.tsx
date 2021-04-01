@@ -1,4 +1,4 @@
-import { createAmmoWorker, CONSTANTS, WorkerHelpers } from "three-ammo";
+import { CONSTANTS, createAmmoWorker, WorkerHelpers } from "three-ammo";
 import {
   BufferAttribute,
   BufferGeometry,
@@ -44,11 +44,10 @@ export function Physics({
     const uuidToIndex: Record<string, number> = {};
     const IndexToUuid: Record<number, string> = {};
     const bodyOptions: Record<string, BodyOptions> = {};
-    const shapes = {};
 
     const ammoWorker: Worker = createAmmoWorker();
 
-    const workerHelpers = new WorkerHelpers(ammoWorker);
+    const workerHelpers = WorkerHelpers(ammoWorker);
 
     const sharedArrayBuffer = new SharedArrayBuffer(
       4 * CONSTANTS.BUFFER_CONFIG.HEADER_LENGTH + //header
