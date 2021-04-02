@@ -25,6 +25,7 @@
   "name": "use-ammojs",
   "description": "Fast physics hooks for use in react-three-fiber. Powered by web-workers and wasm.",
   "author": "notrabs",
+  "repository": "https://github.com/notrabs/use-ammojs",
   "module": "dist/use-ammojs.esm.js",
   "size-limit": [
     {
