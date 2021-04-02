@@ -3,6 +3,7 @@ import React, { MutableRefObject, useEffect, useRef, useState } from "react";
 import {
   BodyOptions,
   BodyType,
+  ShapeOptions,
   ShapeType,
   useAmmoPhysicsContext
 } from "./physics-context";
@@ -14,6 +15,9 @@ type UsePhysicsOptions = Omit<BodyOptions, "type"> & {
 
   // Overrides the physics shape. If not defined the referenced object3Ds mesh will be used. Origins must match.
   mesh?: Object3D;
+
+  // use for manual overrides with the physics shape.
+  shapeOptions?: Omit<ShapeOptions, "type">;
 
   position?: [number, number, number];
 };
@@ -36,7 +40,14 @@ export function usePhysics(
     if (typeof options === "function") {
       options = options();
     }
-    const { bodyType, shapeType, position, mesh, ...rest } = options;
+    const {
+      bodyType,
+      shapeType,
+      shapeOptions,
+      position,
+      mesh,
+      ...rest
+    } = options;
 
     if (position) {
       objectToUse.position.set(position[0], position[1], position[2]);
@@ -47,7 +58,10 @@ export function usePhysics(
 
     const meshToUse = mesh ? mesh : objectToUse;
 
-    addShapes(bodyUUID, shapesUUID, meshToUse, { type: shapeType });
+    addShapes(bodyUUID, shapesUUID, meshToUse, {
+      type: shapeType,
+      ...shapeOptions
+    });
 
     return () => {
       removeBody(bodyUUID);
