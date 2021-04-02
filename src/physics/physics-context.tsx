@@ -233,6 +233,10 @@ export interface AmmoPhysicsContext {
   resetDynamicBody(uuid: string);
 
   activateBody(uuid: string);
+
+  bodySetLinearVelocity(uuid: string, velocity: Vector3);
+
+  object3Ds: Record<string, Object3D>;
 }
 
 export const AmmoPhysicsContext = createContext<AmmoPhysicsContext | null>(

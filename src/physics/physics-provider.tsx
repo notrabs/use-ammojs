@@ -305,8 +305,8 @@ export function Physics({
     if (!!index) {
       debugGeometry.attributes.position.needsUpdate = true;
       debugGeometry.attributes.color.needsUpdate = true;
+      debugGeometry.setDrawRange(0, index);
     }
-    debugGeometry.setDrawRange(0, index);
     Atomics.store(debugIndex, 0, 0);
   });
 
@@ -329,16 +329,16 @@ export function Physics({
   return (
     <AmmoPhysicsContext.Provider
       value={{
+        ...workerHelpers,
+
+        // workerHelpers Overrides
         addBody: physicsState.addBody,
         removeBody: physicsState.removeBody,
         addShapes: physicsState.addShapes,
-        removeShapes: workerHelpers.removeShapes,
         addConstraint: physicsState.addConstraint,
-        removeConstraint: workerHelpers.removeConstraint,
         updateBody: physicsState.updateBody,
-        enableDebug: workerHelpers.enableDebug,
-        resetDynamicBody: workerHelpers.resetDynamicBody,
-        activateBody: workerHelpers.activateBody
+
+        object3Ds: physicsState.object3Ds
       }}
     >
       {drawDebug && (
