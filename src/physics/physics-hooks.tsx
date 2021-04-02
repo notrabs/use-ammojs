@@ -1,15 +1,15 @@
 import { MathUtils, Object3D, Mesh } from "three";
 import React, { MutableRefObject, useEffect, useRef, useState } from "react";
 import {
-  BodyOptions,
+  BodyConfig,
   BodyType,
-  ShapeOptions,
+  ShapeConfig,
   ShapeType,
   useAmmoPhysicsContext
 } from "./physics-context";
 import { createPhysicsApi, PhysicsApi } from "./physics-api";
 
-type UsePhysicsOptions = Omit<BodyOptions, "type"> & {
+type UsePhysicsOptions = Omit<BodyConfig, "type"> & {
   shapeType: ShapeType;
   bodyType?: BodyType;
 
@@ -17,7 +17,7 @@ type UsePhysicsOptions = Omit<BodyOptions, "type"> & {
   mesh?: Object3D;
 
   // use for manual overrides with the physics shape.
-  shapeOptions?: Omit<ShapeOptions, "type">;
+  shapeConfig?: Omit<ShapeConfig, "type">;
 
   position?: [number, number, number];
 };
@@ -43,7 +43,7 @@ export function usePhysics(
     const {
       bodyType,
       shapeType,
-      shapeOptions,
+      shapeConfig,
       position,
       mesh,
       ...rest
@@ -60,7 +60,7 @@ export function usePhysics(
 
     addShapes(bodyUUID, shapesUUID, meshToUse, {
       type: shapeType,
-      ...shapeOptions
+      ...shapeConfig
     });
 
     return () => {

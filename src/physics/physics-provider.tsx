@@ -12,11 +12,11 @@ import { useFrame } from "react-three-fiber";
 import { AmmoDebugConstants, DefaultBufferSize } from "ammo-debug-drawer";
 import {
   AmmoPhysicsContext,
-  BodyOptions,
+  BodyConfig,
   ConstraintOptions,
-  ShapeOptions,
+  ShapeConfig,
   UpdateBodyOptions,
-  WorldOptions
+  WorldConfig
 } from "./physics-context";
 import { removeUndefinedKeys } from "../utils/utils";
 
@@ -44,21 +44,21 @@ interface PhysicsState {
   workerHelpers: ReturnType<typeof WorkerHelpers>;
   debugGeometry: BufferGeometry;
   debugSharedArrayBuffer: SharedArrayBuffer;
-  bodyOptions: Record<string, BodyOptions>;
+  bodyOptions: Record<string, BodyConfig>;
   uuids: string[];
   headerIntArray: Int32Array;
   object3Ds: Record<string, Object3D>;
   objectMatricesFloatArray: Float32Array;
   uuidToIndex: Record<string, number>;
   debugIndex: Uint32Array;
-  addBody(uuid: string, mesh: Object3D, options?: BodyOptions);
+  addBody(uuid: string, mesh: Object3D, options?: BodyConfig);
   updateBody(uuid: string, options: UpdateBodyOptions);
   removeBody(uuid: string);
   addShapes(
     bodyUuid: string,
     shapesUuid: string,
     mesh: Object3D,
-    options?: ShapeOptions
+    options?: ShapeConfig
   );
   addConstraint(
     constraintId: string,
@@ -84,7 +84,7 @@ export function Physics({
     const object3Ds: Record<string, Object3D> = {};
     const uuidToIndex: Record<string, number> = {};
     const IndexToUuid: Record<number, string> = {};
-    const bodyOptions: Record<string, BodyOptions> = {};
+    const bodyOptions: Record<string, BodyConfig> = {};
 
     const ammoWorker: Worker = createAmmoWorker();
 
@@ -150,7 +150,7 @@ export function Physics({
         fixedTimeStep,
         maxSubSteps,
         solverIterations
-      } as WorldOptions),
+      } as WorldConfig),
       sharedArrayBuffer
     });
 
@@ -185,7 +185,7 @@ export function Physics({
 
     workerInitPromise.then(setPhysicsState);
 
-    function addBody(uuid, mesh, options: BodyOptions = {}) {
+    function addBody(uuid, mesh, options: BodyConfig = {}) {
       removeUndefinedKeys(options);
 
       bodyOptions[uuid] = options;
@@ -212,7 +212,7 @@ export function Physics({
       bodyUuid: string,
       shapesUuid: string,
       mesh: Object3D,
-      options?: ShapeOptions
+      options?: ShapeConfig
     ) {
       removeUndefinedKeys(options);
 
