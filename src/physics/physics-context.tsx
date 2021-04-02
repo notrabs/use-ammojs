@@ -234,7 +234,10 @@ export interface AmmoPhysicsContext {
 
   activateBody(uuid: string);
 
+  bodySetMotionState(uuid: string, position?: Vector3, rotation?: Quaternion);
   bodySetLinearVelocity(uuid: string, velocity: Vector3);
+  bodyApplyImpulse(uuid: string, impulse: Vector3, relativeOffset?: Vector3);
+  bodyApplyForce(uuid: string, force: Vector3, relativeOffset?: Vector3);
 
   object3Ds: Record<string, Object3D>;
 }
