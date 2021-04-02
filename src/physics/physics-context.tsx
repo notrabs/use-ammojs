@@ -1,5 +1,5 @@
 import { createContext, useContext } from "react";
-import { Vector3 } from "react-three-fiber";
+import { Quaternion, Vector3 } from "react-three-fiber";
 import { Object3D } from "three";
 
 export { AmmoDebugConstants } from "ammo-debug-drawer";
@@ -93,9 +93,82 @@ export enum ShapeType {
   HEIGHTFIELD = "heightfield"
 }
 
+export enum ShapeFit {
+  //A single shape is automatically sized to bound all meshes within the entity.
+  ALL = "all",
+
+  //A single shape is sized manually. Requires halfExtents or sphereRadius.
+  MANUAL = "manual"
+}
+
 export interface ShapeOptions {
   type: ShapeType;
+
+  // default 0.01
+  margin?: number;
+
+  // default false
   includeInvisible?: boolean;
+
+  offset?: Vector3;
+
+  orientation?: Quaternion;
+
+  // default "ALL"
+  fit?: ShapeFit;
+
+  // Only used with fit=MANUAL
+  halfExtents?: Vector3;
+  // Only used with fit=ALL
+  minHalfExtents?: number;
+  maxHalfExtents?: number;
+
+  // Only used with ShapeType cylinder/capsule/cone
+  cylinderAxis?: "x" | "y" | "z";
+
+  // Only used with ShapeType sphere and manual fit
+  sphereRadius?: number;
+
+  // Only used with ShapeType hull, default 100000
+  hullMaxVertices?: number;
+
+  // Only used with ShapeType HACD
+  compacityWeight?: number;
+  volumeWeight?: number;
+  nClusters?: number;
+  nVerticesPerCH?: number;
+
+  // Only used with ShapeType VHACD
+  //https://kmamou.blogspot.com/2014/12/v-hacd-20-parameters-description.html
+  resolution?: any;
+  depth?: any;
+  planeDownsampling?: any;
+  convexhullDownsampling?: any;
+  alpha?: any;
+  beta?: any;
+  gamma?: any;
+  pca?: any;
+  mode?: any;
+  maxNumVerticesPerCH?: any;
+  minVolumePerCH?: any;
+  convexhullApproximation?: any;
+  oclAcceleration?: any;
+
+  // Only used with ShapeType HACD, VHACD
+  concavity?: number;
+
+  // Only used with ShapeType heightfield
+  // default = 1
+  heightfieldDistance?: number;
+  heightfieldData?: any[];
+  // default 0
+  heightScale?: number;
+  // default 1 ( x = 0; y = 1; z = 2)
+  upAxis?: number;
+  // default "float"
+  heightDataType?: "short" | "float";
+  // default true
+  flipQuadEdges?: boolean;
 }
 
 export type UpdateBodyOptions = Pick<
@@ -137,7 +210,12 @@ export interface AmmoPhysicsContext {
   addBody(uuid: string, mesh: Object3D, options?: BodyOptions);
   removeBody(uuid: string);
 
-  addShapes(bodyUuid: string, shapesUuid: string, mesh: Object3D, options?: ShapeOptions);
+  addShapes(
+    bodyUuid: string,
+    shapesUuid: string,
+    mesh: Object3D,
+    options?: ShapeOptions
+  );
   removeShapes(bodyUuid: string, shapesUuid: string);
 
   addConstraint(
