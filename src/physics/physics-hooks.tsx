@@ -5,8 +5,8 @@ import {
   BodyType,
   ShapeType,
   useAmmoPhysicsContext
-} from "physics-context";
-import { createPhysicsApi } from "physics-api";
+} from "physics/physics-context";
+import { createPhysicsApi } from "physics/physics-api";
 
 type UsePhysicsOptions = Omit<BodyOptions, "type"> & {
   bodyType: BodyType;

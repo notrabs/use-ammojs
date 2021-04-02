@@ -1,3 +1,3 @@
-export * from "./physics-context";
-export * from "./physics-provider";
-export * from "./physics-hooks";
+export * from "physics/physics-context";
+export * from "physics/physics-provider";
+export * from "physics/physics-hooks";

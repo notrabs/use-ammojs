@@ -10,7 +10,7 @@ import {
 import React, { PropsWithChildren, useEffect, useState } from "react";
 import { useFrame } from "react-three-fiber";
 import { AmmoDebugConstants, DefaultBufferSize } from "ammo-debug-drawer";
-import { AmmoPhysicsContext, BodyOptions, WorldOptions } from "physics-context";
+import { AmmoPhysicsContext, BodyOptions, WorldOptions } from "physics/physics-context";
 
 interface AmmoPhysicsProps {
   // Draw a collision debug mesh into the scene

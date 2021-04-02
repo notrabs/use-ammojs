@@ -1,4 +1,4 @@
-import { AmmoPhysicsContext, UpdateBodyOptions } from "physics-context";
+import { AmmoPhysicsContext, UpdateBodyOptions } from "physics/physics-context";
 
 export function createPhysicsApi(
   physicsContext: AmmoPhysicsContext,
