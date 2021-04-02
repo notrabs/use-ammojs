@@ -1,23 +1,24 @@
-import { CONSTANTS, createAmmoWorker, WorkerHelpers } from "three-ammo";
+import {
+  BodyConfig,
+  CONSTANTS,
+  ShapeConfig,
+  UpdateBodyOptions,
+  WorkerHelpers,
+  WorldConfig,
+} from "three-ammo";
+import { createAmmoWorker } from "three-ammo/dist/threeammo-worker";
 import {
   BufferAttribute,
   BufferGeometry,
   DynamicDrawUsage,
   Matrix4,
   Object3D,
-  Vector3
+  Vector3,
 } from "three";
 import React, { PropsWithChildren, useEffect, useState } from "react";
 import { useFrame } from "react-three-fiber";
 import { AmmoDebugConstants, DefaultBufferSize } from "ammo-debug-drawer";
-import {
-  AmmoPhysicsContext,
-  BodyConfig,
-  ConstraintOptions,
-  ShapeConfig,
-  UpdateBodyOptions,
-  WorldConfig
-} from "./physics-context";
+import { AmmoPhysicsContext, ConstraintOptions } from "./physics-context";
 import { removeUndefinedKeys } from "../utils/utils";
 
 interface AmmoPhysicsProps {
@@ -75,7 +76,7 @@ export function Physics({
   fixedTimeStep,
   maxSubSteps,
   solverIterations,
-  children
+  children,
 }: PropsWithChildren<AmmoPhysicsProps>) {
   const [physicsState, setPhysicsState] = useState<PhysicsState>();
 
@@ -92,9 +93,9 @@ export function Physics({
 
     const sharedArrayBuffer = new SharedArrayBuffer(
       4 * CONSTANTS.BUFFER_CONFIG.HEADER_LENGTH + //header
-      4 *
-        CONSTANTS.BUFFER_CONFIG.BODY_DATA_SIZE *
-        CONSTANTS.BUFFER_CONFIG.MAX_BODIES + //matrices
+        4 *
+          CONSTANTS.BUFFER_CONFIG.BODY_DATA_SIZE *
+          CONSTANTS.BUFFER_CONFIG.MAX_BODIES + //matrices
         4 * CONSTANTS.BUFFER_CONFIG.MAX_BODIES //velocities
     );
     const headerIntArray = new Int32Array(
@@ -149,13 +150,13 @@ export function Physics({
         epsilon,
         fixedTimeStep,
         maxSubSteps,
-        solverIterations
+        solverIterations,
       } as WorldConfig),
-      sharedArrayBuffer
+      sharedArrayBuffer,
     });
 
-    const workerInitPromise = new Promise<PhysicsState>(resolve => {
-      ammoWorker.onmessage = async event => {
+    const workerInitPromise = new Promise<PhysicsState>((resolve) => {
+      ammoWorker.onmessage = async (event) => {
         if (event.data.type === CONSTANTS.MESSAGE_TYPES.READY) {
           resolve({
             workerHelpers,
@@ -172,7 +173,7 @@ export function Physics({
             removeBody,
             addConstraint,
             addShapes,
-            updateBody
+            updateBody,
           });
         } else if (event.data.type === CONSTANTS.MESSAGE_TYPES.BODY_READY) {
           const uuid = event.data.uuid;
@@ -255,7 +256,7 @@ export function Physics({
       object3Ds,
       objectMatricesFloatArray,
       uuidToIndex,
-      debugIndex
+      debugIndex,
     } = physicsState;
 
     if (Atomics.load(headerIntArray, 0) === CONSTANTS.BUFFER_STATE.READY) {
@@ -338,7 +339,7 @@ export function Physics({
         addConstraint: physicsState.addConstraint,
         updateBody: physicsState.updateBody,
 
-        object3Ds: physicsState.object3Ds
+        object3Ds: physicsState.object3Ds,
       }}
     >
       {drawDebug && (

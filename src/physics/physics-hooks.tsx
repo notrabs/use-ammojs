@@ -1,13 +1,8 @@
-import { MathUtils, Object3D, Mesh } from "three";
+import { MathUtils, Object3D } from "three";
 import React, { MutableRefObject, useEffect, useRef, useState } from "react";
-import {
-  BodyConfig,
-  BodyType,
-  ShapeConfig,
-  ShapeType,
-  useAmmoPhysicsContext
-} from "./physics-context";
+import { useAmmoPhysicsContext } from "./physics-context";
 import { createPhysicsApi, PhysicsApi } from "./physics-api";
+import { BodyConfig, BodyType, ShapeConfig, ShapeType } from "three-ammo";
 
 type UsePhysicsOptions = Omit<BodyConfig, "type"> & {
   shapeType: ShapeType;
@@ -60,7 +55,7 @@ export function usePhysics(
 
     addShapes(bodyUUID, shapesUUID, meshToUse, {
       type: shapeType,
-      ...shapeConfig
+      ...shapeConfig,
     });
 
     return () => {

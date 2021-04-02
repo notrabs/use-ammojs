@@ -1,6 +1,7 @@
-import { AmmoPhysicsContext, UpdateBodyOptions } from "./physics-context";
+import { AmmoPhysicsContext } from "./physics-context";
 import { Vector3 } from "three";
 import { Quaternion } from "react-three-fiber";
+import { UpdateBodyOptions } from "three-ammo";
 
 export type PhysicsApi = ReturnType<typeof createPhysicsApi>;
 
@@ -40,6 +41,6 @@ export function createPhysicsApi(
 
     applyForce(force: Vector3, relativeOffset?: Vector3) {
       physicsContext.bodyApplyForce(bodyUUID, force, relativeOffset);
-    }
+    },
   };
 }
