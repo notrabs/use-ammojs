@@ -1,5 +1,6 @@
 import { createContext, useContext } from "react";
 import { Vector3 } from "react-three-fiber";
+import { Object3D } from "three";
 
 export { AmmoDebugConstants } from "ammo-debug-drawer";
 
@@ -18,10 +19,10 @@ export interface WorldOptions {
   fixedTimeStep?: number;
 
   // default = (0, -9.8, 0)
-  gravity: Vector3;
+  gravity?: Vector3;
 
   // default = 10
-  solverIterations: number;
+  solverIterations?: number;
 }
 
 export enum BodyActivationState {
@@ -133,10 +134,10 @@ export interface ConstraintOptions {
 }
 
 export interface AmmoPhysicsContext {
-  addBody(uuid: string, mesh, options?: BodyOptions);
+  addBody(uuid: string, mesh: Object3D, options?: BodyOptions);
   removeBody(uuid: string);
 
-  addShapes(bodyUuid: string, shapesUuid: string, mesh, options?: ShapeOptions);
+  addShapes(bodyUuid: string, shapesUuid: string, mesh: Object3D, options?: ShapeOptions);
   removeShapes(bodyUuid: string, shapesUuid: string);
 
   addConstraint(

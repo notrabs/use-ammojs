@@ -13,8 +13,12 @@ import { AmmoDebugConstants, DefaultBufferSize } from "ammo-debug-drawer";
 import {
   AmmoPhysicsContext,
   BodyOptions,
+  ConstraintOptions,
+  ShapeOptions,
+  UpdateBodyOptions,
   WorldOptions
 } from "./physics-context";
+import { removeUndefinedKeys } from "../utils/utils";
 
 interface AmmoPhysicsProps {
   // Draw a collision debug mesh into the scene
@@ -38,17 +42,30 @@ interface AmmoPhysicsProps {
 
 interface PhysicsState {
   workerHelpers;
-  debugGeometry;
-  debugSharedArrayBuffer;
-  bodyOptions;
-  uuids;
-  headerIntArray;
-  object3Ds;
-  objectMatricesFloatArray;
-  uuidToIndex;
-  debugIndex;
-  addBody;
-  removeBody;
+  debugGeometry: BufferGeometry;
+  debugSharedArrayBuffer: SharedArrayBuffer;
+  bodyOptions: Record<string, BodyOptions>;
+  uuids: string[];
+  headerIntArray: Int32Array;
+  object3Ds: Record<string, Object3D>;
+  objectMatricesFloatArray: Float32Array;
+  uuidToIndex: Record<string, number>;
+  debugIndex: Uint32Array;
+  addBody(uuid: string, mesh: Object3D, options?: BodyOptions);
+  updateBody(uuid: string, options: UpdateBodyOptions);
+  removeBody(uuid: string);
+  addShapes(
+    bodyUuid: string,
+    shapesUuid: string,
+    mesh: Object3D,
+    options?: ShapeOptions
+  );
+  addConstraint(
+    constraintId: string,
+    bodyUuid: string,
+    targetUuid: string,
+    options?: ConstraintOptions
+  );
 }
 
 export function Physics({
@@ -126,14 +143,14 @@ export function Physics({
 
     ammoWorker.postMessage({
       type: CONSTANTS.MESSAGE_TYPES.INIT,
-      worldConfig: {
+      worldConfig: removeUndefinedKeys({
         debugDrawMode: AmmoDebugConstants.DrawWireframe,
         gravity: gravity && new Vector3(gravity[0], gravity[1], gravity[2]),
         epsilon,
         fixedTimeStep,
         maxSubSteps,
         solverIterations
-      } as WorldOptions,
+      } as WorldOptions),
       sharedArrayBuffer
     });
 
@@ -152,7 +169,10 @@ export function Physics({
             uuidToIndex,
             debugIndex,
             addBody,
-            removeBody
+            removeBody,
+            addConstraint,
+            addShapes,
+            updateBody
           });
         } else if (event.data.type === CONSTANTS.MESSAGE_TYPES.BODY_READY) {
           const uuid = event.data.uuid;
@@ -166,18 +186,48 @@ export function Physics({
     workerInitPromise.then(setPhysicsState);
 
     function addBody(uuid, mesh, options: BodyOptions = {}) {
+      removeUndefinedKeys(options);
+
       bodyOptions[uuid] = options;
       object3Ds[uuid] = mesh;
       workerHelpers.addBody(uuid, mesh, options);
     }
 
-    function removeBody(uuid) {
+    function updateBody(uuid: string, options: UpdateBodyOptions) {
+      removeUndefinedKeys(options);
+
+      workerHelpers.updateBody(uuid, options);
+    }
+
+    function removeBody(uuid: string) {
       uuids.splice(uuids.indexOf(uuid), 1);
       delete IndexToUuid[uuidToIndex[uuid]];
       delete uuidToIndex[uuid];
       delete bodyOptions[uuid];
       delete object3Ds[uuid];
       workerHelpers.removeBody(uuid);
+    }
+
+    function addShapes(
+      bodyUuid: string,
+      shapesUuid: string,
+      mesh: Object3D,
+      options?: ShapeOptions
+    ) {
+      removeUndefinedKeys(options);
+
+      workerHelpers.addShapes(bodyUuid, shapesUuid, mesh, options);
+    }
+
+    function addConstraint(
+      constraintId: string,
+      bodyUuid: string,
+      targetUuid: string,
+      options?: ConstraintOptions
+    ) {
+      removeUndefinedKeys(options);
+
+      workerHelpers.addConstraint(constraintId, bodyUuid, targetUuid, options);
     }
 
     return () => {
@@ -205,9 +255,7 @@ export function Physics({
       object3Ds,
       objectMatricesFloatArray,
       uuidToIndex,
-      debugIndex,
-      addBody,
-      removeBody
+      debugIndex
     } = physicsState;
 
     if (Atomics.load(headerIntArray, 0) === CONSTANTS.BUFFER_STATE.READY) {
@@ -276,18 +324,18 @@ export function Physics({
     return null;
   }
 
-  const { workerHelpers, debugGeometry, addBody, removeBody } = physicsState;
+  const { workerHelpers, debugGeometry } = physicsState;
 
   return (
     <AmmoPhysicsContext.Provider
       value={{
-        addBody,
-        removeBody,
-        addShapes: workerHelpers.addShapes,
+        addBody: physicsState.addBody,
+        removeBody: physicsState.removeBody,
+        addShapes: physicsState.addShapes,
         removeShapes: workerHelpers.removeShapes,
-        addConstraint: workerHelpers.addConstraint,
+        addConstraint: physicsState.addConstraint,
         removeConstraint: workerHelpers.removeConstraint,
-        updateBody: workerHelpers.updateBody,
+        updateBody: physicsState.updateBody,
         enableDebug: workerHelpers.enableDebug,
         resetDynamicBody: workerHelpers.resetDynamicBody,
         activateBody: workerHelpers.activateBody
