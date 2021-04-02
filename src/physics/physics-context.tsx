@@ -5,23 +5,8 @@ import {
   BodyConfig,
   ConstraintType,
   ShapeConfig,
-  UpdateBodyOptions,
-  ShapeType,
-  BodyType,
-  WorldConfig
+  UpdateBodyOptions
 } from "three-ammo";
-
-export { AmmoDebugConstants } from "ammo-debug-drawer";
-
-export {
-  BodyConfig,
-  ConstraintType,
-  ShapeConfig,
-  UpdateBodyOptions,
-  ShapeType,
-  BodyType,
-  WorldConfig
-};
 
 export interface ConstraintOptions {
   type: ConstraintType;
