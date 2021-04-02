@@ -12,66 +12,6 @@ At the time of writing however use-cannon is more mature and great for small pro
 
 
 ## Documentation [WIP]
-<!-- 
-### 0. Make sure your environment supports wasm
-
-<details> 
-<summary> Add support to react-scripts (create-react-app) using @craco/craco </summary>
-
-1. `yarn add @craco/craco --dev`
-2. Replace `react-scripts` with `craco` in your `package.json` (see [@craco/craco](https://www.npmjs.com/package/@craco/craco) documentation)
-3. Add `craco.config.js` to project root:
-```js
-const { addBeforeLoader, loaderByName } = require("@craco/craco");
-
-module.exports = {
-  webpack: {
-    configure: (webpackConfig) => {
-      const wasmExtensionRegExp = /\.wasm$/;
-      webpackConfig.resolve.extensions.push(".wasm");
-
-      webpackConfig.module.rules.forEach((rule) => {
-        (rule.oneOf || []).forEach((oneOf) => {
-          if (oneOf.loader && oneOf.loader.indexOf("file-loader") >= 0) {
-            oneOf.exclude.push(wasmExtensionRegExp);
-          }
-        });
-      });
-
-      const wasmLoader = {
-        test: /\.wasm$/,
-        type: "javascript/auto",
-        loaders: ["file-loader"],
-      };
-
-      addBeforeLoader(webpackConfig, loaderByName("file-loader"), wasmLoader);
-
-      return webpackConfig;
-    },
-  },
-};
-```
-
-For local development with `yarn link` also add: 
-
-```js
-const path = require("path");
-
-[...]
-
-// Fix that prevents a duplicate react library being used when using a linked yarn package
-webpackConfig.resolve.alias = {
-  ...webpackConfig.resolve.alias,
-  react: path.resolve("./node_modules/react"),
-  "react-three-fiber": path.resolve("./node_modules/react-three-fiber"),
-  three: path.resolve("./node_modules/three"),
-};
-
-[...]
-```
-
-
-</details> -->
 
 ### 1. Wrap your scene in a Physics Provider
 ```tsx
@@ -82,7 +22,7 @@ import { Physics } from "use-ammojs";
 </Physics>
 ```
 
-### 2. Make objects physical
+### 2.a Make objects physical
 
 Automatically parse Shape parameters from the three Mesh (courtesy of [three-to-ammo](https://github.com/InfiniteLee/three-to-ammo)):
 
@@ -91,7 +31,7 @@ import { Box } from "@react-three/drei";
 import { usePhysics, ShapeType } from "use-ammojs";
 
 function MyBox(){
-    const ref = usePhysics(() => ({ mass: 1, position: [0, 2, 4], shapeType: ShapeType.BOX }));
+    const [ref] = usePhysics(() => ({ mass: 1, position: [0, 2, 4], shapeType: ShapeType.BOX }));
 
     return (
       <Box ref={ref}>
@@ -111,6 +51,13 @@ or add collisions to an imported gltf scene:
 TODO
 ```
 
+### 2.a Make objects squishy
+
+```
+TODO
+```
+
+
 ### 3.a Add Constraints
 
 ```
@@ -126,3 +73,42 @@ TODO
 
 
 ### 4 Update positions
+
+
+```
+TODO
+```
+
+
+## Local Development of use-ammojs
+
+
+<details> 
+<summary> Setting up react-scripts to work with yarn link using @craco/craco </summary>
+
+1. `yarn add @craco/craco --dev`
+2. Replace `react-scripts` with `craco` in your `package.json` (see [@craco/craco](https://www.npmjs.com/package/@craco/craco) documentation)
+3. Add `craco.config.js` to project root:
+
+```js
+const path = require("path");
+
+[...]
+
+// Fix that prevents a duplicate react library being imported when using a linked yarn package
+webpackConfig.resolve.alias = {
+  ...webpackConfig.resolve.alias,
+  react: path.resolve("./node_modules/react"),
+  "react-three-fiber": path.resolve("./node_modules/react-three-fiber"),
+  three: path.resolve("./node_modules/three"),
+};
+
+[...]
+```
+
+</details>
+
+1. Run `yarn link` in use-cannonjs root directory
+2. Run `yarn link use-cannonjs` in your project's directory
+3. Run `yarn start` in use-cannonjs to start the development bunlder
+4. Run your project

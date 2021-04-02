@@ -1,36 +1,45 @@
 import { MathUtils, Object3D } from "three";
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   BodyOptions,
+  BodyType,
   ShapeType,
   useAmmoPhysicsContext
-} from "./physics-context";
+} from "physics-context";
+import { createPhysicsApi } from "physics-api";
+
+type UsePhysicsOptions = Omit<BodyOptions, "type"> & {
+  bodyType: BodyType;
+  shapeType: ShapeType;
+  position?: [number, number, number];
+};
 
 export function usePhysics(
-  optionsFn: () => BodyOptions & {
-    shapeType: ShapeType;
-    position?: [number, number, number];
-  },
+  options: UsePhysicsOptions | (() => UsePhysicsOptions),
   object3D?: Object3D
 ) {
   const ref = useRef<Object3D>();
 
-  const { addBody, addShapes, removeBody } = useAmmoPhysicsContext();
+  const physicsContext = useAmmoPhysicsContext();
+  const { addBody, addShapes, removeBody } = physicsContext;
+
+  const [bodyUUID] = useState(() => MathUtils.generateUUID());
+  const [shapesUUID] = useState(() => MathUtils.generateUUID());
 
   useEffect(() => {
-    const bodyUUID = MathUtils.generateUUID();
-    const shapesUUID = MathUtils.generateUUID();
-
     const objectToUse = object3D ? object3D : ref.current!;
 
-    const { shapeType, position, ...rest } = optionsFn();
+    if (typeof options === "function") {
+      options = options();
+    }
+    const { bodyType, shapeType, position, ...rest } = options;
 
     if (position) {
       objectToUse.position.set(position[0], position[1], position[2]);
       objectToUse.updateMatrixWorld();
     }
 
-    addBody(bodyUUID, objectToUse, rest);
+    addBody(bodyUUID, objectToUse, { type: bodyType, ...rest });
 
     const meshToUse = objectToUse;
 
@@ -41,5 +50,5 @@ export function usePhysics(
     };
   }, []);
 
-  return ref;
+  return [ref, createPhysicsApi(physicsContext, bodyUUID, shapesUUID)];
 }

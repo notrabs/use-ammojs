@@ -10,11 +10,26 @@ import {
 import React, { PropsWithChildren, useEffect, useState } from "react";
 import { useFrame } from "react-three-fiber";
 import { AmmoDebugConstants, DefaultBufferSize } from "ammo-debug-drawer";
-import { AmmoPhysicsContext, BodyOptions } from "./physics-context";
+import { AmmoPhysicsContext, BodyOptions, WorldOptions } from "physics-context";
 
 interface AmmoPhysicsProps {
   // Draw a collision debug mesh into the scene
   drawDebug?: boolean;
+
+  // default = [0, -9.8, 0]
+  gravity?: [number, number, number];
+
+  // default = 10e-6
+  epsilon?: number;
+
+  // default = 1/60
+  fixedTimeStep?: number;
+
+  // default = 4
+  maxSubSteps?: number;
+
+  // default = 10
+  solverIterations?: number;
 }
 
 interface PhysicsState {
@@ -34,6 +49,11 @@ interface PhysicsState {
 
 export function Physics({
   drawDebug,
+  gravity,
+  epsilon,
+  fixedTimeStep,
+  maxSubSteps,
+  solverIterations,
   children
 }: PropsWithChildren<AmmoPhysicsProps>) {
   const [physicsState, setPhysicsState] = useState<PhysicsState>();
@@ -102,7 +122,14 @@ export function Physics({
 
     ammoWorker.postMessage({
       type: CONSTANTS.MESSAGE_TYPES.INIT,
-      worldConfig: { debugDrawMode: AmmoDebugConstants.DrawWireframe },
+      worldConfig: {
+        debugDrawMode: AmmoDebugConstants.DrawWireframe,
+        gravity: gravity && new Vector3(gravity[0], gravity[1], gravity[2]),
+        epsilon,
+        fixedTimeStep,
+        maxSubSteps,
+        solverIterations
+      } as WorldOptions,
       sharedArrayBuffer
     });
 
