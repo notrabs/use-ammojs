@@ -9,8 +9,8 @@ import {
 import { createPhysicsApi } from "./physics-api";
 
 type UsePhysicsOptions = Omit<BodyOptions, "type"> & {
-  bodyType: BodyType;
   shapeType: ShapeType;
+  bodyType?: BodyType;
   position?: [number, number, number];
 };
 
