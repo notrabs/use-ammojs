@@ -41,7 +41,7 @@ interface AmmoPhysicsProps {
 }
 
 interface PhysicsState {
-  workerHelpers;
+  workerHelpers: ReturnType<typeof WorkerHelpers>;
   debugGeometry: BufferGeometry;
   debugSharedArrayBuffer: SharedArrayBuffer;
   bodyOptions: Record<string, BodyOptions>;

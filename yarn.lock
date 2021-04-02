@@ -8057,9 +8057,9 @@ text-table@^0.2.0:
   resolved "https://registry.yarnpkg.com/text-table/-/text-table-0.2.0.tgz#7f5ee823ae805207c00af2df4a84ec3fcfa570b4"
   integrity sha1-f17oI66AUgfACvLfSoTsP8+lcLQ=
 
-three-ammo@notrabs/three-ammo#203d6d1f8f0289a077faea8c9c288a4e8eb9201a:
+three-ammo@notrabs/three-ammo#8eff5e95a3bea75b430dcc3b4787881c2b7c58ed:
   version "1.1.1"
-  resolved "https://codeload.github.com/notrabs/three-ammo/tar.gz/203d6d1f8f0289a077faea8c9c288a4e8eb9201a"
+  resolved "https://codeload.github.com/notrabs/three-ammo/tar.gz/8eff5e95a3bea75b430dcc3b4787881c2b7c58ed"
 
 three-to-ammo@^1.0.0:
   version "1.0.0"
