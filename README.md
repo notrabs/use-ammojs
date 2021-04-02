@@ -10,8 +10,20 @@ use-cannon is great and a inspiration for this package, but it is missing featur
 
 At the time of writing however use-cannon is more mature and great for small projects.
 
+## Roadmap
 
-## Documentation [WIP]
+- [x] Create a Physics World as a React context and simulate it in a web-worker
+- [x] Sync three objects to physics rigid-bodies
+- [ ] Expose useful functions from the bullet api trough the hook (e.g. setPosition/applyImpulse/[more...](https://pybullet.org/Bullet/BulletFull/classbtRigidBody.html))
+- [ ] Add [Raycast](https://pybullet.org/Bullet/BulletFull/classbtCollisionWorld.html#aaac6675c8134f6695fecb431c72b0a6a) queries
+- [ ] Add Constraints between rigid bodies
+- [ ] Improve the automatic shape detection (set shapeType automatically based on the three Mesh type)
+- [ ] Add Softbody support (ropes, cloth, squishy balls, [see docs](https://pybullet.org/Bullet/BulletFull/classbtSoftBody.html))
+- [ ] Add Examples to the documentation
+- [ ] Implement convenience features (pausing simulation / access to physics performance info)
+- [ ] Support collision callbacks
+
+## Documentation
 
 ### 1. Wrap your scene in a Physics Provider
 ```tsx
