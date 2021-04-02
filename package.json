@@ -56,7 +56,7 @@
   "dependencies": {
     "ammo-debug-drawer": "^1.0.1",
     "ammo.js": "kripken/ammo.js",
-    "three-ammo": "notrabs/three-ammo#6ffe1a0a1aa47684905153bfcdb24142da11e8f3",
+    "three-ammo": "notrabs/three-ammo#671c87daf19a370d1ff38239f2aa4964d3b1de94",
     "three-to-ammo": "^1.0.0"
   },
   "peerDependencies": {
