@@ -1,18 +1,36 @@
-import { BodyConfig, CONSTANTS, ShapeConfig, UpdateBodyOptions, WorkerHelpers, WorldConfig, } from "three-ammo";
+import {
+  BodyConfig,
+  CONSTANTS,
+  ShapeConfig,
+  UpdateBodyOptions,
+  WorkerHelpers,
+  WorldConfig,
+} from "three-ammo";
 import { createAmmoWorker } from "three-ammo/dist/threeammo-worker";
-import { BufferAttribute, BufferGeometry, DynamicDrawUsage, Matrix4, Object3D, Vector3, } from "three";
+import {
+  BufferAttribute,
+  BufferGeometry,
+  DynamicDrawUsage,
+  Matrix4,
+  Object3D,
+  Vector3,
+} from "three";
 import React, { PropsWithChildren, useEffect, useState } from "react";
 import { useFrame } from "react-three-fiber";
 import { DefaultBufferSize } from "ammo-debug-drawer";
 import { AmmoPhysicsContext, ConstraintOptions } from "./physics-context";
-import { removeUndefinedKeys, ammoDebugOptionsToNumber, AmmoDebugOptions, } from "../utils/utils";
+import {
+  removeUndefinedKeys,
+  ammoDebugOptionsToNumber,
+  AmmoDebugOptions,
+} from "../utils/utils";
 
 interface AmmoPhysicsProps {
   // Draw a collision debug mesh into the scene
   drawDebug?: boolean;
 
   // Configures the debug options (not all options are tested)
-  drawDebugMode: AmmoDebugOptions;
+  drawDebugMode?: AmmoDebugOptions;
 
   // default = [0, -9.8, 0]
   gravity?: [number, number, number];
