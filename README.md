@@ -22,6 +22,7 @@ At the time of writing however use-cannon is more mature and great for small pro
 - [ ] Add Examples to the documentation
 - [ ] Implement convenience features (pausing simulation / access to physics performance info)
 - [ ] Support collision callbacks
+- [ ] Check if it makes sense to polyfill SharedArrayBuffers for non COOP/COEP compliant deployments
 
 ## Documentation
 

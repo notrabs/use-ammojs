@@ -16,6 +16,8 @@ export interface PhysicsApi {
 
   applyImpulse(impulse: Vector3, relativeOffset?: Vector3): void;
   applyForce(force: Vector3, relativeOffset?: Vector3): void;
+
+  setShapesOffset(offset: Vector3);
 }
 
 export function createPhysicsApi(
@@ -58,6 +60,10 @@ export function createPhysicsApi(
 
     applyForce(force: Vector3, relativeOffset?: Vector3) {
       physicsContext.bodyApplyForce(bodyUUID, force, relativeOffset);
+    },
+
+    setShapesOffset(offset: Vector3) {
+      physicsContext.bodySetShapesOffset(bodyUUID, offset);
     },
   };
 }

@@ -5,7 +5,7 @@ import {
   BodyConfig,
   ConstraintType,
   ShapeConfig,
-  UpdateBodyOptions
+  UpdateBodyOptions,
 } from "three-ammo";
 
 export interface ConstraintOptions {
@@ -50,6 +50,9 @@ export interface AmmoPhysicsContext {
   bodySetLinearVelocity(uuid: string, velocity: Vector3);
   bodyApplyImpulse(uuid: string, impulse: Vector3, relativeOffset?: Vector3);
   bodyApplyForce(uuid: string, force: Vector3, relativeOffset?: Vector3);
+
+  // Applies an (local) offset to all shapes of the rigidbody, without moving its origin
+  bodySetShapesOffset(uuid: string, offset: Vector3);
 
   object3Ds: Record<string, Object3D>;
 }
