@@ -2,7 +2,21 @@ import { AmmoPhysicsContext } from "./physics-context";
 import { Vector3, Quaternion } from "three";
 import { UpdateBodyOptions } from "three-ammo";
 
-export type PhysicsApi = ReturnType<typeof createPhysicsApi>;
+export interface PhysicsApi {
+  updateBodyOptions(options: UpdateBodyOptions): void;
+
+  getPosition(): Vector3;
+  setPosition(position: Vector3);
+
+  getRotation(): Quaternion;
+  setRotation(rotation: Quaternion);
+
+  setMotionState(position: Vector3, rotation: Quaternion): void;
+  setLinearVelocity(velocity: Vector3): void;
+
+  applyImpulse(impulse: Vector3, relativeOffset?: Vector3): void;
+  applyForce(force: Vector3, relativeOffset?: Vector3): void;
+}
 
 export function createPhysicsApi(
   physicsContext: AmmoPhysicsContext,
