@@ -1,6 +1,5 @@
 import { AmmoPhysicsContext } from "./physics-context";
-import { Vector3 } from "three";
-import { Quaternion } from "react-three-fiber";
+import { Vector3, Quaternion } from "three";
 import { UpdateBodyOptions } from "three-ammo";
 
 export type PhysicsApi = ReturnType<typeof createPhysicsApi>;
@@ -21,6 +20,10 @@ export function createPhysicsApi(
 
     setPosition(position: Vector3) {
       physicsContext.bodySetMotionState(bodyUUID, position);
+    },
+
+    getRotation(): Quaternion {
+      return physicsContext.object3Ds[bodyUUID].quaternion;
     },
 
     setRotation(rotation: Quaternion) {
