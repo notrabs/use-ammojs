@@ -115,7 +115,7 @@ function handleRespawn() {
 }
 ```
 
-## Local Development of use-ammojs
+## Developing locally using use-ammojs
 
 <details> 
 <summary> Setting up react-scripts to work with yarn link using @craco/craco </summary>
@@ -142,7 +142,7 @@ webpackConfig.resolve.alias = {
 
 </details>
 
-1. Run `yarn link` in use-cannonjs root directory
-2. Run `yarn link use-cannonjs` in your project's directory
-3. Run `yarn start` in use-cannonjs to start the development bunlder
-4. Run your project
+1. Run `yarn link` in use-ammojs root directory
+2. Run `yarn link use-ammojs` in your project's directory
+3. Run `yarn start` in use-ammojs to start the development bundler
+4. Build and run your project as usual
