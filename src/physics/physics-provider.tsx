@@ -6,7 +6,13 @@ import {
   Object3D,
   Vector3,
 } from "three";
-import React, { PropsWithChildren, useEffect, useState } from "react";
+import React, {
+  MutableRefObject,
+  PropsWithChildren,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { useFrame } from "react-three-fiber";
 import { DefaultBufferSize } from "ammo-debug-drawer";
 import { AmmoPhysicsContext, ConstraintOptions } from "./physics-context";
@@ -17,7 +23,10 @@ import {
   isSharedArrayBufferSupported,
   removeUndefinedKeys,
 } from "../utils/utils";
-import {createAmmoWorker, WorkerHelpers} from "../three-ammo/lib/worker-helper";
+import {
+  createAmmoWorker,
+  WorkerHelpers,
+} from "../three-ammo/lib/worker-helper";
 import {
   BodyConfig,
   ShapeConfig,
@@ -49,15 +58,20 @@ interface AmmoPhysicsProps {
   solverIterations?: number;
 }
 
+interface ISharedBuffers {
+  headerIntArray: Int32Array;
+  objectMatricesFloatArray: Float32Array;
+  objectMatricesIntArray: Int32Array;
+}
+
 interface PhysicsState {
   workerHelpers: ReturnType<typeof WorkerHelpers>;
   debugGeometry: BufferGeometry;
   debugBuffer: SharedArrayBuffer | ArrayBuffer;
   bodyOptions: Record<string, BodyConfig>;
   uuids: string[];
-  headerIntArray: Int32Array;
   object3Ds: Record<string, Object3D>;
-  objectMatricesFloatArray: Float32Array;
+  sharedBuffersRef: MutableRefObject<ISharedBuffers>;
   uuidToIndex: Record<string, number>;
   debugIndex: Uint32Array;
   addBody(uuid: string, mesh: Object3D, options?: BodyConfig);
@@ -90,6 +104,8 @@ export function Physics({
   children,
 }: PropsWithChildren<AmmoPhysicsProps>) {
   const [physicsState, setPhysicsState] = useState<PhysicsState>();
+
+  const sharedBuffersRef = useRef<ISharedBuffers>({} as any);
 
   useEffect(() => {
     const uuids: string[] = [];
@@ -126,6 +142,12 @@ export function Physics({
       CONSTANTS.BUFFER_CONFIG.BODY_DATA_SIZE *
         CONSTANTS.BUFFER_CONFIG.MAX_BODIES
     );
+
+    sharedBuffersRef.current = {
+      headerIntArray,
+      objectMatricesFloatArray,
+      objectMatricesIntArray,
+    };
 
     objectMatricesIntArray[0] = CONSTANTS.BUFFER_STATE.UNINITIALIZED;
 
@@ -167,7 +189,6 @@ export function Physics({
         "use-ammojs uses fallback to slower ArrayBuffers. To use the faster SharedArrayBuffers make sure that your environment is crossOriginIsolated. (see https://web.dev/coop-coep/)"
       );
 
-      console.log("1 ", objectMatricesFloatArray.byteLength);
       ammoWorker.postMessage(
         {
           type: CONSTANTS.MESSAGE_TYPES.INIT,
@@ -176,21 +197,28 @@ export function Physics({
         },
         [objectBuffer]
       );
-      console.log("2 ", objectMatricesFloatArray.byteLength);
     }
 
     const workerInitPromise = new Promise<PhysicsState>((resolve) => {
       ammoWorker.onmessage = async (event) => {
         if (event.data.type === CONSTANTS.MESSAGE_TYPES.READY) {
+          if (event.data.arrayBuffer) {
+            sharedBuffersRef.current.objectMatricesFloatArray = new Float32Array(
+              event.data.arrayBuffer
+            );
+            sharedBuffersRef.current.objectMatricesIntArray = new Int32Array(
+              event.data.arrayBuffer
+            );
+          }
+
           resolve({
             workerHelpers,
+            sharedBuffersRef,
             debugGeometry,
             debugBuffer,
             bodyOptions,
             uuids,
-            headerIntArray,
             object3Ds,
-            objectMatricesFloatArray,
             uuidToIndex,
             debugIndex,
             addBody,
@@ -199,20 +227,17 @@ export function Physics({
             addShapes,
             updateBody,
           });
-          console.log("3 ", objectMatricesFloatArray.byteLength);
         } else if (event.data.type === CONSTANTS.MESSAGE_TYPES.BODY_READY) {
           const uuid = event.data.uuid;
           uuids.push(uuid);
           uuidToIndex[uuid] = event.data.index;
           IndexToUuid[event.data.index] = uuid;
         } else if (event.data.type === CONSTANTS.MESSAGE_TYPES.TRANSFER_DATA) {
-          if (physicsState) {
-            console.log("data transfer");
-            setPhysicsState({
-              ...physicsState,
-              objectMatricesFloatArray: event.data.objectMatricesFloatArray,
-            });
-          }
+          sharedBuffersRef.current.objectMatricesFloatArray =
+            event.data.objectMatricesFloatArray;
+          sharedBuffersRef.current.objectMatricesIntArray = new Int32Array(
+            event.data.objectMatricesFloatArray.buffer
+          );
         }
       };
     });
@@ -285,21 +310,20 @@ export function Physics({
       debugGeometry,
       bodyOptions,
       uuids,
-      headerIntArray,
       object3Ds,
-      objectMatricesFloatArray,
       uuidToIndex,
       debugIndex,
     } = physicsState;
 
-    // console.log(objectMatricesFloatArray.byteLength);
+    // console.log(sharedBuffersRef.current.objectMatricesFloatArray.byteLength);
 
     if (
       // Check if the worker is finished with the buffer
       (!isSharedArrayBufferSupported &&
-        objectMatricesFloatArray.byteLength !== 0) ||
+        sharedBuffersRef.current.objectMatricesFloatArray.byteLength !== 0) ||
       (isSharedArrayBufferSupported &&
-        Atomics.load(headerIntArray, 0) === CONSTANTS.BUFFER_STATE.READY)
+        Atomics.load(sharedBuffersRef.current.headerIntArray, 0) ===
+          CONSTANTS.BUFFER_STATE.READY)
     ) {
       for (let i = 0; i < uuids.length; i++) {
         const uuid = uuids[i];
@@ -309,14 +333,14 @@ export function Physics({
         const object3D = object3Ds[uuid];
         if (type === CONSTANTS.TYPE.DYNAMIC) {
           matrix.fromArray(
-            objectMatricesFloatArray,
+            sharedBuffersRef.current.objectMatricesFloatArray,
             uuidToIndex[uuid] * CONSTANTS.BUFFER_CONFIG.BODY_DATA_SIZE
           );
           inverse.copy(object3D.parent!.matrixWorld).invert();
           transform.multiplyMatrices(inverse, matrix);
           transform.decompose(object3D.position, object3D.quaternion, scale);
         } else {
-          objectMatricesFloatArray.set(
+          sharedBuffersRef.current.objectMatricesFloatArray.set(
             object3D.matrixWorld.elements,
             uuidToIndex[uuid] * CONSTANTS.BUFFER_CONFIG.BODY_DATA_SIZE
           );
@@ -341,9 +365,15 @@ export function Physics({
       }
 
       if (isSharedArrayBufferSupported) {
-        Atomics.store(headerIntArray, 0, CONSTANTS.BUFFER_STATE.CONSUMED);
+        Atomics.store(
+          sharedBuffersRef.current.headerIntArray,
+          0,
+          CONSTANTS.BUFFER_STATE.CONSUMED
+        );
       } else {
-        workerHelpers.transferData(objectMatricesFloatArray);
+        workerHelpers.transferData(
+          sharedBuffersRef.current.objectMatricesFloatArray
+        );
       }
     }
 
