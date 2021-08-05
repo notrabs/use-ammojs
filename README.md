@@ -22,7 +22,14 @@ At the time of writing however use-cannon is more mature and great for small pro
 - [ ] Add Examples to the documentation
 - [ ] Implement convenience features (pausing simulation / access to physics performance info)
 - [ ] Support collision callbacks
-- [ ] Check if it makes sense to polyfill SharedArrayBuffers for non COOP/COEP compliant deployments
+- [ ] Use ArrayBuffers as a fallback for missing cross-origin isolation
+
+## Examples
+
+⚠️ **Note that the codesandbox examples do not support SharedArrayBuffers [due to missing cross-origin isolation](https://web.dev/coop-coep/).**
+
+* [Hello Physics World](https://codesandbox.io/s/oc1op?file=/src/index.js) 
+* TODO
 
 ## Documentation
 
