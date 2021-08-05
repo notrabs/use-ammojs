@@ -1,6 +1,6 @@
 # [WIP] use-ammojs
 
-*Fast* Physics hooks for use with [react-three-fiber](https://github.com/pmndrs/react-three-fiber).
+_Fast_ Physics hooks for use with [react-three-fiber](https://github.com/pmndrs/react-three-fiber).
 
 Built on top of [three-ammo](https://github.com/infinitelee/three-ammo), which runs the wasm ammo.js library in a seperate web-worker and syncs three objects using SharedArrayBuffers.
 
@@ -28,17 +28,18 @@ At the time of writing however use-cannon is more mature and great for small pro
 
 ⚠️ **Note that the codesandbox examples do not support SharedArrayBuffers [due to missing cross-origin isolation](https://web.dev/coop-coep/).**
 
-* [Hello Physics World](https://codesandbox.io/s/oc1op?file=/src/index.js) 
-* TODO
+- [Hello Physics World](https://codesandbox.io/s/oc1op?file=/src/index.js)
+- TODO
 
 ## Documentation
 
 ### 1. Wrap your scene in a Physics Provider
+
 ```tsx
 import { Physics } from "use-ammojs";
 
 <Physics drawDebug>
-  [...] 
+    [...]
 </Physics>
 ```
 
@@ -50,23 +51,29 @@ Automatically parse Shape parameters from the three Mesh (courtesy of [three-to-
 import { Box } from "@react-three/drei";
 import { usePhysics, ShapeType } from "use-ammojs";
 
-function MyBox(){
-    const [ref] = usePhysics(() => ({ mass: 1, position: [0, 2, 4], shapeType: ShapeType.BOX }));
+function MyBox() {
+  const [ref] = usePhysics(() => ({
+    mass: 1,
+    position: [0, 2, 4],
+    shapeType: ShapeType.BOX,
+  }));
 
-    return (
-      <Box ref={ref}>
-        <meshBasicMaterial attach="material" color="red" />
-      </Box>
-    );
+  return (
+    <Box ref={ref}>
+      <meshBasicMaterial attach="material" color="red" />
+    </Box>
+  );
 }
 ```
 
 or define Collision Shapes manually:
+
 ```
 TODO
 ```
 
 or add collisions to an imported gltf scene:
+
 ```
 TODO
 ```
@@ -77,13 +84,11 @@ TODO
 TODO
 ```
 
-
 ### 3.a Add Constraints
 
 ```
 TODO
 ```
-
 
 ### 3.b Add Raycasts
 
@@ -91,17 +96,26 @@ TODO
 TODO
 ```
 
+### 4 Updating Motion State
 
-### 4 Update positions
+```tsx
+const [playerRef, api] = usePhysics(() => ({
+  bodyType: BodyType.DYNAMIC,
+  shapeType: ShapeType.CAPSULE,
+  angularFactor: new Vector3(0, 0, 0),
+  shapeConfig: {
+    fit: ShapeFit.MANUAL,
+    halfExtents: new Vector3(0.3, 0.6, 0.3),
+  },
+}));
 
-
+function handleRespawn() {
+  api.setPosition(new Vector3(0, 0, 0));
+  api.setLinearVelocity(new Vector3(0,0,0))
+}
 ```
-TODO
-```
-
 
 ## Local Development of use-ammojs
-
 
 <details> 
 <summary> Setting up react-scripts to work with yarn link using @craco/craco </summary>
