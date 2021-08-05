@@ -23,6 +23,8 @@ import {
   removeUndefinedKeys,
   ammoDebugOptionsToNumber,
   AmmoDebugOptions,
+  allocateCompatibleBuffer,
+  isSharedArrayBufferSupported,
 } from "../utils/utils";
 
 interface AmmoPhysicsProps {
@@ -51,7 +53,7 @@ interface AmmoPhysicsProps {
 interface PhysicsState {
   workerHelpers: ReturnType<typeof WorkerHelpers>;
   debugGeometry: BufferGeometry;
-  debugSharedArrayBuffer: SharedArrayBuffer;
+  debugBuffer: SharedArrayBuffer | ArrayBuffer;
   bodyOptions: Record<string, BodyConfig>;
   uuids: string[];
   headerIntArray: Int32Array;
@@ -101,7 +103,7 @@ export function Physics({
 
     const workerHelpers = WorkerHelpers(ammoWorker);
 
-    const sharedArrayBuffer = new SharedArrayBuffer(
+    const objectBuffer = allocateCompatibleBuffer(
       4 * CONSTANTS.BUFFER_CONFIG.HEADER_LENGTH + //header
         4 *
           CONSTANTS.BUFFER_CONFIG.BODY_DATA_SIZE *
@@ -109,18 +111,18 @@ export function Physics({
         4 * CONSTANTS.BUFFER_CONFIG.MAX_BODIES //velocities
     );
     const headerIntArray = new Int32Array(
-      sharedArrayBuffer,
+      objectBuffer,
       0,
       CONSTANTS.BUFFER_CONFIG.HEADER_LENGTH
     );
     const objectMatricesIntArray = new Int32Array(
-      sharedArrayBuffer,
+      objectBuffer,
       CONSTANTS.BUFFER_CONFIG.HEADER_LENGTH * 4,
       CONSTANTS.BUFFER_CONFIG.BODY_DATA_SIZE *
         CONSTANTS.BUFFER_CONFIG.MAX_BODIES
     );
     const objectMatricesFloatArray = new Float32Array(
-      sharedArrayBuffer,
+      objectBuffer,
       CONSTANTS.BUFFER_CONFIG.HEADER_LENGTH * 4,
       CONSTANTS.BUFFER_CONFIG.BODY_DATA_SIZE *
         CONSTANTS.BUFFER_CONFIG.MAX_BODIES
@@ -128,17 +130,11 @@ export function Physics({
 
     objectMatricesIntArray[0] = CONSTANTS.BUFFER_STATE.UNINITIALIZED;
 
-    const debugSharedArrayBuffer = new SharedArrayBuffer(
-      4 + 2 * DefaultBufferSize * 4
-    );
-    const debugIndex = new Uint32Array(debugSharedArrayBuffer, 0, 4);
-    const debugVertices = new Float32Array(
-      debugSharedArrayBuffer,
-      4,
-      DefaultBufferSize
-    );
+    const debugBuffer = allocateCompatibleBuffer(4 + 2 * DefaultBufferSize * 4);
+    const debugIndex = new Uint32Array(debugBuffer, 0, 4);
+    const debugVertices = new Float32Array(debugBuffer, 4, DefaultBufferSize);
     const debugColors = new Float32Array(
-      debugSharedArrayBuffer,
+      debugBuffer,
       4 + DefaultBufferSize,
       DefaultBufferSize
     );
@@ -152,18 +148,37 @@ export function Physics({
       new BufferAttribute(debugColors, 3).setUsage(DynamicDrawUsage)
     );
 
-    ammoWorker.postMessage({
-      type: CONSTANTS.MESSAGE_TYPES.INIT,
-      worldConfig: removeUndefinedKeys({
-        debugDrawMode: ammoDebugOptionsToNumber(drawDebugMode),
-        gravity: gravity && new Vector3(gravity[0], gravity[1], gravity[2]),
-        epsilon,
-        fixedTimeStep,
-        maxSubSteps,
-        solverIterations,
-      } as WorldConfig),
-      sharedArrayBuffer,
+    const worldConfig: WorldConfig = removeUndefinedKeys({
+      debugDrawMode: ammoDebugOptionsToNumber(drawDebugMode),
+      gravity: gravity && new Vector3(gravity[0], gravity[1], gravity[2]),
+      epsilon,
+      fixedTimeStep,
+      maxSubSteps,
+      solverIterations,
     });
+
+    if (isSharedArrayBufferSupported) {
+      ammoWorker.postMessage({
+        type: CONSTANTS.MESSAGE_TYPES.INIT,
+        worldConfig,
+        sharedArrayBuffer: objectBuffer,
+      });
+    } else {
+      console.warn(
+        "use-ammojs uses fallback to slower ArrayBuffers. To use the faster SharedArrayBuffers make sure that your environment is crossOriginIsolated. (see https://web.dev/coop-coep/)"
+      );
+
+      console.log("1 ", objectMatricesFloatArray.byteLength)
+      ammoWorker.postMessage(
+        {
+          type: CONSTANTS.MESSAGE_TYPES.INIT,
+          worldConfig,
+          arrayBuffer: objectBuffer,
+        },
+        [objectBuffer]
+      );
+      console.log("2 ", objectMatricesFloatArray.byteLength)
+    }
 
     const workerInitPromise = new Promise<PhysicsState>((resolve) => {
       ammoWorker.onmessage = async (event) => {
@@ -171,7 +186,7 @@ export function Physics({
           resolve({
             workerHelpers,
             debugGeometry,
-            debugSharedArrayBuffer,
+            debugBuffer,
             bodyOptions,
             uuids,
             headerIntArray,
@@ -185,11 +200,20 @@ export function Physics({
             addShapes,
             updateBody,
           });
+          console.log("3 ", objectMatricesFloatArray.byteLength)
         } else if (event.data.type === CONSTANTS.MESSAGE_TYPES.BODY_READY) {
           const uuid = event.data.uuid;
           uuids.push(uuid);
           uuidToIndex[uuid] = event.data.index;
           IndexToUuid[event.data.index] = uuid;
+        } else if (event.data.type === CONSTANTS.MESSAGE_TYPES.TRANSFER_DATA) {
+          if (physicsState) {
+            console.log("data transfer");
+            setPhysicsState({
+              ...physicsState,
+              objectMatricesFloatArray: event.data.objectMatricesFloatArray,
+            });
+          }
         }
       };
     });
@@ -269,7 +293,15 @@ export function Physics({
       debugIndex,
     } = physicsState;
 
-    if (Atomics.load(headerIntArray, 0) === CONSTANTS.BUFFER_STATE.READY) {
+    // console.log(objectMatricesFloatArray.byteLength);
+
+    if (
+      // Check if the worker is finished with the buffer
+      (!isSharedArrayBufferSupported &&
+        objectMatricesFloatArray.byteLength !== 0) ||
+      (isSharedArrayBufferSupported &&
+        Atomics.load(headerIntArray, 0) === CONSTANTS.BUFFER_STATE.READY)
+    ) {
       for (let i = 0; i < uuids.length; i++) {
         const uuid = uuids[i];
         const type = bodyOptions[uuid].type
@@ -308,25 +340,39 @@ export function Physics({
         // }
         // console.log(uuid, collisions);
       }
-      Atomics.store(headerIntArray, 0, CONSTANTS.BUFFER_STATE.CONSUMED);
+
+      if (isSharedArrayBufferSupported) {
+        Atomics.store(headerIntArray, 0, CONSTANTS.BUFFER_STATE.CONSUMED);
+      } else {
+        workerHelpers.transferData(objectMatricesFloatArray);
+      }
     }
 
-    /* DEBUG RENDERING */
-    const index = Atomics.load(debugIndex, 0);
-    if (!!index) {
-      debugGeometry.attributes.position.needsUpdate = true;
-      debugGeometry.attributes.color.needsUpdate = true;
-      debugGeometry.setDrawRange(0, index);
+    if (isSharedArrayBufferSupported) {
+      /* DEBUG RENDERING */
+      const index = Atomics.load(debugIndex, 0);
+      if (!!index) {
+        debugGeometry.attributes.position.needsUpdate = true;
+        debugGeometry.attributes.color.needsUpdate = true;
+        debugGeometry.setDrawRange(0, index);
+      }
+      Atomics.store(debugIndex, 0, 0);
     }
-    Atomics.store(debugIndex, 0, 0);
   });
 
   useEffect(() => {
+    if (!isSharedArrayBufferSupported) {
+      if (drawDebug) {
+        console.warn("debug visuals require SharedArrayBuffer support");
+      }
+      return;
+    }
+
     if (physicsState) {
       if (drawDebug) {
-        workerHelpers.enableDebug(true, physicsState.debugSharedArrayBuffer);
+        workerHelpers.enableDebug(true, physicsState.debugBuffer);
       } else {
-        workerHelpers.enableDebug(false, physicsState.debugSharedArrayBuffer);
+        workerHelpers.enableDebug(false, physicsState.debugBuffer);
       }
     }
   }, [drawDebug, physicsState]);
