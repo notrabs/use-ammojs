@@ -1,5 +1,5 @@
 import { createContext, useContext } from "react";
-import { Quaternion, Vector3 } from "react-three-fiber";
+import { Quaternion, Vector3 } from "@react-three/fiber";
 import { Object3D } from "three";
 import {
   BodyConfig,

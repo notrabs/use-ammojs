@@ -112,7 +112,7 @@ const path = require("path");
 webpackConfig.resolve.alias = {
   ...webpackConfig.resolve.alias,
   react: path.resolve("./node_modules/react"),
-  "react-three-fiber": path.resolve("./node_modules/react-three-fiber"),
+  "@react-three/fiber": path.resolve("./node_modules/@react-three/fiber"),
   three: path.resolve("./node_modules/three"),
 };
 

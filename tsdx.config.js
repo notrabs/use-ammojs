@@ -1,5 +1,4 @@
 const workerLoader = require("rollup-plugin-web-worker-loader");
-const commonjs = require("@rollup/plugin-commonjs");
 const url = require("@rollup/plugin-url");
 
 module.exports = {

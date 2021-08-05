@@ -13,7 +13,7 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { useFrame } from "react-three-fiber";
+import { useFrame } from "@react-three/fiber";
 import { DefaultBufferSize } from "ammo-debug-drawer";
 import { AmmoPhysicsContext, ConstraintOptions } from "./physics-context";
 import {
