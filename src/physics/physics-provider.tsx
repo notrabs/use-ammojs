@@ -1,13 +1,4 @@
 import {
-  BodyConfig,
-  CONSTANTS,
-  ShapeConfig,
-  UpdateBodyOptions,
-  WorkerHelpers,
-  WorldConfig,
-} from "three-ammo";
-import { createAmmoWorker } from "three-ammo/dist/threeammo-worker";
-import {
   BufferAttribute,
   BufferGeometry,
   DynamicDrawUsage,
@@ -20,12 +11,20 @@ import { useFrame } from "react-three-fiber";
 import { DefaultBufferSize } from "ammo-debug-drawer";
 import { AmmoPhysicsContext, ConstraintOptions } from "./physics-context";
 import {
-  removeUndefinedKeys,
-  ammoDebugOptionsToNumber,
-  AmmoDebugOptions,
   allocateCompatibleBuffer,
+  AmmoDebugOptions,
+  ammoDebugOptionsToNumber,
   isSharedArrayBufferSupported,
+  removeUndefinedKeys,
 } from "../utils/utils";
+import {createAmmoWorker, WorkerHelpers} from "../three-ammo/lib/worker-helper";
+import {
+  BodyConfig,
+  ShapeConfig,
+  UpdateBodyOptions,
+  WorldConfig,
+} from "../three-ammo/lib/types";
+import { CONSTANTS } from "../three-ammo/lib/constants";
 
 interface AmmoPhysicsProps {
   // Draw a collision debug mesh into the scene
@@ -168,7 +167,7 @@ export function Physics({
         "use-ammojs uses fallback to slower ArrayBuffers. To use the faster SharedArrayBuffers make sure that your environment is crossOriginIsolated. (see https://web.dev/coop-coep/)"
       );
 
-      console.log("1 ", objectMatricesFloatArray.byteLength)
+      console.log("1 ", objectMatricesFloatArray.byteLength);
       ammoWorker.postMessage(
         {
           type: CONSTANTS.MESSAGE_TYPES.INIT,
@@ -177,7 +176,7 @@ export function Physics({
         },
         [objectBuffer]
       );
-      console.log("2 ", objectMatricesFloatArray.byteLength)
+      console.log("2 ", objectMatricesFloatArray.byteLength);
     }
 
     const workerInitPromise = new Promise<PhysicsState>((resolve) => {
@@ -200,7 +199,7 @@ export function Physics({
             addShapes,
             updateBody,
           });
-          console.log("3 ", objectMatricesFloatArray.byteLength)
+          console.log("3 ", objectMatricesFloatArray.byteLength);
         } else if (event.data.type === CONSTANTS.MESSAGE_TYPES.BODY_READY) {
           const uuid = event.data.uuid;
           uuids.push(uuid);

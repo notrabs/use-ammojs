@@ -6,7 +6,7 @@ import {
   ConstraintType,
   ShapeConfig,
   UpdateBodyOptions,
-} from "three-ammo";
+} from "../three-ammo/lib/types";
 
 export interface ConstraintOptions {
   type: ConstraintType;

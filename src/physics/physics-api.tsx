@@ -1,6 +1,6 @@
 import { AmmoPhysicsContext } from "./physics-context";
 import { Vector3, Quaternion } from "three";
-import { UpdateBodyOptions } from "three-ammo";
+import { UpdateBodyOptions } from "../three-ammo/lib/types";
 
 export interface PhysicsApi {
   updateBodyOptions(options: UpdateBodyOptions): void;

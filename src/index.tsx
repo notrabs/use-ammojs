@@ -13,5 +13,5 @@ export {
   ShapeType,
   BodyType,
   WorldConfig,
-  ShapeFit
-} from "three-ammo";
+  ShapeFit,
+} from "./three-ammo/lib/types";

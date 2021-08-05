@@ -2,7 +2,12 @@ import { MathUtils, Object3D } from "three";
 import React, { MutableRefObject, useEffect, useRef, useState } from "react";
 import { useAmmoPhysicsContext } from "./physics-context";
 import { createPhysicsApi, PhysicsApi } from "./physics-api";
-import { BodyConfig, BodyType, ShapeConfig, ShapeType } from "three-ammo";
+import {
+  BodyConfig,
+  BodyType,
+  ShapeConfig,
+  ShapeType,
+} from "../three-ammo/lib/types";
 
 type UsePhysicsOptions = Omit<BodyConfig, "type"> & {
   shapeType: ShapeType;
