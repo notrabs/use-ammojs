@@ -143,17 +143,29 @@ function handleRespawn() {
 ```js
 const path = require("path");
 
-[...]
+module.exports = {
+    webpack: {
+        configure: (webpackConfig) => {
+            // Fix that prevents a duplicate react library being imported when using a linked yarn package
+            webpackConfig.resolve.alias = {
+                ...webpackConfig.resolve.alias,
+                react: path.resolve("./node_modules/react"),
+                "@react-three/fiber": path.resolve("./node_modules/@react-three/fiber"),
+                three: path.resolve("./node_modules/three"),
+            };
 
-// Fix that prevents a duplicate react library being imported when using a linked yarn package
-webpackConfig.resolve.alias = {
-  ...webpackConfig.resolve.alias,
-  react: path.resolve("./node_modules/react"),
-  "@react-three/fiber": path.resolve("./node_modules/@react-three/fiber"),
-  three: path.resolve("./node_modules/three"),
+            return webpackConfig;
+        },
+    },
+
+    // Make sure SharedArrayBuffers are available locally
+    devServer: {
+        headers: {
+            "Cross-Origin-Embedder-Policy": "require-corp",
+            "Cross-Origin-Opener-Policy": "same-origin",
+        },
+    },
 };
-
-[...]
 ```
 
 </details>
