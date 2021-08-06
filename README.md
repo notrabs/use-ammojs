@@ -68,14 +68,28 @@ function MyBox() {
 
 or define Collision Shapes manually:
 
-```
-TODO
+```tsx
+const [playerCapsuleRef] = usePhysics(() => ({
+  bodyType: BodyType.DYNAMIC,
+  shapeType: ShapeType.CAPSULE,
+  angularFactor: new Vector3(0, 0, 0),
+  shapeConfig: {
+    fit: ShapeFit.MANUAL,
+    halfExtents: new Vector3(0.3, 0.6, 0.3),
+  },
+}));
 ```
 
 or add collisions to an imported gltf scene:
 
-```
-TODO
+```tsx
+usePhysics(
+  () => ({
+    shapeType: ShapeType.MESH,
+    type: BodyType.STATIC,
+  }),
+  gltf.scene
+);
 ```
 
 ### 2.a Make objects squishy
@@ -111,7 +125,7 @@ const [playerRef, api] = usePhysics(() => ({
 
 function handleRespawn() {
   api.setPosition(new Vector3(0, 0, 0));
-  api.setLinearVelocity(new Vector3(0,0,0))
+  api.setLinearVelocity(new Vector3(0, 0, 0));
 }
 ```
 
