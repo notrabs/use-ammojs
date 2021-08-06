@@ -13,7 +13,7 @@ import {
   UUID,
 } from "../lib/types";
 import { BUFFER_CONFIG, SIMULATION_RATE } from "../lib/constants";
-import { initializeAmmoWasm } from "./ammo-initialize";
+import { initializeAmmoWasm } from "./ammo-wasm-initialize";
 
 const uuids: UUID[] = [];
 const bodies: Record<UUID, Body> = {};
