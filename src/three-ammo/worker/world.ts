@@ -1,10 +1,8 @@
 import { WorldConfig } from "../lib/types";
-import { CONSTANTS } from "../lib/constants";
+import {EPS, GRAVITY} from "../lib/constants";
 import { AmmoDebugConstants, AmmoDebugDrawer } from "ammo-debug-drawer";
 
-const EPS = 10e-6;
-
-export default class World {
+export class World {
   collisionConfiguration: Ammo.btDefaultCollisionConfiguration;
   dispatcher: Ammo.btCollisionDispatcher;
   broadphase: Ammo.btDbvtBroadphase;
@@ -42,7 +40,7 @@ export default class World {
       // this.softBodySolver
     );
     // this.physicsWorld.setForceUpdateAllAabbs(false);
-    const gravity = new Ammo.btVector3(0, CONSTANTS.GRAVITY, 0);
+    const gravity = new Ammo.btVector3(0, GRAVITY, 0);
     if (worldConfig.hasOwnProperty("gravity")) {
       gravity.setValue(
         worldConfig.gravity.x,

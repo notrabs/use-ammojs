@@ -1,26 +1,20 @@
 import { Matrix4, Quaternion, Vector3 } from "three";
-
-import { CONSTANTS } from "../lib/constants";
 import {
   BodyActivationState,
   BodyConfig,
   BodyType,
+  CollisionFlag,
+  ShapeType,
   UpdateBodyOptions,
 } from "../lib/types";
-import World from "./world";
-
-const ACTIVATION_STATE = CONSTANTS.ACTIVATION_STATE,
-  COLLISION_FLAG = CONSTANTS.COLLISION_FLAG,
-  SHAPE = CONSTANTS.SHAPE,
-  TYPE = CONSTANTS.TYPE,
-  FIT = CONSTANTS.FIT;
+import { World } from "./world";
 
 const ACTIVATION_STATES = [
-  ACTIVATION_STATE.ACTIVE_TAG,
-  ACTIVATION_STATE.ISLAND_SLEEPING,
-  ACTIVATION_STATE.WANTS_DEACTIVATION,
-  ACTIVATION_STATE.DISABLE_DEACTIVATION,
-  ACTIVATION_STATE.DISABLE_SIMULATION,
+  BodyActivationState.ACTIVE_TAG,
+  BodyActivationState.ISLAND_SLEEPING,
+  BodyActivationState.WANTS_DEACTIVATION,
+  BodyActivationState.DISABLE_DEACTIVATION,
+  BodyActivationState.DISABLE_SIMULATION,
 ];
 
 const RIGID_BODY_FLAGS = {
@@ -67,13 +61,17 @@ const scale = new Vector3();
 const v = new Vector3();
 const q = new Quaternion();
 
-const needsPolyhedralInitialization = [SHAPE.HULL, SHAPE.HACD, SHAPE.VHACD];
+const needsPolyhedralInitialization = [
+  ShapeType.HULL,
+  ShapeType.HACD,
+  ShapeType.VHACD,
+];
 
 /**
  * Initializes a body component, assigning it to the physics system and binding listeners for
  * parsing the elements geometry.
  */
-export default class Body {
+export class Body {
   loadedEvent: string;
   mass: number;
   gravity: Ammo.btVector3;
@@ -141,8 +139,8 @@ export default class Body {
       bodyConfig.activationState &&
       ACTIVATION_STATES.indexOf(bodyConfig.activationState) !== -1
         ? bodyConfig.activationState
-        : ACTIVATION_STATE.ACTIVE_TAG;
-    this.type = bodyConfig.type ? bodyConfig.type : TYPE.DYNAMIC;
+        : BodyActivationState.ACTIVE_TAG;
+    this.type = bodyConfig.type ? bodyConfig.type : BodyType.DYNAMIC;
     this.emitCollisionEvents = bodyConfig.emitCollisionEvents ?? false;
     this.disableCollision = bodyConfig.disableCollision ?? false;
     this.collisionFilterGroup = bodyConfig.collisionFilterGroup ?? 1; //32-bit mask
@@ -268,7 +266,7 @@ export default class Body {
     if (this.shapesChanged) {
       this.shapesChanged = false;
       updated = true;
-      if (this.type === TYPE.DYNAMIC) {
+      if (this.type === BodyType.DYNAMIC) {
         this.updateMass();
       }
 
@@ -315,7 +313,7 @@ export default class Body {
       this.physicsBody!.forceActivationState(
         ACTIVATION_STATES.indexOf(this.activationState) + 1
       );
-      if (this.activationState === ACTIVATION_STATE.ACTIVE_TAG) {
+      if (this.activationState === BodyActivationState.ACTIVE_TAG) {
         this.physicsBody!.activate(true);
       }
     }
@@ -474,7 +472,7 @@ export default class Body {
       this.msTransform!.setRotation(this.rotation!);
       this.motionState!.setWorldTransform(this.msTransform!);
 
-      if (this.type === TYPE.STATIC || setCenterOfMassTransform) {
+      if (this.type === BodyType.STATIC || setCenterOfMassTransform) {
         this.physicsBody!.setCenterOfMassTransform(this.msTransform!);
       }
     }
@@ -498,7 +496,10 @@ export default class Body {
   }
 
   addShape(collisionShape) {
-    if (collisionShape.type === SHAPE.MESH && this.type !== TYPE.STATIC) {
+    if (
+      collisionShape.type === ShapeType.MESH &&
+      this.type !== BodyType.STATIC
+    ) {
       console.warn("non-static mesh colliders not supported");
       return;
     }
@@ -541,7 +542,7 @@ export default class Body {
   }
 
   updateMass() {
-    const mass = this.type === TYPE.STATIC ? 0 : this.mass;
+    const mass = this.type === BodyType.STATIC ? 0 : this.mass;
     this.compoundShape!.calculateLocalInertia(mass, this.localInertia!);
     this.physicsBody!.setMassProps(mass, this.localInertia!);
     this.physicsBody!.updateInertiaTensor();
@@ -550,11 +551,11 @@ export default class Body {
   updateCollisionFlags() {
     let flags = this.disableCollision ? 4 : 0;
     switch (this.type) {
-      case TYPE.STATIC:
-        flags |= COLLISION_FLAG.STATIC_OBJECT;
+      case BodyType.STATIC:
+        flags |= CollisionFlag.STATIC_OBJECT;
         break;
-      case TYPE.KINEMATIC:
-        flags |= COLLISION_FLAG.KINEMATIC_OBJECT;
+      case BodyType.KINEMATIC:
+        flags |= CollisionFlag.KINEMATIC_OBJECT;
         break;
       default:
         this.physicsBody!.applyGravity();

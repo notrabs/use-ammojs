@@ -1,22 +1,20 @@
 import { Matrix4 } from "three";
-import { CONSTANTS } from "./constants";
 import { iterateGeometries } from "three-to-ammo";
 import AmmoWorker from "web-worker:../worker/ammo.worker";
-
-const MESSAGE_TYPES = CONSTANTS.MESSAGE_TYPES;
+import { MessageType } from "./types";
 
 export function createAmmoWorker(): Worker {
   return new AmmoWorker();
 }
 
-export const WorkerHelpers = function (ammoWorker) {
+export function WorkerHelpers(ammoWorker: Worker) {
   const transform = new Matrix4();
   const inverse = new Matrix4();
 
   return {
     transferData(objectMatricesFloatArray: Float32Array) {
       ammoWorker.postMessage(
-        { type: MESSAGE_TYPES.TRANSFER_DATA, objectMatricesFloatArray },
+        { type: MessageType.TRANSFER_DATA, objectMatricesFloatArray },
         [objectMatricesFloatArray.buffer]
       );
     },
@@ -25,7 +23,7 @@ export const WorkerHelpers = function (ammoWorker) {
       inverse.copy(mesh.parent.matrixWorld).invert();
       transform.multiplyMatrices(inverse, mesh.matrixWorld);
       ammoWorker.postMessage({
-        type: MESSAGE_TYPES.ADD_BODY,
+        type: MessageType.ADD_BODY,
         uuid,
         matrix: transform.elements,
         options,
@@ -34,7 +32,7 @@ export const WorkerHelpers = function (ammoWorker) {
 
     updateBody(uuid, options) {
       ammoWorker.postMessage({
-        type: MESSAGE_TYPES.UPDATE_BODY,
+        type: MessageType.UPDATE_BODY,
         uuid,
         options,
       });
@@ -42,7 +40,7 @@ export const WorkerHelpers = function (ammoWorker) {
 
     removeBody(uuid) {
       ammoWorker.postMessage({
-        type: MESSAGE_TYPES.REMOVE_BODY,
+        type: MessageType.REMOVE_BODY,
         uuid,
       });
     },
@@ -63,7 +61,7 @@ export const WorkerHelpers = function (ammoWorker) {
         });
 
         ammoWorker.postMessage({
-          type: MESSAGE_TYPES.ADD_SHAPES,
+          type: MessageType.ADD_SHAPES,
           bodyUuid,
           shapesUuid,
           vertices,
@@ -74,7 +72,7 @@ export const WorkerHelpers = function (ammoWorker) {
         });
       } else {
         ammoWorker.postMessage({
-          type: MESSAGE_TYPES.ADD_SHAPES,
+          type: MessageType.ADD_SHAPES,
           bodyUuid,
           shapesUuid,
           options,
@@ -84,7 +82,7 @@ export const WorkerHelpers = function (ammoWorker) {
 
     bodySetShapesOffset(bodyUuid, offset) {
       ammoWorker.postMessage({
-        type: MESSAGE_TYPES.SET_SHAPES_OFFSET,
+        type: MessageType.SET_SHAPES_OFFSET,
         bodyUuid,
         offset,
       });
@@ -92,7 +90,7 @@ export const WorkerHelpers = function (ammoWorker) {
 
     removeShapes(bodyUuid, shapesUuid) {
       ammoWorker.postMessage({
-        type: MESSAGE_TYPES.REMOVE_SHAPES,
+        type: MessageType.REMOVE_SHAPES,
         bodyUuid,
         shapesUuid,
       });
@@ -100,7 +98,7 @@ export const WorkerHelpers = function (ammoWorker) {
 
     addConstraint(constraintId, bodyUuid, targetUuid, options = {}) {
       ammoWorker.postMessage({
-        type: MESSAGE_TYPES.ADD_CONSTRAINT,
+        type: MessageType.ADD_CONSTRAINT,
         constraintId,
         bodyUuid,
         targetUuid,
@@ -110,14 +108,14 @@ export const WorkerHelpers = function (ammoWorker) {
 
     removeConstraint(constraintId) {
       ammoWorker.postMessage({
-        type: MESSAGE_TYPES.REMOVE_CONSTRAINT,
+        type: MessageType.REMOVE_CONSTRAINT,
         constraintId,
       });
     },
 
     enableDebug(enable, debugSharedArrayBuffer) {
       ammoWorker.postMessage({
-        type: MESSAGE_TYPES.ENABLE_DEBUG,
+        type: MessageType.ENABLE_DEBUG,
         enable,
         debugSharedArrayBuffer,
       });
@@ -125,21 +123,21 @@ export const WorkerHelpers = function (ammoWorker) {
 
     resetDynamicBody(uuid) {
       ammoWorker.postMessage({
-        type: MESSAGE_TYPES.RESET_DYNAMIC_BODY,
+        type: MessageType.RESET_DYNAMIC_BODY,
         uuid,
       });
     },
 
     activateBody(uuid) {
       ammoWorker.postMessage({
-        type: MESSAGE_TYPES.ACTIVATE_BODY,
+        type: MessageType.ACTIVATE_BODY,
         uuid,
       });
     },
 
     bodySetMotionState(uuid, position, rotation) {
       ammoWorker.postMessage({
-        type: MESSAGE_TYPES.SET_MOTION_STATE,
+        type: MessageType.SET_MOTION_STATE,
         uuid,
         position,
         rotation,
@@ -148,7 +146,7 @@ export const WorkerHelpers = function (ammoWorker) {
 
     bodySetLinearVelocity(uuid, velocity) {
       ammoWorker.postMessage({
-        type: MESSAGE_TYPES.SET_LINEAR_VELOCITY,
+        type: MessageType.SET_LINEAR_VELOCITY,
         uuid,
         velocity,
       });
@@ -157,13 +155,13 @@ export const WorkerHelpers = function (ammoWorker) {
     bodyApplyImpulse(uuid, impulse, relativeOffset) {
       if (!relativeOffset) {
         ammoWorker.postMessage({
-          type: MESSAGE_TYPES.APPLY_CENTRAL_IMPULSE,
+          type: MessageType.APPLY_CENTRAL_IMPULSE,
           uuid,
           impulse,
         });
       } else {
         ammoWorker.postMessage({
-          type: MESSAGE_TYPES.APPLY_IMPULSE,
+          type: MessageType.APPLY_IMPULSE,
           uuid,
           impulse,
           relativeOffset,
@@ -174,13 +172,13 @@ export const WorkerHelpers = function (ammoWorker) {
     bodyApplyForce(uuid, force, relativeOffset) {
       if (!relativeOffset) {
         ammoWorker.postMessage({
-          type: MESSAGE_TYPES.APPLY_CENTRAL_FORCE,
+          type: MessageType.APPLY_CENTRAL_FORCE,
           uuid,
           force,
         });
       } else {
         ammoWorker.postMessage({
-          type: MESSAGE_TYPES.APPLY_FORCE,
+          type: MessageType.APPLY_FORCE,
           uuid,
           force,
           relativeOffset,
@@ -188,4 +186,4 @@ export const WorkerHelpers = function (ammoWorker) {
       }
     },
   };
-};
+}

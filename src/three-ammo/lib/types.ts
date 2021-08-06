@@ -1,5 +1,7 @@
 import { Quaternion, Vector3 } from "three";
 
+export type UUID = string;
+
 export interface WorldConfig {
   // default = 10e-6
   epsilon?: number;
@@ -21,22 +23,21 @@ export interface WorldConfig {
   solverIterations?: number;
 }
 
-
 export enum BodyActivationState {
   ACTIVE_TAG = "active",
   ISLAND_SLEEPING = "islandSleeping",
   WANTS_DEACTIVATION = "wantsDeactivation",
   DISABLE_DEACTIVATION = "disableDeactivation",
-  DISABLE_SIMULATION = "disableSimulation"
+  DISABLE_SIMULATION = "disableSimulation",
 }
 
 export enum BodyType {
   STATIC = "static",
   DYNAMIC = "dynamic",
-  KINEMATIC = "kinematic"
+  KINEMATIC = "kinematic",
 }
 
-export interface BodyConfig{
+export interface BodyConfig {
   loadedEvent?: string;
 
   // default = 1
@@ -47,7 +48,7 @@ export interface BodyConfig{
 
   enableCCD?: boolean;
   // e.g. 1e-7
-  ccdMotionThreshold? :number;
+  ccdMotionThreshold?: number;
   // e.g. 0.5
   ccdSweptSphereRadius?: number;
 
@@ -96,7 +97,7 @@ export type UpdateBodyOptions = Pick<
   | "linearSleepingThreshold"
   | "angularSleepingThreshold"
   | "angularFactor"
-  >;
+>;
 
 export enum ShapeType {
   BOX = "box",
@@ -108,7 +109,7 @@ export enum ShapeType {
   HACD = "hacd",
   VHACD = "vhacd",
   MESH = "mesh",
-  HEIGHTFIELD = "heightfield"
+  HEIGHTFIELD = "heightfield",
 }
 
 export enum ShapeFit {
@@ -116,7 +117,7 @@ export enum ShapeFit {
   ALL = "all",
 
   //A single shape is sized manually. Requires halfExtents or sphereRadius.
-  MANUAL = "manual"
+  MANUAL = "manual",
 }
 
 export interface ShapeConfig {
@@ -196,5 +197,61 @@ export enum ConstraintType {
   SLIDER = "slider",
   HINGE = "hinge",
   CONE_TWIST = "coneTwist",
-  POINT_TO_POINT = "pointToPoint"
+  POINT_TO_POINT = "pointToPoint",
+}
+
+export enum BufferState {
+  UNINITIALIZED = 0,
+  READY = 1,
+  CONSUMED = 2,
+}
+
+export enum MessageType {
+  INIT = 0,
+  READY = 1,
+  ADD_BODY = 2,
+  BODY_READY = 3,
+  UPDATE_BODY = 4,
+  REMOVE_BODY = 5,
+  ADD_SHAPES = 6,
+  REMOVE_SHAPES = 7,
+  ADD_CONSTRAINT = 8,
+  REMOVE_CONSTRAINT = 9,
+  ENABLE_DEBUG = 10,
+  RESET_DYNAMIC_BODY = 11,
+  ACTIVATE_BODY = 12,
+  TRANSFER_DATA = 13,
+  SET_SHAPES_OFFSET = 14,
+
+  // Body messages
+  SET_MOTION_STATE = 50,
+  // GET_LINEAR_VELOCITY= 51,
+  SET_LINEAR_VELOCITY = 52,
+  // GET_ANGULAR_VELOCITY= 53,
+  SET_ANGULAR_VELOCITY = 54,
+  APPLY_FORCE = 55,
+  APPLY_CENTRAL_FORCE = 56,
+  APPLY_IMPULSE = 57,
+  APPLY_CENTRAL_IMPULSE = 58,
+  APPLY_TORQUE_IMPULSE = 59,
+  CLEAR_FORCES = 60,
+
+  // GET_RESTITUTION= 70,
+  SET_RESTITUTION = 71,
+  // GET_FRICTION= 72,
+  SET_FRICTION = 73,
+  // GET_SPINNING_FRICTION= 74,
+  SET_SPINNING_FRICTION = 75,
+  // GET_ROLLING_FRICTION= 76,
+  SET_ROLLING_FRICTION = 77,
+}
+
+export enum CollisionFlag {
+  STATIC_OBJECT = 1,
+  KINEMATIC_OBJECT = 2,
+  NO_CONTACT_RESPONSE = 4,
+  CUSTOM_MATERIAL_CALLBACK = 8, //this allows per-triangle material (friction/restitution)
+  CHARACTER_OBJECT = 16,
+  DISABLE_VISUALIZE_OBJECT = 32, //disable debug drawing
+  DISABLE_SPU_COLLISION_PROCESSING = 64, //disable parallel/SPU processing
 }

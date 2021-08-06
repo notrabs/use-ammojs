@@ -1,75 +1,16 @@
-import { BodyActivationState, BodyType, ConstraintType, ShapeFit, ShapeType } from "./types";
+export const GRAVITY = -9.81;
+export const MAX_INTERVAL = 4 / 60;
+export const ITERATIONS = 10;
+export const SIMULATION_RATE = 8.333; // 8.333ms / 120hz
+export const EPS = 10e-6;
 
-export const CONSTANTS = {
-  GRAVITY: -9.8,
-  MAX_INTERVAL: 4 / 60,
-  ITERATIONS: 10,
-  SIMULATION_RATE: 8.333, // 8.333ms / 120hz
-  ACTIVATION_STATE: BodyActivationState,
-  COLLISION_FLAG: {
-    STATIC_OBJECT: 1,
-    KINEMATIC_OBJECT: 2,
-    NO_CONTACT_RESPONSE: 4,
-    CUSTOM_MATERIAL_CALLBACK: 8, //this allows per-triangle material (friction/restitution)
-    CHARACTER_OBJECT: 16,
-    DISABLE_VISUALIZE_OBJECT: 32, //disable debug drawing
-    DISABLE_SPU_COLLISION_PROCESSING: 64 //disable parallel/SPU processing
-  },
-  TYPE: BodyType,
-  SHAPE: ShapeType,
-  FIT: ShapeFit,
-  CONSTRAINT: ConstraintType,
-  MESSAGE_TYPES: {
-    INIT: 0,
-    READY: 1,
-    ADD_BODY: 2,
-    BODY_READY: 3,
-    UPDATE_BODY: 4,
-    REMOVE_BODY: 5,
-    ADD_SHAPES: 6,
-    REMOVE_SHAPES: 7,
-    ADD_CONSTRAINT: 8,
-    REMOVE_CONSTRAINT: 9,
-    ENABLE_DEBUG: 10,
-    RESET_DYNAMIC_BODY: 11,
-    ACTIVATE_BODY: 12,
-    TRANSFER_DATA: 13,
-    SET_SHAPES_OFFSET: 14,
-
-    // Body messages
-    SET_MOTION_STATE: 50,
-    // GET_LINEAR_VELOCITY: 51,
-    SET_LINEAR_VELOCITY: 52,
-    // GET_ANGULAR_VELOCITY: 53,
-    SET_ANGULAR_VELOCITY: 54,
-    APPLY_FORCE: 55,
-    APPLY_CENTRAL_FORCE: 56,
-    APPLY_IMPULSE: 57,
-    APPLY_CENTRAL_IMPULSE: 58,
-    APPLY_TORQUE_IMPULSE: 59,
-    CLEAR_FORCES: 60,
-
-    // GET_RESTITUTION: 70,
-    SET_RESTITUTION: 71,
-    // GET_FRICTION: 72,
-    SET_FRICTION: 73,
-    // GET_SPINNING_FRICTION: 74,
-    SET_SPINNING_FRICTION: 75,
-    // GET_ROLLING_FRICTION: 76,
-    SET_ROLLING_FRICTION: 77
-  },
-  BUFFER_CONFIG: {
-    HEADER_LENGTH: 2,
-    MAX_BODIES: 10000,
-    MATRIX_OFFSET: 0,
-    LINEAR_VELOCITY_OFFSET: 16,
-    ANGULAR_VELOCITY_OFFSET: 17,
-    COLLISIONS_OFFSET: 18,
-    BODY_DATA_SIZE: 26
-  },
-  BUFFER_STATE: {
-    UNINITIALIZED: 0,
-    READY: 1,
-    CONSUMED: 2
-  }
+export const BUFFER_CONFIG = {
+  HEADER_LENGTH: 2,
+  MAX_BODIES: 10000,
+  MATRIX_OFFSET: 0,
+  LINEAR_VELOCITY_OFFSET: 16,
+  ANGULAR_VELOCITY_OFFSET: 17,
+  COLLISIONS_OFFSET: 18,
+  BODY_DATA_SIZE: 26,
 };
+

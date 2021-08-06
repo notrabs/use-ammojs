@@ -1,41 +1,27 @@
-import { CONSTANTS } from "../lib/constants";
-import World from "./world";
-import Body from "./body";
-import Constraint from "./constraint";
+import { World } from "./world";
+import { Body } from "./body";
+import { Constraint } from "./constraint";
 import { DefaultBufferSize } from "ammo-debug-drawer";
 import { Matrix4 } from "three";
 import { createCollisionShapes } from "three-to-ammo";
+import {
+  BodyType,
+  BufferState,
+  ConstraintType,
+  MessageType,
+  ShapeType,
+  UUID,
+} from "../lib/types";
+import { BUFFER_CONFIG, SIMULATION_RATE } from "../lib/constants";
+import { initializeAmmoWasm } from "./ammo-initialize";
 
-// TODO: figure out why rollup doesn't like the file out of the ammo.js repo and throws a missing "default export" error
-import Ammo from "../lib/builds/ammo.wasm.js";
-import AmmoWasm from "ammo.js/builds/ammo.wasm.wasm";
-
-const MESSAGE_TYPES = CONSTANTS.MESSAGE_TYPES;
-const TYPE = CONSTANTS.TYPE;
-const SHAPE = CONSTANTS.SHAPE;
-const CONSTRAINT = CONSTANTS.CONSTRAINT;
-const BUFFER_CONFIG = CONSTANTS.BUFFER_CONFIG;
-const BUFFER_STATE = CONSTANTS.BUFFER_STATE;
-
-function initializeAmmoWasm(wasmUrl: string | undefined) {
-  return Ammo({
-    locateFile() {
-      if (wasmUrl) {
-        return wasmUrl;
-      } else {
-        return AmmoWasm; //new URL(AmmoWasm, location.origin).href;
-      }
-    },
-  });
-}
-
-const uuids: any = [];
-const bodies: any = {};
-const shapes: any = {};
-const constraints: any = {};
-const matrices: any = {};
-const indexes: any = {};
-const ptrToIndex: any = {};
+const uuids: UUID[] = [];
+const bodies: Record<UUID, Body> = {};
+const shapes: Record<UUID, any> = {};
+const constraints: Record<UUID, Constraint> = {};
+const matrices: Record<UUID, Matrix4> = {};
+const indexes: Record<UUID, number> = {};
+const ptrToIndex: Record<UUID, number> = {};
 
 const messageQueue: any = [];
 
@@ -77,11 +63,11 @@ function isBufferConsumed() {
 function releaseBuffer() {
   if (usingSharedArrayBuffer) {
     headerFloatArray[1] = stepDuration;
-    Atomics.store(headerIntArray, 0, BUFFER_STATE.READY);
+    Atomics.store(headerIntArray, 0, BufferState.READY);
   } else {
     postMessage(
       {
-        type: MESSAGE_TYPES.TRANSFER_DATA,
+        type: MessageType.TRANSFER_DATA,
         objectMatricesFloatArray,
         stepDuration,
       },
@@ -102,46 +88,46 @@ function tick() {
     while (messageQueue.length > 0) {
       const message = messageQueue.shift();
       switch (message.type) {
-        case MESSAGE_TYPES.ADD_BODY:
+        case MessageType.ADD_BODY:
           addBody(message);
           break;
-        case MESSAGE_TYPES.UPDATE_BODY:
+        case MessageType.UPDATE_BODY:
           updateBody(message);
           break;
-        case MESSAGE_TYPES.REMOVE_BODY:
+        case MessageType.REMOVE_BODY:
           removeBody(message);
           break;
-        case MESSAGE_TYPES.ADD_SHAPES:
+        case MessageType.ADD_SHAPES:
           addShapes(message);
           break;
-        case MESSAGE_TYPES.SET_SHAPES_OFFSET:
+        case MessageType.SET_SHAPES_OFFSET:
           setShapesOffset(message);
           break;
-        case MESSAGE_TYPES.ADD_CONSTRAINT:
+        case MessageType.ADD_CONSTRAINT:
           addConstraint(message);
           break;
-        case MESSAGE_TYPES.RESET_DYNAMIC_BODY:
+        case MessageType.RESET_DYNAMIC_BODY:
           resetDynamicBody(message);
           break;
-        case MESSAGE_TYPES.ACTIVATE_BODY:
+        case MessageType.ACTIVATE_BODY:
           activateBody(message);
           break;
-        case MESSAGE_TYPES.SET_MOTION_STATE:
+        case MessageType.SET_MOTION_STATE:
           bodySetMotionState(message);
           break;
-        case MESSAGE_TYPES.SET_LINEAR_VELOCITY:
+        case MessageType.SET_LINEAR_VELOCITY:
           bodySetLinearVelocity(message);
           break;
-        case MESSAGE_TYPES.APPLY_IMPULSE:
+        case MessageType.APPLY_IMPULSE:
           bodyApplyImpulse(message);
           break;
-        case MESSAGE_TYPES.APPLY_CENTRAL_IMPULSE:
+        case MessageType.APPLY_CENTRAL_IMPULSE:
           bodyApplyCentralImpulse(message);
           break;
-        case MESSAGE_TYPES.APPLY_FORCE:
+        case MessageType.APPLY_FORCE:
           bodyApplyForce(message);
           break;
-        case MESSAGE_TYPES.APPLY_CENTRAL_FORCE:
+        case MessageType.APPLY_CENTRAL_FORCE:
           bodyApplyCentralForce(message);
           break;
       }
@@ -167,7 +153,7 @@ function tick() {
       );
       body.updateShapes();
 
-      if (body.type === TYPE.DYNAMIC) {
+      if (body.type === BodyType.DYNAMIC) {
         body.syncFromPhysics();
       } else {
         body.syncToPhysics(false);
@@ -181,11 +167,11 @@ function tick() {
       objectMatricesFloatArray[
         index * BUFFER_CONFIG.BODY_DATA_SIZE +
           BUFFER_CONFIG.LINEAR_VELOCITY_OFFSET
-      ] = body.physicsBody.getLinearVelocity().length();
+      ] = body.physicsBody!.getLinearVelocity().length();
       objectMatricesFloatArray[
         index * BUFFER_CONFIG.BODY_DATA_SIZE +
           BUFFER_CONFIG.ANGULAR_VELOCITY_OFFSET
-      ] = body.physicsBody.getAngularVelocity().length();
+      ] = body.physicsBody!.getAngularVelocity().length();
 
       const ptr = getPointer(body.physicsBody);
       const collisions = world.collisions.get(ptr);
@@ -216,7 +202,7 @@ function tick() {
     releaseBuffer();
   }
 }
-const initSharedArrayBuffer = (sharedArrayBuffer, maxBodies) => {
+function initSharedArrayBuffer(sharedArrayBuffer, maxBodies) {
   /** BUFFER HEADER
    * When using SAB, the first 4 bytes (1 int) are reserved for signaling BUFFER_STATE
    * This is used to determine which thread is currently allowed to modify the SAB.
@@ -243,12 +229,12 @@ const initSharedArrayBuffer = (sharedArrayBuffer, maxBodies) => {
     BUFFER_CONFIG.HEADER_LENGTH * 4,
     BUFFER_CONFIG.BODY_DATA_SIZE * maxBodies
   );
-};
+}
 
-const initTransferrables = (arrayBuffer) => {
+function initTransferrables(arrayBuffer) {
   objectMatricesFloatArray = new Float32Array(arrayBuffer);
   objectMatricesIntArray = new Int32Array(arrayBuffer);
-};
+}
 
 function initDebug(debugSharedArrayBuffer, world) {
   const debugIndexArray = new Uint32Array(debugSharedArrayBuffer, 0, 1);
@@ -284,7 +270,7 @@ function addBody({ uuid, matrix, options }) {
     const ptr = getPointer(bodies[uuid].physicsBody);
     ptrToIndex[ptr] = freeIndex;
 
-    postMessage({ type: MESSAGE_TYPES.BODY_READY, uuid, index: freeIndex });
+    postMessage({ type: MessageType.BODY_READY, uuid, index: freeIndex });
     freeIndex = nextFreeIndex;
   }
 }
@@ -292,14 +278,14 @@ function addBody({ uuid, matrix, options }) {
 function updateBody({ uuid, options }) {
   if (bodies[uuid]) {
     bodies[uuid].update(options);
-    bodies[uuid].physicsBody.activate(true);
+    bodies[uuid].physicsBody!.activate(true);
   }
 }
 
 function bodySetMotionState({ uuid, position, rotation }) {
   const body = bodies[uuid];
   if (body) {
-    const transform = body.physicsBody.getCenterOfMassTransform();
+    const transform = body.physicsBody!.getCenterOfMassTransform();
 
     if (position) {
       vector3Tmp1.setValue(position.x, position.y, position.z);
@@ -311,18 +297,18 @@ function bodySetMotionState({ uuid, position, rotation }) {
       transform.setRotation(quatTmp1);
     }
 
-    body.physicsBody.setCenterOfMassTransform(transform);
-    body.physicsBody.activate(true);
+    body.physicsBody!.setCenterOfMassTransform(transform);
+    body.physicsBody!.activate(true);
   }
 }
 
 function bodySetLinearVelocity({ uuid, velocity }) {
   const body = bodies[uuid];
   if (body) {
-    body.physicsBody
-      .getLinearVelocity()
+    body
+      .physicsBody!.getLinearVelocity()
       .setValue(velocity.x, velocity.y, velocity.z);
-    body.physicsBody.activate(true);
+    body.physicsBody!.activate(true);
   }
 }
 
@@ -331,8 +317,8 @@ function bodyApplyImpulse({ uuid, impulse, relativeOffset }) {
   if (body) {
     vector3Tmp1.setValue(impulse.x, impulse.y, impulse.z);
     vector3Tmp2.setValue(relativeOffset.x, relativeOffset.y, relativeOffset.z);
-    body.physicsBody.applyImpulse(vector3Tmp1, vector3Tmp2);
-    body.physicsBody.activate(true);
+    body.physicsBody!.applyImpulse(vector3Tmp1, vector3Tmp2);
+    body.physicsBody!.activate(true);
   }
 }
 
@@ -340,8 +326,8 @@ function bodyApplyCentralImpulse({ uuid, impulse }) {
   const body = bodies[uuid];
   if (body) {
     vector3Tmp1.setValue(impulse.x, impulse.y, impulse.z);
-    body.physicsBody.applyCentralImpulse(vector3Tmp1);
-    body.physicsBody.activate(true);
+    body.physicsBody!.applyCentralImpulse(vector3Tmp1);
+    body.physicsBody!.activate(true);
   }
 }
 
@@ -350,8 +336,8 @@ function bodyApplyForce({ uuid, force, relativeOffset }) {
   if (body) {
     vector3Tmp1.setValue(force.x, force.y, force.z);
     vector3Tmp2.setValue(relativeOffset.x, relativeOffset.y, relativeOffset.z);
-    body.physicsBody.applyImpulse(vector3Tmp1, vector3Tmp2);
-    body.physicsBody.activate(true);
+    body.physicsBody!.applyImpulse(vector3Tmp1, vector3Tmp2);
+    body.physicsBody!.activate(true);
   }
 }
 
@@ -359,8 +345,8 @@ function bodyApplyCentralForce({ uuid, force }) {
   const body = bodies[uuid];
   if (body) {
     vector3Tmp1.setValue(force.x, force.y, force.z);
-    body.physicsBody.applyCentralForce(vector3Tmp1);
-    body.physicsBody.activate(true);
+    body.physicsBody!.applyCentralForce(vector3Tmp1);
+    body.physicsBody!.activate(true);
   }
 }
 
@@ -399,7 +385,7 @@ function addShapes({
     matrices,
     indexes,
     matrixWorld,
-    options || { type: SHAPE.BOX }
+    options || { type: ShapeType.BOX }
   );
   for (let i = 0; i < physicsShapes.length; i++) {
     const shape = physicsShapes[i];
@@ -418,7 +404,7 @@ function addConstraint({ constraintId, bodyUuid, targetUuid, options }) {
   if (bodies[bodyUuid] && bodies[targetUuid]) {
     options = options || {};
     if (!options.hasOwnProperty("type")) {
-      options.type = CONSTRAINT.LOCK;
+      options.type = ConstraintType.LOCK;
     }
     const constraint = new Constraint(
       options,
@@ -439,19 +425,19 @@ function resetDynamicBody({ uuid }) {
       index * BUFFER_CONFIG.BODY_DATA_SIZE
     );
     body.syncToPhysics(true);
-    body.physicsBody.getLinearVelocity().setValue(0, 0, 0);
-    body.physicsBody.getAngularVelocity().setValue(0, 0, 0);
+    body.physicsBody!.getLinearVelocity().setValue(0, 0, 0);
+    body.physicsBody!.getAngularVelocity().setValue(0, 0, 0);
   }
 }
 
 function activateBody({ uuid }) {
   if (bodies[uuid]) {
-    bodies[uuid].physicsBody.activate();
+    bodies[uuid].physicsBody!.activate();
   }
 }
 
 onmessage = async (event) => {
-  if (event.data.type === MESSAGE_TYPES.INIT) {
+  if (event.data.type === MessageType.INIT) {
     initializeAmmoWasm(event.data.wasmUrl).then((Ammo) => {
       getPointer = Ammo.getPointer;
 
@@ -481,20 +467,20 @@ onmessage = async (event) => {
       lastTick = performance.now();
       simulationRate =
         event.data.simulationRate === undefined
-          ? CONSTANTS.SIMULATION_RATE
+          ? SIMULATION_RATE
           : event.data.simulationRate;
       tickInterval = self.setInterval(tick, simulationRate);
 
       if (event.data.arrayBuffer) {
         postMessage(
-          { type: MESSAGE_TYPES.READY, arrayBuffer: event.data.arrayBuffer },
+          { type: MessageType.READY, arrayBuffer: event.data.arrayBuffer },
           [event.data.arrayBuffer]
         );
       } else {
-        postMessage({ type: MESSAGE_TYPES.READY });
+        postMessage({ type: MessageType.READY });
       }
     });
-  } else if (event.data.type === MESSAGE_TYPES.TRANSFER_DATA) {
+  } else if (event.data.type === MessageType.TRANSFER_DATA) {
     if (event.data.simulationRate !== undefined) {
       simulationRate = event.data.simulationRate;
       clearInterval(tickInterval);
@@ -504,17 +490,7 @@ onmessage = async (event) => {
     objectMatricesIntArray = new Int32Array(objectMatricesFloatArray.buffer);
   } else if (world) {
     switch (event.data.type) {
-      case MESSAGE_TYPES.ADD_BODY: {
-        messageQueue.push(event.data);
-        break;
-      }
-
-      case MESSAGE_TYPES.UPDATE_BODY: {
-        messageQueue.push(event.data);
-        break;
-      }
-
-      case MESSAGE_TYPES.REMOVE_BODY: {
+      case MessageType.REMOVE_BODY: {
         const uuid = event.data.uuid;
         if (uuids.indexOf(uuid) !== -1) {
           messageQueue.push(event.data);
@@ -522,7 +498,7 @@ onmessage = async (event) => {
         break;
       }
 
-      case MESSAGE_TYPES.ADD_SHAPES: {
+      case MessageType.ADD_SHAPES: {
         const bodyUuid = event.data.bodyUuid;
         if (bodies[bodyUuid]) {
           addShapes(event.data);
@@ -532,7 +508,7 @@ onmessage = async (event) => {
         break;
       }
 
-      case MESSAGE_TYPES.SET_SHAPES_OFFSET: {
+      case MessageType.SET_SHAPES_OFFSET: {
         const bodyUuid = event.data.bodyUuid;
         if (bodies[bodyUuid]) {
           setShapesOffset(event.data);
@@ -542,7 +518,7 @@ onmessage = async (event) => {
         break;
       }
 
-      case MESSAGE_TYPES.REMOVE_SHAPES: {
+      case MessageType.REMOVE_SHAPES: {
         const bodyUuid = event.data.bodyUuid;
         const shapesUuid = event.data.shapesUuid;
         if (bodies[bodyUuid] && shapes[shapesUuid]) {
@@ -554,7 +530,7 @@ onmessage = async (event) => {
         break;
       }
 
-      case MESSAGE_TYPES.ADD_CONSTRAINT: {
+      case MessageType.ADD_CONSTRAINT: {
         const bodyUuid = event.data.bodyUuid;
         const targetUuid = event.data.targetUuid;
         if (bodies[bodyUuid] && bodies[targetUuid]) {
@@ -565,7 +541,7 @@ onmessage = async (event) => {
         break;
       }
 
-      case MESSAGE_TYPES.REMOVE_CONSTRAINT: {
+      case MessageType.REMOVE_CONSTRAINT: {
         const constraintId = event.data.constraintId;
         if (constraints[constraintId]) {
           constraints[constraintId].destroy();
@@ -574,7 +550,7 @@ onmessage = async (event) => {
         break;
       }
 
-      case MESSAGE_TYPES.ENABLE_DEBUG: {
+      case MessageType.ENABLE_DEBUG: {
         const enable = event.data.enable;
         if (!world.debugDrawer) {
           initDebug(event.data.debugSharedArrayBuffer, world);
@@ -590,14 +566,16 @@ onmessage = async (event) => {
         break;
       }
 
-      case MESSAGE_TYPES.RESET_DYNAMIC_BODY:
-      case MESSAGE_TYPES.ACTIVATE_BODY:
-      case MESSAGE_TYPES.SET_MOTION_STATE:
-      case MESSAGE_TYPES.SET_LINEAR_VELOCITY:
-      case MESSAGE_TYPES.APPLY_IMPULSE:
-      case MESSAGE_TYPES.APPLY_CENTRAL_IMPULSE:
-      case MESSAGE_TYPES.APPLY_FORCE:
-      case MESSAGE_TYPES.APPLY_CENTRAL_FORCE:
+      case MessageType.ADD_BODY:
+      case MessageType.UPDATE_BODY:
+      case MessageType.RESET_DYNAMIC_BODY:
+      case MessageType.ACTIVATE_BODY:
+      case MessageType.SET_MOTION_STATE:
+      case MessageType.SET_LINEAR_VELOCITY:
+      case MessageType.APPLY_IMPULSE:
+      case MessageType.APPLY_CENTRAL_IMPULSE:
+      case MessageType.APPLY_FORCE:
+      case MessageType.APPLY_CENTRAL_FORCE:
         messageQueue.push(event.data);
         break;
     }
