@@ -1,8 +1,8 @@
-import { AmmoPhysicsContext } from "./physics-context";
-import { Vector3, Quaternion } from "three";
-import { UpdateBodyOptions } from "../three-ammo/lib/types";
+import { AmmoPhysicsContext } from "../physics-context";
+import { Quaternion, Vector3 } from "three";
+import { UpdateBodyOptions, UUID } from "../../three-ammo/lib/types";
 
-export interface PhysicsApi {
+export interface RigidbodyApi {
   updateBodyOptions(options: UpdateBodyOptions): void;
 
   getPosition(): Vector3;
@@ -20,14 +20,14 @@ export interface PhysicsApi {
   setShapesOffset(offset: Vector3);
 }
 
-export function createPhysicsApi(
+export function createRigidBodyApi(
   physicsContext: AmmoPhysicsContext,
-  bodyUUID: string,
-  shapesUUID: string
+  bodyUUID: UUID,
+  shapesUUID: UUID
 ) {
   return {
     updateBodyOptions(options: UpdateBodyOptions) {
-      physicsContext.updateBody(bodyUUID, options);
+      physicsContext.updateRigidBody(bodyUUID, options);
     },
 
     getPosition(): Vector3 {

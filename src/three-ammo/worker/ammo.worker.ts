@@ -7,7 +7,6 @@ import { createCollisionShapes } from "three-to-ammo";
 import {
   BodyType,
   BufferState,
-  ConstraintType,
   MessageType,
   ShapeType,
   UUID,
@@ -21,11 +20,7 @@ const shapes: Record<UUID, any> = {};
 const constraints: Record<UUID, Constraint> = {};
 const matrices: Record<UUID, Matrix4> = {};
 const indexes: Record<UUID, number> = {};
-const ptrToIndex: Record<UUID, number> = {};
-
-const messageQueue: any = [];
-
-let simulationRate;
+const ptrToIndex: Record<number, number> = {};
 
 let stepDuration = 0;
 
@@ -37,13 +32,13 @@ let vector3Tmp1;
 let vector3Tmp2;
 let quatTmp1;
 
-let world,
-  headerIntArray,
-  headerFloatArray,
-  objectMatricesFloatArray,
-  objectMatricesIntArray,
-  lastTick,
-  getPointer;
+let world;
+let headerIntArray;
+let headerFloatArray;
+let objectMatricesFloatArray;
+let objectMatricesIntArray;
+let lastTick;
+let getPointer;
 let usingSharedArrayBuffer = false;
 
 function isBufferConsumed() {
@@ -84,54 +79,6 @@ function tick() {
     world.step(dt / 1000);
     stepDuration = performance.now() - now;
     lastTick = now;
-
-    while (messageQueue.length > 0) {
-      const message = messageQueue.shift();
-      switch (message.type) {
-        case MessageType.ADD_BODY:
-          addBody(message);
-          break;
-        case MessageType.UPDATE_BODY:
-          updateBody(message);
-          break;
-        case MessageType.REMOVE_BODY:
-          removeBody(message);
-          break;
-        case MessageType.ADD_SHAPES:
-          addShapes(message);
-          break;
-        case MessageType.SET_SHAPES_OFFSET:
-          setShapesOffset(message);
-          break;
-        case MessageType.ADD_CONSTRAINT:
-          addConstraint(message);
-          break;
-        case MessageType.RESET_DYNAMIC_BODY:
-          resetDynamicBody(message);
-          break;
-        case MessageType.ACTIVATE_BODY:
-          activateBody(message);
-          break;
-        case MessageType.SET_MOTION_STATE:
-          bodySetMotionState(message);
-          break;
-        case MessageType.SET_LINEAR_VELOCITY:
-          bodySetLinearVelocity(message);
-          break;
-        case MessageType.APPLY_IMPULSE:
-          bodyApplyImpulse(message);
-          break;
-        case MessageType.APPLY_CENTRAL_IMPULSE:
-          bodyApplyCentralImpulse(message);
-          break;
-        case MessageType.APPLY_FORCE:
-          bodyApplyForce(message);
-          break;
-        case MessageType.APPLY_CENTRAL_FORCE:
-          bodyApplyCentralForce(message);
-          break;
-      }
-    }
 
     /** Buffer Schema
      * Every physics body has 26 * 4 bytes (64bit float/int) assigned in the buffer
@@ -270,7 +217,7 @@ function addBody({ uuid, matrix, options }) {
     const ptr = getPointer(bodies[uuid].physicsBody);
     ptrToIndex[ptr] = freeIndex;
 
-    postMessage({ type: MessageType.BODY_READY, uuid, index: freeIndex });
+    postMessage({ type: MessageType.RIGIDBODY_READY, uuid, index: freeIndex });
     freeIndex = nextFreeIndex;
   }
 }
@@ -400,19 +347,14 @@ function setShapesOffset({ bodyUuid, offset }) {
   bodies[bodyUuid].setShapesOffset(offset);
 }
 
-function addConstraint({ constraintId, bodyUuid, targetUuid, options }) {
+function addConstraint({ constraintId, bodyUuid, targetUuid, options = {} }) {
   if (bodies[bodyUuid] && bodies[targetUuid]) {
-    options = options || {};
-    if (!options.hasOwnProperty("type")) {
-      options.type = ConstraintType.LOCK;
-    }
-    const constraint = new Constraint(
+    constraints[constraintId] = new Constraint(
       options,
       bodies[bodyUuid],
       bodies[targetUuid],
       world
     );
-    constraints[constraintId] = constraint;
   }
 }
 
@@ -436,150 +378,150 @@ function activateBody({ uuid }) {
   }
 }
 
-onmessage = async (event) => {
-  if (event.data.type === MessageType.INIT) {
-    initializeAmmoWasm(event.data.wasmUrl).then((Ammo) => {
-      getPointer = Ammo.getPointer;
+async function initWorld({
+  wasmUrl,
+  maxBodies = BUFFER_CONFIG.MAX_BODIES,
+  sharedArrayBuffer,
+  arrayBuffer,
+  worldConfig,
+  simulationRate = SIMULATION_RATE,
+}) {
+  const Ammo = await initializeAmmoWasm(wasmUrl);
 
-      vector3Tmp1 = new Ammo.btVector3(0, 0, 0);
-      vector3Tmp2 = new Ammo.btVector3(0, 0, 0);
-      quatTmp1 = new Ammo.btQuaternion(0, 0, 0, 0);
+  getPointer = Ammo.getPointer;
 
-      const maxBodies = event.data.maxBodies
-        ? event.data.maxBodies
-        : BUFFER_CONFIG.MAX_BODIES;
+  vector3Tmp1 = new Ammo.btVector3(0, 0, 0);
+  vector3Tmp2 = new Ammo.btVector3(0, 0, 0);
+  quatTmp1 = new Ammo.btQuaternion(0, 0, 0, 0);
 
-      freeIndexArray = new Int32Array(maxBodies);
-      for (let i = 0; i < maxBodies - 1; i++) {
-        freeIndexArray[i] = i + 1;
-      }
-      freeIndexArray[maxBodies - 1] = -1;
+  freeIndexArray = new Int32Array(maxBodies);
+  for (let i = 0; i < maxBodies - 1; i++) {
+    freeIndexArray[i] = i + 1;
+  }
+  freeIndexArray[maxBodies - 1] = -1;
 
-      if (event.data.sharedArrayBuffer) {
-        initSharedArrayBuffer(event.data.sharedArrayBuffer, maxBodies);
-      } else if (event.data.arrayBuffer) {
-        initTransferrables(event.data.arrayBuffer);
-      } else {
-        console.error("A valid ArrayBuffer or SharedArrayBuffer is required.");
-      }
+  if (sharedArrayBuffer) {
+    initSharedArrayBuffer(sharedArrayBuffer, maxBodies);
+  } else if (arrayBuffer) {
+    initTransferrables(arrayBuffer);
+  } else {
+    console.error("A valid ArrayBuffer or SharedArrayBuffer is required.");
+  }
 
-      world = new World(event.data.worldConfig || {});
-      lastTick = performance.now();
-      simulationRate =
-        event.data.simulationRate === undefined
-          ? SIMULATION_RATE
-          : event.data.simulationRate;
-      tickInterval = self.setInterval(tick, simulationRate);
+  world = new World(worldConfig || {});
+  lastTick = performance.now();
+  tickInterval = self.setInterval(tick, simulationRate);
 
-      if (event.data.arrayBuffer) {
-        postMessage(
-          { type: MessageType.READY, arrayBuffer: event.data.arrayBuffer },
-          [event.data.arrayBuffer]
-        );
-      } else {
-        postMessage({ type: MessageType.READY });
-      }
-    });
-  } else if (event.data.type === MessageType.TRANSFER_DATA) {
-    if (event.data.simulationRate !== undefined) {
-      simulationRate = event.data.simulationRate;
-      clearInterval(tickInterval);
-      tickInterval = self.setInterval(tick, simulationRate);
+  if (arrayBuffer) {
+    postMessage({ type: MessageType.READY, arrayBuffer: arrayBuffer }, [
+      arrayBuffer,
+    ]);
+  } else {
+    postMessage({ type: MessageType.READY });
+  }
+}
+
+function transferData({ objectMatricesFloatArray: omfa, simulationRate }) {
+  if (simulationRate !== undefined) {
+    clearInterval(tickInterval);
+    tickInterval = self.setInterval(tick, simulationRate);
+  }
+  objectMatricesFloatArray = omfa;
+  objectMatricesIntArray = new Int32Array(objectMatricesFloatArray.buffer);
+}
+
+function removeShapes({ bodyUuid, shapesUuid }) {
+  if (bodies[bodyUuid] && shapes[shapesUuid]) {
+    for (let i = 0; i < shapes[shapesUuid].length; i++) {
+      const shape = shapes[shapesUuid][i];
+      bodies[bodyUuid].removeShape(shape);
     }
-    objectMatricesFloatArray = event.data.objectMatricesFloatArray;
-    objectMatricesIntArray = new Int32Array(objectMatricesFloatArray.buffer);
-  } else if (world) {
-    switch (event.data.type) {
-      case MessageType.REMOVE_BODY: {
-        const uuid = event.data.uuid;
-        if (uuids.indexOf(uuid) !== -1) {
-          messageQueue.push(event.data);
-        }
-        break;
-      }
+  }
+}
 
-      case MessageType.ADD_SHAPES: {
-        const bodyUuid = event.data.bodyUuid;
-        if (bodies[bodyUuid]) {
-          addShapes(event.data);
-        } else {
-          messageQueue.push(event.data);
-        }
-        break;
-      }
+function removeConstraint({ constraintId }) {
+  if (constraints[constraintId]) {
+    constraints[constraintId].destroy();
+    delete constraints[constraintId];
+  }
+}
 
-      case MessageType.SET_SHAPES_OFFSET: {
-        const bodyUuid = event.data.bodyUuid;
-        if (bodies[bodyUuid]) {
-          setShapesOffset(event.data);
-        } else {
-          messageQueue.push(event.data);
-        }
-        break;
-      }
+function enableDebug({ enable, debugSharedArrayBuffer }) {
+  if (!world.debugDrawer) {
+    initDebug(debugSharedArrayBuffer, world);
+  }
 
-      case MessageType.REMOVE_SHAPES: {
-        const bodyUuid = event.data.bodyUuid;
-        const shapesUuid = event.data.shapesUuid;
-        if (bodies[bodyUuid] && shapes[shapesUuid]) {
-          for (let i = 0; i < shapes[shapesUuid].length; i++) {
-            const shape = shapes[shapesUuid][i];
-            bodies[bodyUuid].removeShape(shape);
-          }
-        }
-        break;
-      }
+  if (world.debugDrawer) {
+    if (enable) {
+      world.debugDrawer.enable();
+    } else {
+      world.debugDrawer.disable();
+    }
+  }
+}
 
-      case MessageType.ADD_CONSTRAINT: {
-        const bodyUuid = event.data.bodyUuid;
-        const targetUuid = event.data.targetUuid;
-        if (bodies[bodyUuid] && bodies[targetUuid]) {
-          addConstraint(event.data);
-        } else {
-          messageQueue.push(event.data);
-        }
-        break;
-      }
+function clientSideEvent(data) {
+  console.error("received event is only available client-side", data);
+}
 
-      case MessageType.REMOVE_CONSTRAINT: {
-        const constraintId = event.data.constraintId;
-        if (constraints[constraintId]) {
-          constraints[constraintId].destroy();
-          delete constraints[constraintId];
-        }
-        break;
-      }
+const clientSideEventReceivers = {
+  [MessageType.READY]: clientSideEvent,
+  [MessageType.RIGIDBODY_READY]: clientSideEvent,
+};
 
-      case MessageType.ENABLE_DEBUG: {
-        const enable = event.data.enable;
-        if (!world.debugDrawer) {
-          initDebug(event.data.debugSharedArrayBuffer, world);
-        }
+function notImplementedEventReceiver() {}
 
-        if (world.debugDrawer) {
-          if (enable) {
-            world.debugDrawer.enable();
-          } else {
-            world.debugDrawer.disable();
-          }
-        }
-        break;
-      }
+const eventReceivers: Record<MessageType, (eventData: any) => void> = {
+  [MessageType.INIT]: initWorld,
+  [MessageType.TRANSFER_DATA]: transferData,
+  [MessageType.ADD_RIGIDBODY]: addBody,
+  [MessageType.UPDATE_RIGIDBODY]: updateBody,
+  [MessageType.REMOVE_RIGIDBODY]: removeBody,
+  [MessageType.ADD_SHAPES]: addShapes,
+  [MessageType.SET_SHAPES_OFFSET]: setShapesOffset,
+  [MessageType.ADD_CONSTRAINT]: addConstraint,
+  [MessageType.RESET_DYNAMIC_BODY]: resetDynamicBody,
+  [MessageType.ACTIVATE_BODY]: activateBody,
+  [MessageType.SET_MOTION_STATE]: bodySetMotionState,
+  [MessageType.SET_LINEAR_VELOCITY]: bodySetLinearVelocity,
+  [MessageType.SET_ANGULAR_VELOCITY]: notImplementedEventReceiver,
+  [MessageType.APPLY_IMPULSE]: bodyApplyImpulse,
+  [MessageType.APPLY_CENTRAL_IMPULSE]: bodyApplyCentralImpulse,
+  [MessageType.APPLY_FORCE]: bodyApplyForce,
+  [MessageType.APPLY_CENTRAL_FORCE]: bodyApplyCentralForce,
+  [MessageType.REMOVE_SHAPES]: removeShapes,
+  [MessageType.REMOVE_CONSTRAINT]: removeConstraint,
+  [MessageType.ENABLE_DEBUG]: enableDebug,
 
-      case MessageType.ADD_BODY:
-      case MessageType.UPDATE_BODY:
-      case MessageType.RESET_DYNAMIC_BODY:
-      case MessageType.ACTIVATE_BODY:
-      case MessageType.SET_MOTION_STATE:
-      case MessageType.SET_LINEAR_VELOCITY:
-      case MessageType.APPLY_IMPULSE:
-      case MessageType.APPLY_CENTRAL_IMPULSE:
-      case MessageType.APPLY_FORCE:
-      case MessageType.APPLY_CENTRAL_FORCE:
-        messageQueue.push(event.data);
-        break;
+  [MessageType.APPLY_TORQUE_IMPULSE]: notImplementedEventReceiver,
+  [MessageType.CLEAR_FORCES]: notImplementedEventReceiver,
+  [MessageType.SET_RESTITUTION]: notImplementedEventReceiver,
+  [MessageType.SET_ROLLING_FRICTION]: notImplementedEventReceiver,
+  [MessageType.SET_FRICTION]: notImplementedEventReceiver,
+  [MessageType.SET_SPINNING_FRICTION]: notImplementedEventReceiver,
+  [MessageType.ADD_SOFTBODY]: notImplementedEventReceiver,
+  [MessageType.REMOVE_SOFTBODY]: notImplementedEventReceiver,
+
+  ...clientSideEventReceivers,
+};
+
+onmessage = async (event) => {
+  if (!eventReceivers[event.data?.type]) {
+    console.error("unknown event type: ", event.data);
+    return;
+  }
+
+  if (world) {
+    if (event.data.type === MessageType.INIT) {
+      console.error("Error: World is already initialized", event.data);
+    } else {
+      eventReceivers[event.data.type](event.data);
     }
   } else {
-    console.error("Error: World Not Initialized", event.data);
+    if (event.data.type === MessageType.INIT) {
+      eventReceivers[event.data.type](event.data);
+    } else {
+      console.error("Error: World Not Initialized", event.data);
+    }
   }
 };

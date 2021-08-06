@@ -1,7 +1,11 @@
 import { Matrix4 } from "three";
 import { iterateGeometries } from "three-to-ammo";
 import AmmoWorker from "web-worker:../worker/ammo.worker";
-import { MessageType } from "./types";
+import { MessageType, SoftBodyConfig, UUID } from "./types";
+import {
+  CompatibleBuffer,
+  isSharedArrayBufferSupported,
+} from "../../utils/utils";
 
 export function createAmmoWorker(): Worker {
   return new AmmoWorker();
@@ -19,28 +23,54 @@ export function WorkerHelpers(ammoWorker: Worker) {
       );
     },
 
-    addBody(uuid, mesh, options = {}) {
+    addRigidBody(uuid, mesh, options = {}) {
       inverse.copy(mesh.parent.matrixWorld).invert();
       transform.multiplyMatrices(inverse, mesh.matrixWorld);
       ammoWorker.postMessage({
-        type: MessageType.ADD_BODY,
+        type: MessageType.ADD_RIGIDBODY,
         uuid,
         matrix: transform.elements,
         options,
       });
     },
 
-    updateBody(uuid, options) {
+    updateRigidBody(uuid, options) {
       ammoWorker.postMessage({
-        type: MessageType.UPDATE_BODY,
+        type: MessageType.UPDATE_RIGIDBODY,
         uuid,
         options,
       });
     },
 
-    removeBody(uuid) {
+    removeRigidBody(uuid) {
       ammoWorker.postMessage({
-        type: MessageType.REMOVE_BODY,
+        type: MessageType.REMOVE_RIGIDBODY,
+        uuid,
+      });
+    },
+
+    addSoftBody(uuid: UUID, buffer: CompatibleBuffer, options: SoftBodyConfig) {
+      if (isSharedArrayBufferSupported) {
+        ammoWorker.postMessage({
+          type: MessageType.ADD_SOFTBODY,
+          uuid,
+          sharedArrayBuffer: buffer,
+        });
+      } else {
+        ammoWorker.postMessage(
+          {
+            type: MessageType.ADD_SOFTBODY,
+            uuid,
+            arrayBuffer: buffer,
+          },
+          [buffer]
+        );
+      }
+    },
+
+    removeSoftBody(uuid: UUID) {
+      ammoWorker.postMessage({
+        type: MessageType.REMOVE_SOFTBODY,
         uuid,
       });
     },

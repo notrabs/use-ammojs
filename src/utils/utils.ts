@@ -94,11 +94,13 @@ export function ammoDebugOptionsToNumber(
   return options;
 }
 
+export type CompatibleBuffer = SharedArrayBuffer | ArrayBuffer;
+
 export const isSharedArrayBufferSupported = !!window.SharedArrayBuffer;
 
 export function allocateCompatibleBuffer(
   byteLength: number
-): SharedArrayBuffer | ArrayBuffer {
+): CompatibleBuffer {
   if (isSharedArrayBufferSupported) {
     return new SharedArrayBuffer(byteLength);
   } else {

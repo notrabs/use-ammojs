@@ -1,15 +1,15 @@
 import { MathUtils, Object3D } from "three";
 import React, { MutableRefObject, useEffect, useRef, useState } from "react";
-import { useAmmoPhysicsContext } from "./physics-context";
-import { createPhysicsApi, PhysicsApi } from "./physics-api";
+import { useAmmoPhysicsContext } from "../physics-context";
 import {
   BodyConfig,
   BodyType,
   ShapeConfig,
   ShapeType,
-} from "../three-ammo/lib/types";
+} from "../../three-ammo/lib/types";
+import { createRigidBodyApi, RigidbodyApi } from "../api/rigidbody-api";
 
-type UsePhysicsOptions = Omit<BodyConfig, "type"> & {
+type UseRigidBodyOptions = Omit<BodyConfig, "type"> & {
   shapeType: ShapeType;
   bodyType?: BodyType;
 
@@ -22,14 +22,14 @@ type UsePhysicsOptions = Omit<BodyConfig, "type"> & {
   position?: [number, number, number];
 };
 
-export function usePhysics(
-  options: UsePhysicsOptions | (() => UsePhysicsOptions),
+export function useRigidBody(
+  options: UseRigidBodyOptions | (() => UseRigidBodyOptions),
   object3D?: Object3D
-): [MutableRefObject<Object3D>, PhysicsApi] {
+): [MutableRefObject<Object3D>, RigidbodyApi] {
   const ref = useRef<Object3D>();
 
   const physicsContext = useAmmoPhysicsContext();
-  const { addBody, addShapes, removeBody } = physicsContext;
+  const { addRigidBody, addShapes, removeRigidBody } = physicsContext;
 
   const [bodyUUID] = useState(() => MathUtils.generateUUID());
   const [shapesUUID] = useState(() => MathUtils.generateUUID());
@@ -54,7 +54,7 @@ export function usePhysics(
       objectToUse.updateMatrixWorld();
     }
 
-    addBody(bodyUUID, objectToUse, { type: bodyType, ...rest });
+    addRigidBody(bodyUUID, objectToUse, { type: bodyType, ...rest });
 
     const meshToUse = mesh ? mesh : objectToUse;
 
@@ -64,9 +64,14 @@ export function usePhysics(
     });
 
     return () => {
-      removeBody(bodyUUID);
+      removeRigidBody(bodyUUID);
     };
   }, []);
 
-  return [ref, createPhysicsApi(physicsContext, bodyUUID, shapesUUID)];
+  return [ref, createRigidBodyApi(physicsContext, bodyUUID, shapesUUID)];
 }
+
+/**
+ * @deprecated use useRigidBody instead
+ */
+export const usePhysics = useRigidBody;

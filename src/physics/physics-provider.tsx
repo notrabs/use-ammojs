@@ -33,7 +33,9 @@ import {
   BufferState,
   MessageType,
   ShapeConfig,
+  SoftBodyConfig,
   UpdateBodyOptions,
+  UUID,
   WorldConfig,
 } from "../three-ammo/lib/types";
 import { BUFFER_CONFIG } from "../three-ammo/lib/constants";
@@ -71,25 +73,27 @@ interface PhysicsState {
   workerHelpers: ReturnType<typeof WorkerHelpers>;
   debugGeometry: BufferGeometry;
   debugBuffer: SharedArrayBuffer | ArrayBuffer;
-  bodyOptions: Record<string, BodyConfig>;
-  uuids: string[];
-  object3Ds: Record<string, Object3D>;
+  bodyOptions: Record<UUID, BodyConfig>;
+  uuids: UUID[];
+  object3Ds: Record<UUID, Object3D>;
   sharedBuffersRef: MutableRefObject<ISharedBuffers>;
-  uuidToIndex: Record<string, number>;
+  uuidToIndex: Record<UUID, number>;
   debugIndex: Uint32Array;
-  addBody(uuid: string, mesh: Object3D, options?: BodyConfig);
-  updateBody(uuid: string, options: UpdateBodyOptions);
-  removeBody(uuid: string);
+  addRigidBody(uuid: UUID, mesh: Object3D, options?: BodyConfig);
+  updateRigidBody(uuid: UUID, options: UpdateBodyOptions);
+  removeRigidBody(uuid: UUID);
   addShapes(
-    bodyUuid: string,
-    shapesUuid: string,
+    bodyUuid: UUID,
+    shapesUuid: UUID,
     mesh: Object3D,
     options?: ShapeConfig
   );
+  addSoftBody(uuid: UUID, mesh: Object3D, options?: SoftBodyConfig);
+  removeSoftBody(uuid: UUID);
   addConstraint(
-    constraintId: string,
-    bodyUuid: string,
-    targetUuid: string,
+    constraintId: UUID,
+    bodyUuid: UUID,
+    targetUuid: UUID,
     options?: ConstraintOptions
   );
 }
@@ -220,13 +224,15 @@ export function Physics({
             object3Ds,
             uuidToIndex,
             debugIndex,
-            addBody,
-            removeBody,
+            addRigidBody,
+            removeRigidBody,
+            addSoftBody,
+            removeSoftBody,
             addConstraint,
             addShapes,
-            updateBody,
+            updateRigidBody,
           });
-        } else if (event.data.type === MessageType.BODY_READY) {
+        } else if (event.data.type === MessageType.RIGIDBODY_READY) {
           const uuid = event.data.uuid;
           uuids.push(uuid);
           uuidToIndex[uuid] = event.data.index;
@@ -243,27 +249,27 @@ export function Physics({
 
     workerInitPromise.then(setPhysicsState);
 
-    function addBody(uuid, mesh, options: BodyConfig = {}) {
+    function addRigidBody(uuid, mesh, options: BodyConfig = {}) {
       removeUndefinedKeys(options);
 
       bodyOptions[uuid] = options;
       object3Ds[uuid] = mesh;
-      workerHelpers.addBody(uuid, mesh, options);
+      workerHelpers.addRigidBody(uuid, mesh, options);
     }
 
-    function updateBody(uuid: string, options: UpdateBodyOptions) {
+    function updateRigidBody(uuid: string, options: UpdateBodyOptions) {
       removeUndefinedKeys(options);
 
-      workerHelpers.updateBody(uuid, options);
+      workerHelpers.updateRigidBody(uuid, options);
     }
 
-    function removeBody(uuid: string) {
+    function removeRigidBody(uuid: string) {
       uuids.splice(uuids.indexOf(uuid), 1);
       delete IndexToUuid[uuidToIndex[uuid]];
       delete uuidToIndex[uuid];
       delete bodyOptions[uuid];
       delete object3Ds[uuid];
-      workerHelpers.removeBody(uuid);
+      workerHelpers.removeRigidBody(uuid);
     }
 
     function addShapes(
@@ -275,6 +281,23 @@ export function Physics({
       removeUndefinedKeys(options);
 
       workerHelpers.addShapes(bodyUuid, shapesUuid, mesh, options);
+    }
+
+    function addSoftBody(uuid, mesh, options: SoftBodyConfig = {}) {
+      // removeUndefinedKeys(options);
+      //
+      // bodyOptions[uuid] = options;
+      // object3Ds[uuid] = mesh;
+      // workerHelpers.addRigidBody(uuid, mesh, options);
+    }
+
+    function removeSoftBody(uuid: string) {
+      // uuids.splice(uuids.indexOf(uuid), 1);
+      // delete IndexToUuid[uuidToIndex[uuid]];
+      // delete uuidToIndex[uuid];
+      // delete bodyOptions[uuid];
+      // delete object3Ds[uuid];
+      // workerHelpers.removeRigidBody(uuid);
     }
 
     function addConstraint(
@@ -417,11 +440,14 @@ export function Physics({
         ...workerHelpers,
 
         // workerHelpers Overrides
-        addBody: physicsState.addBody,
-        removeBody: physicsState.removeBody,
+        addRigidBody: physicsState.addRigidBody,
+        removeRigidBody: physicsState.removeRigidBody,
         addShapes: physicsState.addShapes,
         addConstraint: physicsState.addConstraint,
-        updateBody: physicsState.updateBody,
+        updateRigidBody: physicsState.updateRigidBody,
+
+        addSoftBody: physicsState.addSoftBody,
+        removeSoftBody: physicsState.removeSoftBody,
 
         object3Ds: physicsState.object3Ds,
       }}

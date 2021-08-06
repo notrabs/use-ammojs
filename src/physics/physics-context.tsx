@@ -5,6 +5,7 @@ import {
   BodyConfig,
   ConstraintType,
   ShapeConfig,
+  SoftBodyConfig,
   UpdateBodyOptions,
 } from "../three-ammo/lib/types";
 
@@ -19,8 +20,8 @@ export interface ConstraintOptions {
 }
 
 export interface AmmoPhysicsContext {
-  addBody(uuid: string, mesh: Object3D, options?: BodyConfig);
-  removeBody(uuid: string);
+  addRigidBody(uuid: string, mesh: Object3D, options?: BodyConfig);
+  removeRigidBody(uuid: string);
 
   addShapes(
     bodyUuid: string,
@@ -30,6 +31,9 @@ export interface AmmoPhysicsContext {
   );
   removeShapes(bodyUuid: string, shapesUuid: string);
 
+  addSoftBody(uuid: string, mesh: Object3D, options?: SoftBodyConfig);
+  removeSoftBody(uuid: string);
+
   addConstraint(
     constraintId: string,
     bodyUuid: string,
@@ -38,7 +42,7 @@ export interface AmmoPhysicsContext {
   );
   removeConstraint(constraintId: string);
 
-  updateBody(uuid: string, options: UpdateBodyOptions);
+  updateRigidBody(uuid: string, options: UpdateBodyOptions);
 
   enableDebug(enable: boolean, debugSharedArrayBuffer: SharedArrayBuffer);
 

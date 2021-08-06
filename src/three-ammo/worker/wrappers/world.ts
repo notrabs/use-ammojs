@@ -41,7 +41,7 @@ export class World {
     );
     // this.physicsWorld.setForceUpdateAllAabbs(false);
     const gravity = new Ammo.btVector3(0, GRAVITY, 0);
-    if (worldConfig.hasOwnProperty("gravity")) {
+    if (worldConfig.gravity) {
       gravity.setValue(
         worldConfig.gravity.x,
         worldConfig.gravity.y,
@@ -59,14 +59,13 @@ export class World {
     return this.debugDrawMode !== AmmoDebugConstants.NoDebug;
   }
 
-  /* @param {Ammo.btCollisionObject} body */
-  addBody(body, object3D, group, mask) {
+  addRigidBody(body: Ammo.btRigidBody, object3D, group, mask) {
     this.physicsWorld.addRigidBody(body, group, mask);
     // @ts-ignore
     this.object3Ds.set(Ammo.getPointer(body), object3D);
   }
 
-  removeBody(body) {
+  removeRigidBody(body) {
     this.physicsWorld.removeRigidBody(body);
     // @ts-ignore
     const bodyptr = Ammo.getPointer(body);
@@ -78,7 +77,7 @@ export class World {
     }
   }
 
-  updateBody(body) {
+  updateRigidBody(body) {
     // @ts-ignore
     if (this.object3Ds.has(Ammo.getPointer(body))) {
       this.physicsWorld.updateSingleAabb(body);
@@ -138,7 +137,7 @@ export class World {
     Ammo.destroy(this.dispatcher);
     Ammo.destroy(this.broadphase);
     Ammo.destroy(this.solver);
-    // Ammo.destroy(this.softBodySolver);
+    Ammo.destroy(this.softBodySolver);
     Ammo.destroy(this.physicsWorld);
     Ammo.destroy(this.debugDrawer);
   }

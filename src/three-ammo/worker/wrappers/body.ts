@@ -62,7 +62,7 @@ export class Body {
   shapes: Ammo.btCollisionShape[];
   world: World;
   disableCollision: boolean;
-  physicsBody?: Ammo.btRigidBody;
+  physicsBody: Ammo.btRigidBody;
   localScaling?: Ammo.btVector3;
   prevScale: any;
   prevNumChildShapes?: number;
@@ -131,7 +131,7 @@ export class Body {
     this.tmpTransform1 = new Ammo.btTransform();
     this.tmpTransform2 = new Ammo.btTransform();
 
-    this._initBody();
+    this.physicsBody = this._initBody();
   }
 
   /**
@@ -200,7 +200,7 @@ export class Body {
 
     this.updateCollisionFlags();
 
-    this.world.addBody(
+    this.world.addRigidBody(
       this.physicsBody,
       this.matrix,
       this.collisionFilterGroup,
@@ -211,6 +211,8 @@ export class Body {
       // @ts-ignore
       this.world.addEventListener(this.physicsBody);
     }
+
+    return this.physicsBody;
   }
 
   /**
@@ -242,7 +244,7 @@ export class Body {
         this.updateMass();
       }
 
-      this.world.updateBody(this.physicsBody);
+      this.world.updateRigidBody(this.physicsBody);
     }
 
     //call initializePolyhedralFeatures for hull shapes if debug is turned on and/or scale changes
@@ -401,9 +403,9 @@ export class Body {
     }
     if (this.compoundShape) Ammo.destroy(this.compoundShape);
 
-    this.world.removeBody(this.physicsBody);
+    this.world.removeRigidBody(this.physicsBody);
     Ammo.destroy(this.physicsBody);
-    delete this.physicsBody;
+    delete (this as any).physicsBody;
     Ammo.destroy(this.rbInfo);
     Ammo.destroy(this.msTransform);
     Ammo.destroy(this.motionState);
@@ -542,7 +544,7 @@ export class Body {
       this.physicsBody!.setCcdSweptSphereRadius(this.ccdSweptSphereRadius);
     }
 
-    this.world.updateBody(this.physicsBody);
+    this.world.updateRigidBody(this.physicsBody);
   }
 
   getVelocity() {

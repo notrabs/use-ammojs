@@ -13,4 +13,3 @@ export const BUFFER_CONFIG = {
   COLLISIONS_OFFSET: 18,
   BODY_DATA_SIZE: 26,
 };
-

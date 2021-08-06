@@ -23,7 +23,7 @@ At the time of writing however use-cannon is more mature and great for small pro
 - [ ] Add Examples to the documentation
 - [ ] Implement convenience features (pausing simulation / access to physics performance info)
 - [ ] Support collision callbacks
-- [ ] Implement reactive props for usePhysics() hook instead of initializer function
+- [ ] Implement reactive props for physics hooks instead of initializer function
 - [ ] Improve the automatic shape detection (set shapeType automatically based on the three Mesh type)
 
 ## Examples
@@ -51,10 +51,10 @@ Automatically parse Shape parameters from the three Mesh (courtesy of [three-to-
 
 ```tsx
 import { Box } from "@react-three/drei";
-import { usePhysics, ShapeType } from "use-ammojs";
+import { useRigidbody, ShapeType } from "use-ammojs";
 
 function MyBox() {
-  const [ref] = usePhysics(() => ({
+  const [ref] = useRigidbody(() => ({
     mass: 1,
     position: [0, 2, 4],
     shapeType: ShapeType.BOX,
@@ -71,7 +71,7 @@ function MyBox() {
 or define Collision Shapes manually:
 
 ```tsx
-const [playerCapsuleRef] = usePhysics(() => ({
+const [playerCapsuleRef] = useRigidbody(() => ({
   bodyType: BodyType.DYNAMIC,
   shapeType: ShapeType.CAPSULE,
   angularFactor: new Vector3(0, 0, 0),
@@ -85,7 +85,7 @@ const [playerCapsuleRef] = usePhysics(() => ({
 or add collisions to an imported gltf scene:
 
 ```tsx
-usePhysics(
+useRigidbody(
   () => ({
     shapeType: ShapeType.MESH,
     type: BodyType.STATIC,
@@ -115,7 +115,7 @@ TODO
 ### 4 Updating Motion State
 
 ```tsx
-const [playerRef, api] = usePhysics(() => ({
+const [playerRef, api] = useRigidbody(() => ({
   bodyType: BodyType.DYNAMIC,
   shapeType: ShapeType.CAPSULE,
   angularFactor: new Vector3(0, 0, 0),

@@ -1,4 +1,4 @@
-import { Quaternion, Vector3 } from "three";
+import { Quaternion, Vector3, Object3D } from "three";
 
 export type UUID = string;
 
@@ -82,6 +82,18 @@ export interface BodyConfig {
 
   // default = true
   scaleAutoUpdate?: boolean;
+}
+
+export interface SoftBodyConfig {
+  type?: SoftBodyType;
+
+  mesh?: Object3D;
+}
+
+export enum SoftBodyType {
+  VOLUME = "volume",
+  ROPE = "rope",
+  CLOTH = "cloth",
 }
 
 export type UpdateBodyOptions = Pick<
@@ -207,43 +219,45 @@ export enum BufferState {
 }
 
 export enum MessageType {
-  INIT = 0,
-  READY = 1,
-  ADD_BODY = 2,
-  BODY_READY = 3,
-  UPDATE_BODY = 4,
-  REMOVE_BODY = 5,
-  ADD_SHAPES = 6,
-  REMOVE_SHAPES = 7,
-  ADD_CONSTRAINT = 8,
-  REMOVE_CONSTRAINT = 9,
-  ENABLE_DEBUG = 10,
-  RESET_DYNAMIC_BODY = 11,
-  ACTIVATE_BODY = 12,
-  TRANSFER_DATA = 13,
-  SET_SHAPES_OFFSET = 14,
+  INIT,
+  READY,
+  ADD_RIGIDBODY,
+  UPDATE_RIGIDBODY,
+  REMOVE_RIGIDBODY,
+  RIGIDBODY_READY,
+  ADD_SHAPES,
+  REMOVE_SHAPES,
+  ADD_SOFTBODY,
+  REMOVE_SOFTBODY,
+  ADD_CONSTRAINT,
+  REMOVE_CONSTRAINT,
+  ENABLE_DEBUG,
+  RESET_DYNAMIC_BODY,
+  ACTIVATE_BODY,
+  TRANSFER_DATA,
+  SET_SHAPES_OFFSET,
 
   // Body messages
-  SET_MOTION_STATE = 50,
-  // GET_LINEAR_VELOCITY= 51,
-  SET_LINEAR_VELOCITY = 52,
-  // GET_ANGULAR_VELOCITY= 53,
-  SET_ANGULAR_VELOCITY = 54,
-  APPLY_FORCE = 55,
-  APPLY_CENTRAL_FORCE = 56,
-  APPLY_IMPULSE = 57,
-  APPLY_CENTRAL_IMPULSE = 58,
-  APPLY_TORQUE_IMPULSE = 59,
-  CLEAR_FORCES = 60,
+  SET_MOTION_STATE,
+  // GET_LINEAR_VELOCITY,
+  SET_LINEAR_VELOCITY,
+  // GET_ANGULAR_VELOCITY,
+  SET_ANGULAR_VELOCITY,
+  APPLY_FORCE,
+  APPLY_CENTRAL_FORCE,
+  APPLY_IMPULSE,
+  APPLY_CENTRAL_IMPULSE,
+  APPLY_TORQUE_IMPULSE,
+  CLEAR_FORCES,
 
-  // GET_RESTITUTION= 70,
-  SET_RESTITUTION = 71,
-  // GET_FRICTION= 72,
-  SET_FRICTION = 73,
-  // GET_SPINNING_FRICTION= 74,
-  SET_SPINNING_FRICTION = 75,
-  // GET_ROLLING_FRICTION= 76,
-  SET_ROLLING_FRICTION = 77,
+  // GET_RESTITUTION,
+  SET_RESTITUTION,
+  // GET_FRICTION,
+  SET_FRICTION,
+  // GET_SPINNING_FRICTION,
+  SET_SPINNING_FRICTION,
+  // GET_ROLLING_FRICTION,
+  SET_ROLLING_FRICTION,
 }
 
 export enum CollisionFlag {
