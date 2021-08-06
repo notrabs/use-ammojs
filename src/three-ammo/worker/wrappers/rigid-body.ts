@@ -14,13 +14,7 @@ import {
   almostEqualsVector3,
 } from "../utils";
 
-const ACTIVATION_STATES = [
-  BodyActivationState.ACTIVE_TAG,
-  BodyActivationState.ISLAND_SLEEPING,
-  BodyActivationState.WANTS_DEACTIVATION,
-  BodyActivationState.DISABLE_DEACTIVATION,
-  BodyActivationState.DISABLE_SIMULATION,
-];
+const ACTIVATION_STATES = Object.values(BodyActivationState);
 
 enum RigidBodyFlags {
   NONE = 0,
@@ -433,6 +427,8 @@ export class RigidBody {
 
     const quaternion = this.msTransform!.getRotation();
     q.set(quaternion.x(), quaternion.y(), quaternion.z(), quaternion.w());
+
+    console.log(v, pos)
 
     if (
       !almostEqualsVector3(0.001, pos, v) ||

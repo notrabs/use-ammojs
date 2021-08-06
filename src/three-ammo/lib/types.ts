@@ -1,4 +1,4 @@
-import { Quaternion, Vector3, Object3D } from "three";
+import { Quaternion, Vector3 } from "three";
 
 export type UUID = string;
 
@@ -86,8 +86,6 @@ export interface BodyConfig {
 
 export interface SoftBodyConfig {
   type?: SoftBodyType;
-
-  mesh?: Object3D;
 }
 
 export enum SoftBodyType {
@@ -220,6 +218,8 @@ export enum BufferState {
 
 export enum MessageType {
   INIT,
+  TRANSFER_BUFFERS,
+
   ADD_RIGIDBODY,
   UPDATE_RIGIDBODY,
   REMOVE_RIGIDBODY,
@@ -232,7 +232,6 @@ export enum MessageType {
   ENABLE_DEBUG,
   RESET_DYNAMIC_BODY,
   ACTIVATE_BODY,
-  TRANSFER_DATA,
   SET_SHAPES_OFFSET,
 
   // Body messages
@@ -261,6 +260,7 @@ export enum MessageType {
 export enum ClientMessageType {
   READY,
   RIGIDBODY_READY,
+  TRANSFER_BUFFERS,
 }
 
 export enum CollisionFlag {
@@ -271,4 +271,25 @@ export enum CollisionFlag {
   CHARACTER_OBJECT = 16,
   DISABLE_VISUALIZE_OBJECT = 32, //disable debug drawing
   DISABLE_SPU_COLLISION_PROCESSING = 64, //disable parallel/SPU processing
+}
+
+export interface ISharedBuffers {
+  rigidBodies: {
+    headerIntArray: Int32Array;
+    headerFloatArray: Float32Array;
+    objectMatricesFloatArray: Float32Array;
+    objectMatricesIntArray: Int32Array;
+  };
+
+  softBodies: {
+    indexIntArray: Uint32Array;
+    vertexFloatArray: Float32Array;
+    normalFloatArray: Float32Array;
+  }[];
+
+  debug: {
+    indexIntArray: Uint32Array;
+    vertexFloatArray: Float32Array;
+    colorFloatArray: Float32Array;
+  };
 }

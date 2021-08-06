@@ -97,10 +97,9 @@ export function ammoDebugOptionsToNumber(
 export type CompatibleBuffer = SharedArrayBuffer | ArrayBuffer;
 
 export const isSharedArrayBufferSupported = !!window.SharedArrayBuffer;
+// export const isSharedArrayBufferSupported = false;
 
-export function allocateCompatibleBuffer(
-  byteLength: number
-): CompatibleBuffer {
+export function allocateCompatibleBuffer(byteLength: number): CompatibleBuffer {
   if (isSharedArrayBufferSupported) {
     return new SharedArrayBuffer(byteLength);
   } else {

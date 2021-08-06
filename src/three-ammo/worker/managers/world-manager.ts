@@ -1,11 +1,11 @@
 import { BUFFER_CONFIG } from "../../lib/constants";
 import { initializeAmmoWasm } from "../ammo-wasm-initialize";
 import { World } from "../wrappers/world";
-import { ClientMessageType, MessageType } from "../../lib/types";
 import {
-  initSharedArrayBuffer,
-  initTransferrables,
-} from "./rigid-body-manager";
+  ClientMessageType,
+  ISharedBuffers,
+  MessageType,
+} from "../../lib/types";
 
 export let world;
 
@@ -17,12 +17,13 @@ export let quatTmp1: Ammo.btQuaternion;
 
 export let usingSharedArrayBuffer = false;
 
+export let sharedBuffers: ISharedBuffers;
+
 async function initWorld({
   wasmUrl,
-  maxBodies = BUFFER_CONFIG.MAX_BODIES,
-  sharedArrayBuffer,
-  arrayBuffer,
+  sharedBuffers: transferredBuffers,
   worldConfig,
+  isSharedArrayBufferSupported,
 }) {
   const Ammo = await initializeAmmoWasm(wasmUrl);
 
@@ -30,32 +31,34 @@ async function initWorld({
   vector3Tmp2 = new Ammo.btVector3(0, 0, 0);
   quatTmp1 = new Ammo.btQuaternion(0, 0, 0, 0);
 
-  freeIndexArray = new Int32Array(maxBodies);
-  for (let i = 0; i < maxBodies - 1; i++) {
+  freeIndexArray = new Int32Array(BUFFER_CONFIG.MAX_BODIES);
+  for (let i = 0; i < BUFFER_CONFIG.MAX_BODIES - 1; i++) {
     freeIndexArray[i] = i + 1;
   }
-  freeIndexArray[maxBodies - 1] = -1;
+  freeIndexArray[BUFFER_CONFIG.MAX_BODIES - 1] = -1;
 
-  if (sharedArrayBuffer) {
-    usingSharedArrayBuffer = true;
-    initSharedArrayBuffer(sharedArrayBuffer, maxBodies);
-  } else if (arrayBuffer) {
-    initTransferrables(arrayBuffer);
-  } else {
-    console.error("A valid ArrayBuffer or SharedArrayBuffer is required.");
-  }
+  usingSharedArrayBuffer = isSharedArrayBufferSupported;
+
+  sharedBuffers = transferredBuffers;
 
   world = new World(worldConfig || {});
 
-  if (arrayBuffer) {
-    postMessage({ type: ClientMessageType.READY, arrayBuffer: arrayBuffer }, [
-      arrayBuffer,
-    ]);
-  } else {
+  if (usingSharedArrayBuffer) {
     postMessage({ type: ClientMessageType.READY });
+  } else {
+    postMessage({ type: ClientMessageType.READY, sharedBuffers }, [
+      sharedBuffers.rigidBodies.headerIntArray.buffer,
+      sharedBuffers.debug.vertexFloatArray.buffer,
+      ...sharedBuffers.softBodies.map((sb) => sb.vertexFloatArray.buffer),
+    ]);
   }
+}
+
+function transferBuffers({ sharedBuffers: receivedSharedBuffers }) {
+  sharedBuffers = receivedSharedBuffers;
 }
 
 export const worldEventReceivers = {
   [MessageType.INIT]: initWorld,
+  [MessageType.TRANSFER_BUFFERS]: transferBuffers,
 };

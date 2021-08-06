@@ -25,7 +25,7 @@ type UseRigidBodyOptions = Omit<BodyConfig, "type"> & {
 export function useRigidBody(
   options: UseRigidBodyOptions | (() => UseRigidBodyOptions),
   object3D?: Object3D
-): [MutableRefObject<Object3D>, RigidbodyApi] {
+): [MutableRefObject<Object3D | undefined>, RigidbodyApi] {
   const ref = useRef<Object3D>();
 
   const physicsContext = useAmmoPhysicsContext();

@@ -1,6 +1,7 @@
 import {
   BodyType,
-  BufferState, ClientMessageType,
+  BufferState,
+  ClientMessageType,
   MessageType,
   ShapeType,
   UUID,
@@ -12,6 +13,7 @@ import { Matrix4 } from "three";
 import {
   freeIndexArray,
   quatTmp1,
+  sharedBuffers,
   usingSharedArrayBuffer,
   vector3Tmp1,
   vector3Tmp2,
@@ -29,11 +31,6 @@ let freeIndex = 0;
 
 export const uuids: UUID[] = [];
 
-let headerIntArray;
-let headerFloatArray;
-let objectMatricesFloatArray;
-let objectMatricesIntArray;
-
 function addBody({ uuid, matrix, options }) {
   if (freeIndex !== -1) {
     const nextFreeIndex = freeIndexArray[freeIndex];
@@ -45,15 +42,19 @@ function addBody({ uuid, matrix, options }) {
     transform.fromArray(matrix);
     matrices[uuid] = transform;
 
-    objectMatricesFloatArray.set(
-      transform.elements,
-      freeIndex * BUFFER_CONFIG.BODY_DATA_SIZE
-    );
+    // sharedBuffers.rigidBodies.objectMatricesFloatArray.set(
+    //   transform.elements,
+    //   freeIndex * BUFFER_CONFIG.BODY_DATA_SIZE
+    // );
     bodies[uuid] = new RigidBody(options || {}, transform, world);
     const ptr = Ammo.getPointer(bodies[uuid].physicsBody);
     ptrToIndex[ptr] = freeIndex;
 
-    postMessage({ type: ClientMessageType.RIGIDBODY_READY, uuid, index: freeIndex });
+    postMessage({
+      type: ClientMessageType.RIGIDBODY_READY,
+      uuid,
+      index: freeIndex,
+    });
     freeIndex = nextFreeIndex;
   }
 }
@@ -196,10 +197,10 @@ function resetDynamicBody({ uuid }) {
   if (bodies[uuid]) {
     const body = bodies[uuid];
     const index = indexes[uuid];
-    matrices[uuid].fromArray(
-      objectMatricesFloatArray,
-      index * BUFFER_CONFIG.BODY_DATA_SIZE
-    );
+    // matrices[uuid].fromArray(
+    //   sharedBuffers.rigidBodies.objectMatricesFloatArray,
+    //   index * BUFFER_CONFIG.BODY_DATA_SIZE
+    // );
     body.syncToPhysics(true);
     body.physicsBody!.getLinearVelocity().setValue(0, 0, 0);
     body.physicsBody!.getAngularVelocity().setValue(0, 0, 0);
@@ -212,38 +213,38 @@ function activateBody({ uuid }) {
   }
 }
 
-export function initSharedArrayBuffer(sharedArrayBuffer, maxBodies) {
-  /** BUFFER HEADER
-   * When using SAB, the first 4 bytes (1 int) are reserved for signaling BUFFER_STATE
-   * This is used to determine which thread is currently allowed to modify the SAB.
-   * The second 4 bytes (1 float) is used for storing stepDuration for stats.
-   */
-  headerIntArray = new Int32Array(
-    sharedArrayBuffer,
-    0,
-    BUFFER_CONFIG.HEADER_LENGTH
-  );
-  headerFloatArray = new Float32Array(
-    sharedArrayBuffer,
-    0,
-    BUFFER_CONFIG.HEADER_LENGTH
-  );
-  objectMatricesFloatArray = new Float32Array(
-    sharedArrayBuffer,
-    BUFFER_CONFIG.HEADER_LENGTH * 4,
-    BUFFER_CONFIG.BODY_DATA_SIZE * maxBodies
-  );
-  objectMatricesIntArray = new Int32Array(
-    sharedArrayBuffer,
-    BUFFER_CONFIG.HEADER_LENGTH * 4,
-    BUFFER_CONFIG.BODY_DATA_SIZE * maxBodies
-  );
-}
-
-export function initTransferrables(arrayBuffer) {
-  objectMatricesFloatArray = new Float32Array(arrayBuffer);
-  objectMatricesIntArray = new Int32Array(arrayBuffer);
-}
+// export function initSharedArrayBuffer(sharedArrayBuffer, maxBodies) {
+//   /** BUFFER HEADER
+//    * When using SAB, the first 4 bytes (1 int) are reserved for signaling BUFFER_STATE
+//    * This is used to determine which thread is currently allowed to modify the SAB.
+//    * The second 4 bytes (1 float) is used for storing stepDuration for stats.
+//    */
+//   headerIntArray = new Int32Array(
+//     sharedArrayBuffer,
+//     0,
+//     BUFFER_CONFIG.HEADER_LENGTH
+//   );
+//   headerFloatArray = new Float32Array(
+//     sharedArrayBuffer,
+//     0,
+//     BUFFER_CONFIG.HEADER_LENGTH
+//   );
+//   objectMatricesFloatArray = new Float32Array(
+//     sharedArrayBuffer,
+//     BUFFER_CONFIG.HEADER_LENGTH * 4,
+//     BUFFER_CONFIG.BODY_DATA_SIZE * BUFFER_CONFIG.MAX_BODIES
+//   );
+//   objectMatricesIntArray = new Int32Array(
+//     sharedArrayBuffer,
+//     BUFFER_CONFIG.HEADER_LENGTH * 4,
+//     BUFFER_CONFIG.BODY_DATA_SIZE * BUFFER_CONFIG.MAX_BODIES
+//   );
+// }
+//
+// export function initTransferrables(arrayBuffer) {
+//   objectMatricesFloatArray = new Float32Array(arrayBuffer);
+//   objectMatricesIntArray = new Int32Array(arrayBuffer);
+// }
 
 export function copyToRigidBodyBuffer() {
   /** Buffer Schema
@@ -260,31 +261,33 @@ export function copyToRigidBodyBuffer() {
     const index = indexes[uuid];
     const matrix = matrices[uuid];
 
-    matrix.fromArray(
-      objectMatricesFloatArray,
-      index * BUFFER_CONFIG.BODY_DATA_SIZE + BUFFER_CONFIG.MATRIX_OFFSET
-    );
     body.updateShapes();
 
     if (body.type === BodyType.DYNAMIC) {
       body.syncFromPhysics();
+
+      sharedBuffers.rigidBodies.objectMatricesFloatArray.set(
+        matrix.elements,
+        index * BUFFER_CONFIG.BODY_DATA_SIZE + BUFFER_CONFIG.MATRIX_OFFSET
+      );
+
+      sharedBuffers.rigidBodies.objectMatricesFloatArray[
+        index * BUFFER_CONFIG.BODY_DATA_SIZE +
+          BUFFER_CONFIG.LINEAR_VELOCITY_OFFSET
+      ] = body.physicsBody!.getLinearVelocity().length();
+
+      sharedBuffers.rigidBodies.objectMatricesFloatArray[
+        index * BUFFER_CONFIG.BODY_DATA_SIZE +
+          BUFFER_CONFIG.ANGULAR_VELOCITY_OFFSET
+      ] = body.physicsBody!.getAngularVelocity().length();
     } else {
-      body.syncToPhysics(false);
+      // matrix.fromArray(
+      //   sharedBuffers.rigidBodies.objectMatricesFloatArray,
+      //   index * BUFFER_CONFIG.BODY_DATA_SIZE + BUFFER_CONFIG.MATRIX_OFFSET
+      // );
+
+      // body.syncToPhysics(false);
     }
-
-    objectMatricesFloatArray.set(
-      matrix.elements,
-      index * BUFFER_CONFIG.BODY_DATA_SIZE + BUFFER_CONFIG.MATRIX_OFFSET
-    );
-
-    objectMatricesFloatArray[
-      index * BUFFER_CONFIG.BODY_DATA_SIZE +
-        BUFFER_CONFIG.LINEAR_VELOCITY_OFFSET
-    ] = body.physicsBody!.getLinearVelocity().length();
-    objectMatricesFloatArray[
-      index * BUFFER_CONFIG.BODY_DATA_SIZE +
-        BUFFER_CONFIG.ANGULAR_VELOCITY_OFFSET
-    ] = body.physicsBody!.getAngularVelocity().length();
 
     const ptr = Ammo.getPointer(body.physicsBody);
     const collisions = world.collisions.get(ptr);
@@ -294,7 +297,7 @@ export function copyToRigidBodyBuffer() {
       j++
     ) {
       if (!collisions || j >= collisions.length) {
-        objectMatricesIntArray[
+        sharedBuffers.rigidBodies.objectMatricesIntArray[
           index * BUFFER_CONFIG.BODY_DATA_SIZE +
             BUFFER_CONFIG.COLLISIONS_OFFSET +
             j
@@ -302,7 +305,7 @@ export function copyToRigidBodyBuffer() {
       } else {
         const collidingPtr = collisions[j];
         if (ptrToIndex[collidingPtr]) {
-          objectMatricesIntArray[
+          sharedBuffers.rigidBodies.objectMatricesIntArray[
             index * BUFFER_CONFIG.BODY_DATA_SIZE +
               BUFFER_CONFIG.COLLISIONS_OFFSET +
               j
@@ -316,36 +319,40 @@ export function copyToRigidBodyBuffer() {
 export function isBufferConsumed() {
   if (usingSharedArrayBuffer) {
     return (
-      // @ts-ignore
-      headerIntArray && Atomics.load(headerIntArray, 0) != BufferState.READY
+      sharedBuffers.rigidBodies.headerIntArray &&
+      Atomics.load(sharedBuffers.rigidBodies.headerIntArray, 0) !=
+        BufferState.READY
     );
   } else {
     return (
-      objectMatricesFloatArray &&
-      objectMatricesFloatArray.buffer.byteLength !== 0
+      sharedBuffers.rigidBodies.objectMatricesFloatArray &&
+      sharedBuffers.rigidBodies.objectMatricesFloatArray.buffer.byteLength !== 0
     );
   }
 }
 
 export function releaseBuffer(stepDuration: number) {
+  sharedBuffers.rigidBodies.headerFloatArray[1] = stepDuration;
+
   if (usingSharedArrayBuffer) {
-    headerFloatArray[1] = stepDuration;
-    Atomics.store(headerIntArray, 0, BufferState.READY);
+    Atomics.store(
+      sharedBuffers.rigidBodies.headerIntArray,
+      0,
+      BufferState.READY
+    );
   } else {
     postMessage(
       {
-        type: MessageType.TRANSFER_DATA,
-        objectMatricesFloatArray,
-        stepDuration,
+        type: ClientMessageType.TRANSFER_BUFFERS,
+        sharedBuffers,
       },
-      [objectMatricesFloatArray.buffer]
+      [
+        sharedBuffers.rigidBodies.headerIntArray.buffer,
+        sharedBuffers.debug.vertexFloatArray.buffer,
+        ...sharedBuffers.softBodies.map((sb) => sb.vertexFloatArray.buffer),
+      ]
     );
   }
-}
-
-function transferData({ objectMatricesFloatArray: omfa }) {
-  objectMatricesFloatArray = omfa;
-  objectMatricesIntArray = new Int32Array(objectMatricesFloatArray.buffer);
 }
 
 export const rigidBodyEventReceivers = {
@@ -364,7 +371,6 @@ export const rigidBodyEventReceivers = {
   [MessageType.APPLY_CENTRAL_IMPULSE]: bodyApplyCentralImpulse,
   [MessageType.APPLY_FORCE]: bodyApplyForce,
   [MessageType.APPLY_CENTRAL_FORCE]: bodyApplyCentralForce,
-  [MessageType.TRANSFER_DATA]: transferData,
 
   // TODO implement
   [MessageType.APPLY_TORQUE_IMPULSE]: notImplementedEventReceiver,

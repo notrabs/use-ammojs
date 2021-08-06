@@ -1,7 +1,13 @@
 import { Matrix4 } from "three";
 import { iterateGeometries } from "three-to-ammo";
 import AmmoWorker from "web-worker:../worker/ammo.worker";
-import { MessageType, SoftBodyConfig, UUID } from "./types";
+import {
+  ISharedBuffers,
+  MessageType,
+  SoftBodyConfig,
+  UUID,
+  WorldConfig,
+} from "./types";
 import {
   CompatibleBuffer,
   isSharedArrayBufferSupported,
@@ -16,10 +22,43 @@ export function WorkerHelpers(ammoWorker: Worker) {
   const inverse = new Matrix4();
 
   return {
-    transferData(objectMatricesFloatArray: Float32Array) {
+    initWorld(worldConfig: WorldConfig, sharedBuffers: ISharedBuffers) {
+      if (isSharedArrayBufferSupported) {
+        ammoWorker.postMessage({
+          type: MessageType.INIT,
+          worldConfig,
+          sharedBuffers,
+          isSharedArrayBufferSupported
+        });
+      } else {
+        console.warn(
+          "use-ammojs uses fallback to slower ArrayBuffers. To use the faster SharedArrayBuffers make sure that your environment is crossOriginIsolated. (see https://web.dev/coop-coep/)"
+        );
+
+        ammoWorker.postMessage(
+          {
+            type: MessageType.INIT,
+            worldConfig,
+            sharedBuffers,
+            isSharedArrayBufferSupported
+          },
+          [
+            sharedBuffers.rigidBodies.headerIntArray.buffer,
+            sharedBuffers.debug.vertexFloatArray.buffer,
+            ...sharedBuffers.softBodies.map((sb) => sb.vertexFloatArray.buffer),
+          ]
+        );
+      }
+    },
+
+    transferSharedBuffers(sharedBuffers: ISharedBuffers) {
       ammoWorker.postMessage(
-        { type: MessageType.TRANSFER_DATA, objectMatricesFloatArray },
-        [objectMatricesFloatArray.buffer]
+        { type: MessageType.TRANSFER_BUFFERS, sharedBuffers },
+        [
+          sharedBuffers.rigidBodies.headerIntArray.buffer,
+          sharedBuffers.debug.vertexFloatArray.buffer,
+          ...sharedBuffers.softBodies.map((sb) => sb.vertexFloatArray.buffer),
+        ]
       );
     },
 

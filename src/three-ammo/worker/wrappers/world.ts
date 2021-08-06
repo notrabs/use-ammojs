@@ -59,9 +59,9 @@ export class World {
     return this.debugDrawMode !== AmmoDebugConstants.NoDebug;
   }
 
-  addRigidBody(body: Ammo.btRigidBody, object3D, group, mask) {
+  addRigidBody(body: Ammo.btRigidBody, matrix, group, mask) {
     this.physicsWorld.addRigidBody(body, group, mask);
-    this.object3Ds.set(Ammo.getPointer(body), object3D);
+    this.object3Ds.set(Ammo.getPointer(body), matrix);
   }
 
   removeRigidBody(body) {

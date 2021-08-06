@@ -32,6 +32,7 @@ import {
   BodyType,
   BufferState,
   ClientMessageType,
+  ISharedBuffers,
   MessageType,
   ShapeConfig,
   SoftBodyConfig,
@@ -62,12 +63,6 @@ interface AmmoPhysicsProps {
 
   // default = 10
   solverIterations?: number;
-}
-
-interface ISharedBuffers {
-  headerIntArray: Int32Array;
-  objectMatricesFloatArray: Float32Array;
-  objectMatricesIntArray: Int32Array;
 }
 
 interface PhysicsState {
@@ -126,32 +121,31 @@ export function Physics({
 
     const workerHelpers = WorkerHelpers(ammoWorker);
 
-    const objectBuffer = allocateCompatibleBuffer(
+    const rigidBodyBuffer = allocateCompatibleBuffer(
       4 * BUFFER_CONFIG.HEADER_LENGTH + //header
         4 * BUFFER_CONFIG.BODY_DATA_SIZE * BUFFER_CONFIG.MAX_BODIES + //matrices
         4 * BUFFER_CONFIG.MAX_BODIES //velocities
     );
     const headerIntArray = new Int32Array(
-      objectBuffer,
+      rigidBodyBuffer,
+      0,
+      BUFFER_CONFIG.HEADER_LENGTH
+    );
+    const headerFloatArray = new Float32Array(
+      rigidBodyBuffer,
       0,
       BUFFER_CONFIG.HEADER_LENGTH
     );
     const objectMatricesIntArray = new Int32Array(
-      objectBuffer,
+      rigidBodyBuffer,
       BUFFER_CONFIG.HEADER_LENGTH * 4,
       BUFFER_CONFIG.BODY_DATA_SIZE * BUFFER_CONFIG.MAX_BODIES
     );
     const objectMatricesFloatArray = new Float32Array(
-      objectBuffer,
+      rigidBodyBuffer,
       BUFFER_CONFIG.HEADER_LENGTH * 4,
       BUFFER_CONFIG.BODY_DATA_SIZE * BUFFER_CONFIG.MAX_BODIES
     );
-
-    sharedBuffersRef.current = {
-      headerIntArray,
-      objectMatricesFloatArray,
-      objectMatricesIntArray,
-    };
 
     objectMatricesIntArray[0] = BufferState.UNINITIALIZED;
 
@@ -173,6 +167,23 @@ export function Physics({
       new BufferAttribute(debugColors, 3).setUsage(DynamicDrawUsage)
     );
 
+    sharedBuffersRef.current = {
+      rigidBodies: {
+        headerIntArray,
+        headerFloatArray,
+        objectMatricesFloatArray,
+        objectMatricesIntArray,
+      },
+
+      softBodies: [],
+
+      debug: {
+        indexIntArray: debugIndex,
+        vertexFloatArray: debugVertices,
+        colorFloatArray: debugColors,
+      },
+    };
+
     const worldConfig: WorldConfig = removeUndefinedKeys({
       debugDrawMode: ammoDebugOptionsToNumber(drawDebugMode),
       gravity: gravity && new Vector3(gravity[0], gravity[1], gravity[2]),
@@ -182,37 +193,13 @@ export function Physics({
       solverIterations,
     });
 
-    if (isSharedArrayBufferSupported) {
-      ammoWorker.postMessage({
-        type: MessageType.INIT,
-        worldConfig,
-        sharedArrayBuffer: objectBuffer,
-      });
-    } else {
-      console.warn(
-        "use-ammojs uses fallback to slower ArrayBuffers. To use the faster SharedArrayBuffers make sure that your environment is crossOriginIsolated. (see https://web.dev/coop-coep/)"
-      );
-
-      ammoWorker.postMessage(
-        {
-          type: MessageType.INIT,
-          worldConfig,
-          arrayBuffer: objectBuffer,
-        },
-        [objectBuffer]
-      );
-    }
+    workerHelpers.initWorld(worldConfig, sharedBuffersRef.current);
 
     const workerInitPromise = new Promise<PhysicsState>((resolve) => {
       ammoWorker.onmessage = async (event) => {
         if (event.data.type === ClientMessageType.READY) {
-          if (event.data.arrayBuffer) {
-            sharedBuffersRef.current.objectMatricesFloatArray = new Float32Array(
-              event.data.arrayBuffer
-            );
-            sharedBuffersRef.current.objectMatricesIntArray = new Int32Array(
-              event.data.arrayBuffer
-            );
+          if (event.data.sharedBuffers) {
+            sharedBuffersRef.current = event.data.sharedBuffers;
           }
 
           resolve({
@@ -238,12 +225,8 @@ export function Physics({
           uuids.push(uuid);
           uuidToIndex[uuid] = event.data.index;
           IndexToUuid[event.data.index] = uuid;
-        } else if (event.data.type === MessageType.TRANSFER_DATA) {
-          sharedBuffersRef.current.objectMatricesFloatArray =
-            event.data.objectMatricesFloatArray;
-          sharedBuffersRef.current.objectMatricesIntArray = new Int32Array(
-            event.data.objectMatricesFloatArray.buffer
-          );
+        } else if (event.data.type === ClientMessageType.TRANSFER_BUFFERS) {
+          sharedBuffersRef.current = event.data.sharedBuffers;
         }
       };
     });
@@ -340,12 +323,14 @@ export function Physics({
 
     // console.log(sharedBuffersRef.current.objectMatricesFloatArray.byteLength);
 
+    const sharedBuffers = sharedBuffersRef.current;
+
     if (
       // Check if the worker is finished with the buffer
       (!isSharedArrayBufferSupported &&
-        sharedBuffersRef.current.objectMatricesFloatArray.byteLength !== 0) ||
+        sharedBuffers.rigidBodies.objectMatricesFloatArray.byteLength !== 0) ||
       (isSharedArrayBufferSupported &&
-        Atomics.load(sharedBuffersRef.current.headerIntArray, 0) ===
+        Atomics.load(sharedBuffers.rigidBodies.headerIntArray, 0) ===
           BufferState.READY)
     ) {
       for (let i = 0; i < uuids.length; i++) {
@@ -356,17 +341,18 @@ export function Physics({
         const object3D = object3Ds[uuid];
         if (type === BodyType.DYNAMIC) {
           matrix.fromArray(
-            sharedBuffersRef.current.objectMatricesFloatArray,
+            sharedBuffers.rigidBodies.objectMatricesFloatArray,
             uuidToIndex[uuid] * BUFFER_CONFIG.BODY_DATA_SIZE
           );
+
           inverse.copy(object3D.parent!.matrixWorld).invert();
           transform.multiplyMatrices(inverse, matrix);
           transform.decompose(object3D.position, object3D.quaternion, scale);
         } else {
-          sharedBuffersRef.current.objectMatricesFloatArray.set(
-            object3D.matrixWorld.elements,
-            uuidToIndex[uuid] * BUFFER_CONFIG.BODY_DATA_SIZE
-          );
+          // sharedBuffers.rigidBodies.objectMatricesFloatArray.set(
+          //   object3D.matrixWorld.elements,
+          //   uuidToIndex[uuid] * BUFFER_CONFIG.BODY_DATA_SIZE
+          // );
         }
 
         // print velocities
@@ -389,14 +375,12 @@ export function Physics({
 
       if (isSharedArrayBufferSupported) {
         Atomics.store(
-          sharedBuffersRef.current.headerIntArray,
+          sharedBuffers.rigidBodies.headerIntArray,
           0,
           BufferState.CONSUMED
         );
       } else {
-        workerHelpers.transferData(
-          sharedBuffersRef.current.objectMatricesFloatArray
-        );
+        workerHelpers.transferSharedBuffers(sharedBuffersRef.current);
       }
     }
 
@@ -410,6 +394,7 @@ export function Physics({
       }
       Atomics.store(debugIndex, 0, 0);
     }
+
   });
 
   useEffect(() => {

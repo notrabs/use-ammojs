@@ -1,14 +1,6 @@
 import { ConstraintType } from "../../lib/types";
 
-const CONSTRAINTS = [
-  ConstraintType.LOCK,
-  ConstraintType.FIXED,
-  ConstraintType.SPRING,
-  ConstraintType.SLIDER,
-  ConstraintType.HINGE,
-  ConstraintType.CONE_TWIST,
-  ConstraintType.POINT_TO_POINT,
-];
+const CONSTRAINTS = Object.values(ConstraintType);
 
 export class Constraint {
   private world: any;
