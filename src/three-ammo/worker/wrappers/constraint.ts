@@ -1,4 +1,4 @@
-import { ConstraintType } from "../lib/types";
+import { ConstraintType } from "../../lib/types";
 
 const CONSTRAINTS = [
   ConstraintType.LOCK,

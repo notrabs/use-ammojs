@@ -1,6 +1,6 @@
-import { World } from "./world";
-import { Body } from "./body";
-import { Constraint } from "./constraint";
+import { World } from "./wrappers/world";
+import { Body } from "./wrappers/body";
+import { Constraint } from "./wrappers/constraint";
 import { DefaultBufferSize } from "ammo-debug-drawer";
 import { Matrix4 } from "three";
 import { createCollisionShapes } from "three-to-ammo";

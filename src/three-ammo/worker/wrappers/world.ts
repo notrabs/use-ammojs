@@ -1,5 +1,5 @@
-import { WorldConfig } from "../lib/types";
-import {EPS, GRAVITY} from "../lib/constants";
+import { WorldConfig } from "../../lib/types";
+import { EPS, GRAVITY } from "../../lib/constants";
 import { AmmoDebugConstants, AmmoDebugDrawer } from "ammo-debug-drawer";
 
 export class World {
@@ -7,7 +7,7 @@ export class World {
   dispatcher: Ammo.btCollisionDispatcher;
   broadphase: Ammo.btDbvtBroadphase;
   solver: Ammo.btSequentialImpulseConstraintSolver;
-  physicsWorld: Ammo.btDiscreteDynamicsWorld;
+  physicsWorld: Ammo.btSoftRigidDynamicsWorld;
   debugDrawer: AmmoDebugDrawer | null = null;
 
   object3Ds = new Map();
@@ -17,7 +17,7 @@ export class World {
   debugDrawMode: number;
   maxSubSteps: number;
   fixedTimeStep: number;
-  // softBodySolver: Ammo.btDefaultSoftBodySolver;
+  softBodySolver: Ammo.btDefaultSoftBodySolver;
 
   constructor(worldConfig: WorldConfig) {
     this.epsilon = worldConfig.epsilon || EPS;
@@ -31,13 +31,13 @@ export class World {
     );
     this.broadphase = new Ammo.btDbvtBroadphase();
     this.solver = new Ammo.btSequentialImpulseConstraintSolver();
-    // this.softBodySolver = new Ammo.btDefaultSoftBodySolver();
-    this.physicsWorld = new Ammo.btDiscreteDynamicsWorld(
+    this.softBodySolver = new Ammo.btDefaultSoftBodySolver();
+    this.physicsWorld = new Ammo.btSoftRigidDynamicsWorld(
       this.dispatcher,
       this.broadphase,
       this.solver,
-      this.collisionConfiguration
-      // this.softBodySolver
+      this.collisionConfiguration,
+      this.softBodySolver
     );
     // this.physicsWorld.setForceUpdateAllAabbs(false);
     const gravity = new Ammo.btVector3(0, GRAVITY, 0);

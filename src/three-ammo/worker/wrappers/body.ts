@@ -6,8 +6,13 @@ import {
   CollisionFlag,
   ShapeType,
   UpdateBodyOptions,
-} from "../lib/types";
+} from "../../lib/types";
 import { World } from "./world";
+import {
+  almostEqualsBtVector3,
+  almostEqualsQuaternion,
+  almostEqualsVector3,
+} from "../utils";
 
 const ACTIVATION_STATES = [
   BodyActivationState.ACTIVE_TAG,
@@ -17,42 +22,9 @@ const ACTIVATION_STATES = [
   BodyActivationState.DISABLE_SIMULATION,
 ];
 
-const RIGID_BODY_FLAGS = {
-  NONE: 0,
-  DISABLE_WORLD_GRAVITY: 1,
-};
-
-function almostEqualsVector3(epsilon: number, u: Vector3, v: Vector3) {
-  return (
-    Math.abs(u.x - v.x) < epsilon &&
-    Math.abs(u.y - v.y) < epsilon &&
-    Math.abs(u.z - v.z) < epsilon
-  );
-}
-
-function almostEqualsBtVector3(
-  epsilon: number,
-  u: Ammo.btVector3,
-  v: Ammo.btVector3
-) {
-  return (
-    Math.abs(u.x() - v.x()) < epsilon &&
-    Math.abs(u.y() - v.y()) < epsilon &&
-    Math.abs(u.z() - v.z()) < epsilon
-  );
-}
-
-function almostEqualsQuaternion(epsilon: number, u: Quaternion, v: Quaternion) {
-  return (
-    (Math.abs(u.x - v.x) < epsilon &&
-      Math.abs(u.y - v.y) < epsilon &&
-      Math.abs(u.z - v.z) < epsilon &&
-      Math.abs(u.w - v.w) < epsilon) ||
-    (Math.abs(u.x + v.x) < epsilon &&
-      Math.abs(u.y + v.y) < epsilon &&
-      Math.abs(u.z + v.z) < epsilon &&
-      Math.abs(u.w + v.w) < epsilon)
-  );
+enum RigidBodyFlags {
+  NONE = 0,
+  DISABLE_WORLD_GRAVITY = 1,
 }
 
 const pos = new Vector3();
@@ -223,7 +195,7 @@ export class Body {
     ) {
       this.physicsBody.setGravity(this.gravity);
       // @ts-ignore
-      this.physicsBody.setFlags(RIGID_BODY_FLAGS.DISABLE_WORLD_GRAVITY);
+      this.physicsBody.setFlags(RigidBodyFlags.DISABLE_WORLD_GRAVITY);
     }
 
     this.updateCollisionFlags();
@@ -374,10 +346,10 @@ export class Body {
           )
         ) {
           // @ts-ignore
-          this.physicsBody.setFlags(RIGID_BODY_FLAGS.DISABLE_WORLD_GRAVITY);
+          this.physicsBody.setFlags(RigidBodyFlags.DISABLE_WORLD_GRAVITY);
         } else {
           // @ts-ignore
-          this.physicsBody.setFlags(RIGID_BODY_FLAGS.NONE);
+          this.physicsBody.setFlags(RigidBodyFlags.NONE);
         }
         this.physicsBody!.setGravity(this.gravity);
       }
