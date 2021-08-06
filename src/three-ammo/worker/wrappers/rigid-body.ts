@@ -43,7 +43,7 @@ const needsPolyhedralInitialization = [
  * Initializes a body component, assigning it to the physics system and binding listeners for
  * parsing the elements geometry.
  */
-export class Body {
+export class RigidBody {
   loadedEvent: string;
   mass: number;
   gravity: Ammo.btVector3;

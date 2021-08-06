@@ -36,3 +36,7 @@ export function almostEqualsQuaternion(
       Math.abs(u.w + v.w) < epsilon)
   );
 }
+
+export function notImplementedEventReceiver(data) {
+  console.error("not implemented event: ", data)
+}

@@ -61,13 +61,11 @@ export class World {
 
   addRigidBody(body: Ammo.btRigidBody, object3D, group, mask) {
     this.physicsWorld.addRigidBody(body, group, mask);
-    // @ts-ignore
     this.object3Ds.set(Ammo.getPointer(body), object3D);
   }
 
   removeRigidBody(body) {
     this.physicsWorld.removeRigidBody(body);
-    // @ts-ignore
     const bodyptr = Ammo.getPointer(body);
     this.object3Ds.delete(bodyptr);
     this.collisions.delete(bodyptr);
@@ -78,7 +76,6 @@ export class World {
   }
 
   updateRigidBody(body) {
-    // @ts-ignore
     if (this.object3Ds.has(Ammo.getPointer(body))) {
       this.physicsWorld.updateSingleAabb(body);
     }
@@ -99,9 +96,7 @@ export class World {
     for (let i = 0; i < numManifolds; i++) {
       const persistentManifold = this.dispatcher.getManifoldByIndexInternal(i);
       const numContacts = persistentManifold.getNumContacts();
-      // @ts-ignore
       const body0ptr = Ammo.getPointer(persistentManifold.getBody0());
-      // @ts-ignore
       const body1ptr = Ammo.getPointer(persistentManifold.getBody1());
 
       for (let j = 0; j < numContacts; j++) {

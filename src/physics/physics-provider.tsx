@@ -31,6 +31,7 @@ import {
   BodyConfig,
   BodyType,
   BufferState,
+  ClientMessageType,
   MessageType,
   ShapeConfig,
   SoftBodyConfig,
@@ -204,7 +205,7 @@ export function Physics({
 
     const workerInitPromise = new Promise<PhysicsState>((resolve) => {
       ammoWorker.onmessage = async (event) => {
-        if (event.data.type === MessageType.READY) {
+        if (event.data.type === ClientMessageType.READY) {
           if (event.data.arrayBuffer) {
             sharedBuffersRef.current.objectMatricesFloatArray = new Float32Array(
               event.data.arrayBuffer
@@ -232,7 +233,7 @@ export function Physics({
             addShapes,
             updateRigidBody,
           });
-        } else if (event.data.type === MessageType.RIGIDBODY_READY) {
+        } else if (event.data.type === ClientMessageType.RIGIDBODY_READY) {
           const uuid = event.data.uuid;
           uuids.push(uuid);
           uuidToIndex[uuid] = event.data.index;

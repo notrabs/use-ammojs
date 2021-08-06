@@ -220,11 +220,9 @@ export enum BufferState {
 
 export enum MessageType {
   INIT,
-  READY,
   ADD_RIGIDBODY,
   UPDATE_RIGIDBODY,
   REMOVE_RIGIDBODY,
-  RIGIDBODY_READY,
   ADD_SHAPES,
   REMOVE_SHAPES,
   ADD_SOFTBODY,
@@ -258,6 +256,11 @@ export enum MessageType {
   SET_SPINNING_FRICTION,
   // GET_ROLLING_FRICTION,
   SET_ROLLING_FRICTION,
+}
+
+export enum ClientMessageType {
+  READY,
+  RIGIDBODY_READY,
 }
 
 export enum CollisionFlag {
