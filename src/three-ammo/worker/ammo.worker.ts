@@ -50,7 +50,7 @@ function isBufferConsumed() {
   if (usingSharedArrayBuffer) {
     return (
       // @ts-ignore
-      headerIntArray && Atomics.load(headerIntArray, 0) != BUFFER_STATE.READY
+      headerIntArray && Atomics.load(headerIntArray, 0) != BufferState.READY
     );
   } else {
     return (
