@@ -1,21 +1,24 @@
-// // TODO: figure out why rollup doesn't like the file out of the ammo.js repo and throws a missing "default export" error
-// import Ammo from "../lib/builds/ammo.wasm.js";
-// import AmmoWasm from "ammo.js/builds/ammo.wasm.wasm";
-//
-// export function initializeAmmoWasm(wasmUrl: string | undefined) {
-//   return Ammo({
-//     locateFile() {
-//       if (wasmUrl) {
-//         return wasmUrl;
-//       } else {
-//         return AmmoWasm; //new URL(AmmoWasm, location.origin).href;
-//       }
-//     },
-//   });
-// }
+// TODO: figure out why rollup doesn't like the file out of the ammo.js repo and throws a missing "default export" error
 
-import Ammo from "../lib/builds/ammo.js";
+// TODO: custom ammo build adds "btSoftBody::setPose" function. should be merged upstream
+
+import Ammo from "../lib/builds/ammo.wasm.js";
+import AmmoWasm from "../lib/builds/ammo.wasm.wasm";
 
 export function initializeAmmoWasm(wasmUrl: string | undefined) {
-  return Ammo();
+  return Ammo.bind(self)({
+    locateFile() {
+      if (wasmUrl) {
+        return wasmUrl;
+      } else {
+        return AmmoWasm; //new URL(AmmoWasm, location.origin).href;
+      }
+    },
+  });
 }
+
+// import Ammo from "../lib/builds/ammo.js";
+//
+// export function initializeAmmoWasm(wasmUrl: string | undefined) {
+//   return Ammo.bind(self)();
+// }

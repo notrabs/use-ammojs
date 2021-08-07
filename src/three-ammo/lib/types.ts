@@ -84,12 +84,39 @@ export interface BodyConfig {
   scaleAutoUpdate?: boolean;
 }
 
+export enum SoftBodyFCollisionFlag {
+  // Rigid versus soft mask.
+  RVSmask = 0x000f,
+
+  // SDF based rigid vs soft.
+  SDF_RS = 0x0001,
+
+  // Cluster vs convex rigid vs soft.
+  CL_RS = 0x0002,
+
+  // Rigid versus soft mask.
+  SVSmask = 0x0030,
+
+  // Vertex vs face soft vs soft handling.
+  VF_SS = 0x0010,
+
+  // Cluster vs cluster soft vs soft handling.
+  CL_SS = 0x0020,
+
+  // Cluster soft body self collision.
+  CL_SELF = 0x0040,
+
+  Default = SDF_RS,
+}
+
 // see https://pybullet.org/Bullet/phpBB3/viewtopic.php?t=7070
 export interface SoftBodyConfig {
   type?: SoftBodyType;
 
   mass?: number;
   margin?: number;
+
+  clusters?: number;
 
   viterations?: number;
   piterations?: number;
@@ -109,6 +136,9 @@ export interface SoftBodyConfig {
   collisionFilterGroup?: number;
   //32-bit mask, default = 1
   collisionFilterMask?: number;
+
+  // see SoftBodyFCollisionFlag  (btSoftBody::fCollision)
+  collisionFlag?: number;
 }
 
 export enum SoftBodyType {
@@ -284,6 +314,7 @@ export enum MessageType {
 export enum ClientMessageType {
   READY,
   RIGIDBODY_READY,
+  SOFTBODY_READY,
   TRANSFER_BUFFERS,
 }
 

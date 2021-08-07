@@ -1,11 +1,12 @@
 import {
+  ClientMessageType,
   MessageType,
   SharedSoftBodyBuffers,
   SoftBodyConfig,
   UUID,
 } from "../../lib/types";
 import { SoftBody } from "../wrappers/soft-body";
-import { world } from "./world-manager";
+import { usingSharedArrayBuffer, world } from "./world-manager";
 
 const softbodies: Record<UUID, SoftBody> = {};
 
@@ -19,6 +20,19 @@ function addSoftbody({
   softBodyConfig: SoftBodyConfig;
 }) {
   softbodies[uuid] = new SoftBody(world, sharedSoftBodyBuffers, softBodyConfig);
+
+  if (usingSharedArrayBuffer) {
+    postMessage({
+      type: ClientMessageType.SOFTBODY_READY,
+      uuid,
+      sharedSoftBodyBuffers,
+    });
+  } else {
+    postMessage(
+      { type: ClientMessageType.SOFTBODY_READY, uuid, sharedSoftBodyBuffers },
+      [sharedSoftBodyBuffers.vertexFloatArray.buffer]
+    );
+  }
 }
 
 function removeSoftbody({ uuid }: { uuid: UUID }) {

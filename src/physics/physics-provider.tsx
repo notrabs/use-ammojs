@@ -216,6 +216,10 @@ export function Physics({
           uuids.push(uuid);
           uuidToIndex[uuid] = event.data.index;
           IndexToUuid[event.data.index] = uuid;
+        } else if (event.data.type === ClientMessageType.SOFTBODY_READY) {
+          sharedBuffersRef.current.softBodies.push(
+            event.data.sharedSoftBodyBuffers
+          );
         } else if (event.data.type === ClientMessageType.TRANSFER_BUFFERS) {
           sharedBuffersRef.current = event.data.sharedBuffers;
         }
@@ -322,8 +326,6 @@ export function Physics({
       }
 
       softBodies[uuid] = mesh;
-
-      sharedBuffersRef.current.softBodies.push(sharedSoftBodyBuffers);
 
       workerHelpers.addSoftBody(uuid, sharedSoftBodyBuffers, options);
     }

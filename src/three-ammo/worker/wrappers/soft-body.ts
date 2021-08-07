@@ -2,6 +2,7 @@ import {
   BodyActivationState,
   SharedSoftBodyBuffers,
   SoftBodyConfig,
+  SoftBodyFCollisionFlag,
 } from "../../lib/types";
 import { World } from "./world";
 
@@ -20,6 +21,8 @@ export class SoftBody {
       mass = 1,
       margin = 0.05,
 
+      clusters = 30,
+
       viterations = 40,
       piterations = 40,
 
@@ -33,6 +36,10 @@ export class SoftBody {
 
       collisionFilterGroup = 1,
       collisionFilterMask = 1,
+
+      // Soft-soft and soft-rigid collisions
+      collisionFlag = SoftBodyFCollisionFlag.SDF_RS |
+        SoftBodyFCollisionFlag.VF_SS,
 
       randomizeConstraints = true,
       activationState = BodyActivationState.DISABLE_DEACTIVATION,
@@ -58,17 +65,16 @@ export class SoftBody {
     );
 
     const sbConfig = this.physicsBody.get_m_cfg();
-    sbConfig.set_viterations(viterations);
-    sbConfig.set_piterations(piterations);
+    // sbConfig.set_viterations(viterations);
+    // sbConfig.set_piterations(piterations);
 
-    // Soft-soft and soft-rigid collisions
-    sbConfig.set_collisions(0x11);
+    sbConfig.set_collisions(collisionFlag);
 
     // Friction
     sbConfig.set_kDF(friction);
     // Damping
     sbConfig.set_kDP(damping);
-    // Pressure
+    // // Pressure
     sbConfig.set_kPR(pressure);
 
     // Stiffness
@@ -78,12 +84,16 @@ export class SoftBody {
 
     this.physicsBody.setTotalMass(mass, false);
 
+    this.physicsBody.setPose(true, true);
+
     Ammo.castObject<Ammo.btCollisionObject>(
       this.physicsBody,
       Ammo.btCollisionObject
     )
       .getCollisionShape()
       .setMargin(margin);
+
+    this.physicsBody.generateClusters(clusters);
 
     this.world.physicsWorld.addSoftBody(
       this.physicsBody,
