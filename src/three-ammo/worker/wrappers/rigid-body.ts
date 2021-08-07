@@ -14,8 +14,6 @@ import {
   almostEqualsVector3,
 } from "../utils";
 
-const ACTIVATION_STATES = Object.values(BodyActivationState);
-
 enum RigidBodyFlags {
   NONE = 0,
   DISABLE_WORLD_GRAVITY = 1,
@@ -102,10 +100,7 @@ export class RigidBody {
       this.angularFactor.copy(bodyConfig.angularFactor);
     }
     this.activationState =
-      bodyConfig.activationState &&
-      ACTIVATION_STATES.indexOf(bodyConfig.activationState) !== -1
-        ? bodyConfig.activationState
-        : BodyActivationState.ACTIVE_TAG;
+      bodyConfig.activationState ?? BodyActivationState.ACTIVE_TAG;
     this.type = bodyConfig.type ? bodyConfig.type : BodyType.DYNAMIC;
     this.emitCollisionEvents = bodyConfig.emitCollisionEvents ?? false;
     this.disableCollision = bodyConfig.disableCollision ?? false;
@@ -162,9 +157,7 @@ export class RigidBody {
     );
 
     this.physicsBody = new Ammo.btRigidBody(this.rbInfo);
-    this.physicsBody.setActivationState(
-      ACTIVATION_STATES.indexOf(this.activationState) + 1
-    );
+    this.physicsBody.setActivationState(this.activationState);
     this.physicsBody.setSleepingThresholds(
       this.linearSleepingThreshold,
       this.angularSleepingThreshold
@@ -278,9 +271,7 @@ export class RigidBody {
       bodyConfig.activationState !== this.activationState
     ) {
       this.activationState = bodyConfig.activationState;
-      this.physicsBody!.forceActivationState(
-        ACTIVATION_STATES.indexOf(this.activationState) + 1
-      );
+      this.physicsBody!.forceActivationState(this.activationState);
       if (this.activationState === BodyActivationState.ACTIVE_TAG) {
         this.physicsBody!.activate(true);
       }
@@ -428,7 +419,7 @@ export class RigidBody {
     const quaternion = this.msTransform!.getRotation();
     q.set(quaternion.x(), quaternion.y(), quaternion.z(), quaternion.w());
 
-    console.log(v, pos)
+    console.log(v, pos);
 
     if (
       !almostEqualsVector3(0.001, pos, v) ||

@@ -2,16 +2,14 @@ import { Matrix4 } from "three";
 import { iterateGeometries } from "three-to-ammo";
 import AmmoWorker from "web-worker:../worker/ammo.worker";
 import {
-  ISharedBuffers,
   MessageType,
+  SharedBuffers,
+  SharedSoftBodyBuffers,
   SoftBodyConfig,
   UUID,
   WorldConfig,
 } from "./types";
-import {
-  CompatibleBuffer,
-  isSharedArrayBufferSupported,
-} from "../../utils/utils";
+import { isSharedArrayBufferSupported } from "../../utils/utils";
 
 export function createAmmoWorker(): Worker {
   return new AmmoWorker();
@@ -22,13 +20,13 @@ export function WorkerHelpers(ammoWorker: Worker) {
   const inverse = new Matrix4();
 
   return {
-    initWorld(worldConfig: WorldConfig, sharedBuffers: ISharedBuffers) {
+    initWorld(worldConfig: WorldConfig, sharedBuffers: SharedBuffers) {
       if (isSharedArrayBufferSupported) {
         ammoWorker.postMessage({
           type: MessageType.INIT,
           worldConfig,
           sharedBuffers,
-          isSharedArrayBufferSupported
+          isSharedArrayBufferSupported,
         });
       } else {
         console.warn(
@@ -40,7 +38,7 @@ export function WorkerHelpers(ammoWorker: Worker) {
             type: MessageType.INIT,
             worldConfig,
             sharedBuffers,
-            isSharedArrayBufferSupported
+            isSharedArrayBufferSupported,
           },
           [
             sharedBuffers.rigidBodies.headerIntArray.buffer,
@@ -51,7 +49,7 @@ export function WorkerHelpers(ammoWorker: Worker) {
       }
     },
 
-    transferSharedBuffers(sharedBuffers: ISharedBuffers) {
+    transferSharedBuffers(sharedBuffers: SharedBuffers) {
       ammoWorker.postMessage(
         { type: MessageType.TRANSFER_BUFFERS, sharedBuffers },
         [
@@ -88,21 +86,27 @@ export function WorkerHelpers(ammoWorker: Worker) {
       });
     },
 
-    addSoftBody(uuid: UUID, buffer: CompatibleBuffer, options: SoftBodyConfig) {
+    addSoftBody(
+      uuid: UUID,
+      sharedSoftBodyBuffers: SharedSoftBodyBuffers,
+      softBodyConfig: SoftBodyConfig
+    ) {
       if (isSharedArrayBufferSupported) {
         ammoWorker.postMessage({
           type: MessageType.ADD_SOFTBODY,
           uuid,
-          sharedArrayBuffer: buffer,
+          sharedSoftBodyBuffers,
+          softBodyConfig,
         });
       } else {
         ammoWorker.postMessage(
           {
             type: MessageType.ADD_SOFTBODY,
             uuid,
-            arrayBuffer: buffer,
+            sharedSoftBodyBuffers,
+            softBodyConfig,
           },
-          [buffer]
+          [sharedSoftBodyBuffers.vertexFloatArray.buffer]
         );
       }
     },

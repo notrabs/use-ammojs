@@ -17,7 +17,9 @@ export class World {
   debugDrawMode: number;
   maxSubSteps: number;
   fixedTimeStep: number;
+
   softBodySolver: Ammo.btDefaultSoftBodySolver;
+  softBodyHelpers: Ammo.btSoftBodyHelpers;
 
   constructor(worldConfig: WorldConfig) {
     this.epsilon = worldConfig.epsilon || EPS;
@@ -40,6 +42,7 @@ export class World {
       this.softBodySolver
     );
     // this.physicsWorld.setForceUpdateAllAabbs(false);
+
     const gravity = new Ammo.btVector3(0, GRAVITY, 0);
     if (worldConfig.gravity) {
       gravity.setValue(
@@ -50,9 +53,12 @@ export class World {
     }
     this.physicsWorld.setGravity(gravity);
     Ammo.destroy(gravity);
+
     this.physicsWorld
       .getSolverInfo()
       .set_m_numIterations(worldConfig.solverIterations || 10);
+
+    this.softBodyHelpers = new Ammo.btSoftBodyHelpers();
   }
 
   isDebugEnabled() {
@@ -135,6 +141,7 @@ export class World {
     Ammo.destroy(this.softBodySolver);
     Ammo.destroy(this.physicsWorld);
     Ammo.destroy(this.debugDrawer);
+    Ammo.destroy(this.softBodyHelpers);
   }
 
   getDebugDrawer(

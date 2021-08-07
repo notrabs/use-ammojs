@@ -9,6 +9,7 @@ export {
   UpdateBodyOptions,
   ShapeType,
   BodyType,
+  SoftBodyType,
   WorldConfig,
   ShapeFit,
 } from "./three-ammo/lib/types";

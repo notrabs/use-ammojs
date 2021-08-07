@@ -3,7 +3,7 @@ import { initializeAmmoWasm } from "../ammo-wasm-initialize";
 import { World } from "../wrappers/world";
 import {
   ClientMessageType,
-  ISharedBuffers,
+  SharedBuffers,
   MessageType,
 } from "../../lib/types";
 
@@ -17,7 +17,7 @@ export let quatTmp1: Ammo.btQuaternion;
 
 export let usingSharedArrayBuffer = false;
 
-export let sharedBuffers: ISharedBuffers;
+export let sharedBuffers: SharedBuffers;
 
 async function initWorld({
   wasmUrl,

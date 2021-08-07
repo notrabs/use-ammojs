@@ -3,6 +3,7 @@ import {
   BufferGeometry,
   DynamicDrawUsage,
   Matrix4,
+  Mesh,
   Object3D,
   Vector3,
 } from "three";
@@ -15,13 +16,12 @@ import React, {
 } from "react";
 import { useFrame } from "@react-three/fiber";
 import { DefaultBufferSize } from "ammo-debug-drawer";
-import { AmmoPhysicsContext, ConstraintOptions } from "./physics-context";
+import { AmmoPhysicsContext } from "./physics-context";
 import {
   allocateCompatibleBuffer,
   AmmoDebugOptions,
   ammoDebugOptionsToNumber,
   isSharedArrayBufferSupported,
-  removeUndefinedKeys,
 } from "../utils/utils";
 import {
   createAmmoWorker,
@@ -32,15 +32,14 @@ import {
   BodyType,
   BufferState,
   ClientMessageType,
-  ISharedBuffers,
-  MessageType,
-  ShapeConfig,
+  SharedBuffers,
+  SharedSoftBodyBuffers,
   SoftBodyConfig,
-  UpdateBodyOptions,
   UUID,
   WorldConfig,
 } from "../three-ammo/lib/types";
 import { BUFFER_CONFIG } from "../three-ammo/lib/constants";
+import { BufferGeometryUtils } from "three/examples/jsm/utils/BufferGeometryUtils";
 
 interface AmmoPhysicsProps {
   // Draw a collision debug mesh into the scene
@@ -72,26 +71,14 @@ interface PhysicsState {
   bodyOptions: Record<UUID, BodyConfig>;
   uuids: UUID[];
   object3Ds: Record<UUID, Object3D>;
-  sharedBuffersRef: MutableRefObject<ISharedBuffers>;
+  softBodies: Record<UUID, Mesh>;
+  sharedBuffersRef: MutableRefObject<SharedBuffers>;
   uuidToIndex: Record<UUID, number>;
   debugIndex: Uint32Array;
   addRigidBody(uuid: UUID, mesh: Object3D, options?: BodyConfig);
-  updateRigidBody(uuid: UUID, options: UpdateBodyOptions);
   removeRigidBody(uuid: UUID);
-  addShapes(
-    bodyUuid: UUID,
-    shapesUuid: UUID,
-    mesh: Object3D,
-    options?: ShapeConfig
-  );
   addSoftBody(uuid: UUID, mesh: Object3D, options?: SoftBodyConfig);
   removeSoftBody(uuid: UUID);
-  addConstraint(
-    constraintId: UUID,
-    bodyUuid: UUID,
-    targetUuid: UUID,
-    options?: ConstraintOptions
-  );
 }
 
 const DEFAULT_DEBUG_MODE = { DrawWireframe: true };
@@ -108,7 +95,7 @@ export function Physics({
 }: PropsWithChildren<AmmoPhysicsProps>) {
   const [physicsState, setPhysicsState] = useState<PhysicsState>();
 
-  const sharedBuffersRef = useRef<ISharedBuffers>({} as any);
+  const sharedBuffersRef = useRef<SharedBuffers>({} as any);
 
   useEffect(() => {
     const uuids: string[] = [];
@@ -116,6 +103,8 @@ export function Physics({
     const uuidToIndex: Record<string, number> = {};
     const IndexToUuid: Record<number, string> = {};
     const bodyOptions: Record<string, BodyConfig> = {};
+
+    const softBodies: Record<UUID, Mesh> = {};
 
     const ammoWorker: Worker = createAmmoWorker();
 
@@ -184,14 +173,14 @@ export function Physics({
       },
     };
 
-    const worldConfig: WorldConfig = removeUndefinedKeys({
+    const worldConfig: WorldConfig = {
       debugDrawMode: ammoDebugOptionsToNumber(drawDebugMode),
       gravity: gravity && new Vector3(gravity[0], gravity[1], gravity[2]),
       epsilon,
       fixedTimeStep,
       maxSubSteps,
       solverIterations,
-    });
+    };
 
     workerHelpers.initWorld(worldConfig, sharedBuffersRef.current);
 
@@ -210,15 +199,13 @@ export function Physics({
             bodyOptions,
             uuids,
             object3Ds,
+            softBodies,
             uuidToIndex,
             debugIndex,
             addRigidBody,
             removeRigidBody,
             addSoftBody,
             removeSoftBody,
-            addConstraint,
-            addShapes,
-            updateRigidBody,
           });
         } else if (event.data.type === ClientMessageType.RIGIDBODY_READY) {
           const uuid = event.data.uuid;
@@ -234,17 +221,10 @@ export function Physics({
     workerInitPromise.then(setPhysicsState);
 
     function addRigidBody(uuid, mesh, options: BodyConfig = {}) {
-      removeUndefinedKeys(options);
-
       bodyOptions[uuid] = options;
       object3Ds[uuid] = mesh;
+
       workerHelpers.addRigidBody(uuid, mesh, options);
-    }
-
-    function updateRigidBody(uuid: string, options: UpdateBodyOptions) {
-      removeUndefinedKeys(options);
-
-      workerHelpers.updateRigidBody(uuid, options);
     }
 
     function removeRigidBody(uuid: string) {
@@ -256,43 +236,87 @@ export function Physics({
       workerHelpers.removeRigidBody(uuid);
     }
 
-    function addShapes(
-      bodyUuid: string,
-      shapesUuid: string,
-      mesh: Object3D,
-      options?: ShapeConfig
-    ) {
-      removeUndefinedKeys(options);
+    function addSoftBody(uuid: UUID, mesh: Mesh, options: SoftBodyConfig = {}) {
+      if (!mesh.geometry) {
+        console.error("useSoftBody received: ", mesh);
+        throw new Error("useSoftBody is only supported on BufferGeometries");
+      }
 
-      workerHelpers.addShapes(bodyUuid, shapesUuid, mesh, options);
-    }
+      BufferGeometryUtils.mergeVertices(mesh.geometry);
 
-    function addSoftBody(uuid, mesh, options: SoftBodyConfig = {}) {
-      // removeUndefinedKeys(options);
-      //
-      // bodyOptions[uuid] = options;
-      // object3Ds[uuid] = mesh;
-      // workerHelpers.addRigidBody(uuid, mesh, options);
+      const indexLength = mesh.geometry.index.count * 3;
+      const vertexLength = mesh.geometry.attributes.position.count * 3;
+      const normalLength = mesh.geometry.attributes.normal.count * 3;
+
+      console.log(mesh.geometry);
+
+      const buffer = allocateCompatibleBuffer(
+        indexLength * 4 + vertexLength * 4 + normalLength * 4
+      );
+
+      const sharedSoftBodyBuffers: SharedSoftBodyBuffers = {
+        uuid,
+        indexIntArray: new Uint32Array(buffer, 0, indexLength),
+        vertexFloatArray: new Float32Array(
+          buffer,
+          indexLength * 4,
+          vertexLength
+        ),
+        normalFloatArray: new Float32Array(
+          buffer,
+          indexLength * 4 + vertexLength * 4,
+          normalLength
+        ),
+      };
+
+      // Bullet softbodies operate in world-space,
+      // so the transform needs to be baked into the vertex data
+      mesh.updateMatrixWorld(true);
+      mesh.geometry.applyMatrix4(mesh.matrixWorld);
+
+      mesh.position.set(0, 0, 0);
+      mesh.quaternion.set(0, 0, 0, 1);
+      mesh.scale.set(1, 1, 1);
+
+      sharedSoftBodyBuffers.indexIntArray.set(mesh.geometry.index.array);
+      sharedSoftBodyBuffers.vertexFloatArray.set(
+        mesh.geometry.attributes.position.array
+      );
+      sharedSoftBodyBuffers.normalFloatArray.set(
+        mesh.geometry.attributes.normal.array
+      );
+
+      if (isSharedArrayBufferSupported) {
+        mesh.geometry.setAttribute(
+          "position",
+          new BufferAttribute(
+            sharedSoftBodyBuffers.vertexFloatArray,
+            3
+          ).setUsage(DynamicDrawUsage)
+        );
+        mesh.geometry.setAttribute(
+          "normal",
+          new BufferAttribute(
+            sharedSoftBodyBuffers.normalFloatArray,
+            3
+          ).setUsage(DynamicDrawUsage)
+        );
+      }
+
+      softBodies[uuid] = mesh;
+
+      sharedBuffersRef.current.softBodies.push(sharedSoftBodyBuffers);
+
+      workerHelpers.addSoftBody(uuid, sharedSoftBodyBuffers, options);
     }
 
     function removeSoftBody(uuid: string) {
-      // uuids.splice(uuids.indexOf(uuid), 1);
-      // delete IndexToUuid[uuidToIndex[uuid]];
-      // delete uuidToIndex[uuid];
-      // delete bodyOptions[uuid];
-      // delete object3Ds[uuid];
-      // workerHelpers.removeRigidBody(uuid);
-    }
+      delete softBodies[uuid];
+      workerHelpers.removeSoftBody(uuid);
 
-    function addConstraint(
-      constraintId: string,
-      bodyUuid: string,
-      targetUuid: string,
-      options?: ConstraintOptions
-    ) {
-      removeUndefinedKeys(options);
-
-      workerHelpers.addConstraint(constraintId, bodyUuid, targetUuid, options);
+      sharedBuffersRef.current.softBodies = sharedBuffersRef.current.softBodies.filter(
+        (ssbb) => ssbb.uuid !== uuid
+      );
     }
 
     return () => {
@@ -319,6 +343,7 @@ export function Physics({
       object3Ds,
       uuidToIndex,
       debugIndex,
+      softBodies,
     } = physicsState;
 
     // console.log(sharedBuffersRef.current.objectMatricesFloatArray.byteLength);
@@ -373,6 +398,15 @@ export function Physics({
         // console.log(uuid, collisions);
       }
 
+      for (const softBodyBuffers of sharedBuffersRef.current.softBodies) {
+        const softBodyMesh = softBodies[softBodyBuffers.uuid];
+
+        if (softBodyMesh) {
+          softBodyMesh.geometry.attributes.position.needsUpdate = true;
+          softBodyMesh.geometry.attributes.normal.needsUpdate = true;
+        }
+      }
+
       if (isSharedArrayBufferSupported) {
         Atomics.store(
           sharedBuffers.rigidBodies.headerIntArray,
@@ -394,7 +428,6 @@ export function Physics({
       }
       Atomics.store(debugIndex, 0, 0);
     }
-
   });
 
   useEffect(() => {
@@ -428,9 +461,6 @@ export function Physics({
         // workerHelpers Overrides
         addRigidBody: physicsState.addRigidBody,
         removeRigidBody: physicsState.removeRigidBody,
-        addShapes: physicsState.addShapes,
-        addConstraint: physicsState.addConstraint,
-        updateRigidBody: physicsState.updateRigidBody,
 
         addSoftBody: physicsState.addSoftBody,
         removeSoftBody: physicsState.removeSoftBody,

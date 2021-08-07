@@ -10,4 +10,6 @@ declare module "*.wasm" {
 
 declare module Ammo {
   const getPointer: (obj: any) => number;
+
+  const castObject: <T>(obj, target) => T;
 }

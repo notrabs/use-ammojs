@@ -1,18 +1,16 @@
-import { MathUtils, Mesh, Object3D } from "three";
+import { MathUtils, Object3D , Mesh} from "three";
 import React, { MutableRefObject, useEffect, useRef, useState } from "react";
 import { useAmmoPhysicsContext } from "../physics-context";
 import { SoftBodyConfig } from "../../three-ammo/lib/types";
 import { createSoftbodyApi, SoftbodyApi } from "../api/softbody-api";
 
-type UseSoftBodyOptions = SoftBodyConfig & {
-  mesh: Mesh;
-};
+type UseSoftBodyOptions = SoftBodyConfig & {};
 
 export function useSoftBody(
   options: UseSoftBodyOptions | (() => UseSoftBodyOptions),
-  object3D?: Object3D
-): [MutableRefObject<Object3D | undefined>, SoftbodyApi] {
-  const ref = useRef<Object3D>();
+  mesh?: Mesh
+): [MutableRefObject<Mesh | undefined>, SoftbodyApi] {
+  const ref = useRef<Mesh>();
 
   const physicsContext = useAmmoPhysicsContext();
   const { addSoftBody, removeSoftBody } = physicsContext;
@@ -20,17 +18,15 @@ export function useSoftBody(
   const [bodyUUID] = useState(() => MathUtils.generateUUID());
 
   useEffect(() => {
-    const objectToUse = object3D ? object3D : ref.current!;
+    const meshToUse = mesh ? mesh : ref.current!;
 
     if (typeof options === "function") {
       options = options();
     }
 
-    const { mesh, ...rest } = options;
+    const { ...rest } = options;
 
-    const meshToUse = mesh ? mesh : objectToUse;
-
-    addSoftBody(bodyUUID, objectToUse, {
+    addSoftBody(bodyUUID, meshToUse, {
       ...rest,
     });
 

@@ -24,11 +24,11 @@ export interface WorldConfig {
 }
 
 export enum BodyActivationState {
-  ACTIVE_TAG = "active",
-  ISLAND_SLEEPING = "islandSleeping",
-  WANTS_DEACTIVATION = "wantsDeactivation",
-  DISABLE_DEACTIVATION = "disableDeactivation",
-  DISABLE_SIMULATION = "disableSimulation",
+  ACTIVE_TAG = 1,
+  ISLAND_SLEEPING = 2,
+  WANTS_DEACTIVATION = 3,
+  DISABLE_DEACTIVATION = 4,
+  DISABLE_SIMULATION = 5,
 }
 
 export enum BodyType {
@@ -86,6 +86,23 @@ export interface BodyConfig {
 
 export interface SoftBodyConfig {
   type?: SoftBodyType;
+
+  mass?: number;
+  margin?: number;
+
+  viterations?: number;
+  piterations?: number;
+
+  friction?: number;
+  damping?: number;
+  pressure?: number;
+
+  linearStiffness?: number;
+  angularStiffness?: number;
+  volumeStiffness?: number;
+
+  randomizeConstraints?: boolean;
+  activationState?: BodyActivationState;
 }
 
 export enum SoftBodyType {
@@ -273,7 +290,14 @@ export enum CollisionFlag {
   DISABLE_SPU_COLLISION_PROCESSING = 64, //disable parallel/SPU processing
 }
 
-export interface ISharedBuffers {
+export interface SharedSoftBodyBuffers {
+  uuid: UUID;
+  indexIntArray: Uint32Array;
+  vertexFloatArray: Float32Array;
+  normalFloatArray: Float32Array;
+}
+
+export interface SharedBuffers {
   rigidBodies: {
     headerIntArray: Int32Array;
     headerFloatArray: Float32Array;
@@ -281,11 +305,7 @@ export interface ISharedBuffers {
     objectMatricesIntArray: Int32Array;
   };
 
-  softBodies: {
-    indexIntArray: Uint32Array;
-    vertexFloatArray: Float32Array;
-    normalFloatArray: Float32Array;
-  }[];
+  softBodies: SharedSoftBodyBuffers[];
 
   debug: {
     indexIntArray: Uint32Array;

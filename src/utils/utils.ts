@@ -1,14 +1,5 @@
 import { AmmoDebugConstants } from "ammo-debug-drawer";
 
-export function removeUndefinedKeys<T>(obj: T): T {
-  Object.keys(obj).forEach((key) => {
-    if (obj[key] === undefined) {
-      delete obj[key];
-    }
-  });
-  return obj;
-}
-
 // see AmmoDebugConstants from ammo-debug-drawer package
 export interface AmmoDebugOptions {
   DrawWireframe?: boolean;

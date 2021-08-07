@@ -9,7 +9,7 @@ import { world, worldEventReceivers } from "./managers/world-manager";
 import { debugEventReceivers } from "./managers/debug-manager";
 import { constraintEventReceivers } from "./managers/constraint-manager";
 import { SIMULATION_RATE } from "../lib/constants";
-import { softBodyEventReceivers } from "./managers/soft-body-manager";
+import { copyToSoftBodyBuffers, softBodyEventReceivers } from "./managers/soft-body-manager";
 
 let lastTick;
 let tickInterval;
@@ -23,6 +23,7 @@ function tick() {
     lastTick = now;
 
     copyToRigidBodyBuffer();
+    copyToSoftBodyBuffers();
 
     releaseBuffer(stepDuration);
   }
