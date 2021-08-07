@@ -17,7 +17,7 @@ export class SoftBody {
     {
       type,
 
-      mass = 15,
+      mass = 1,
       margin = 0.05,
 
       viterations = 40,
@@ -43,6 +43,12 @@ export class SoftBody {
 
     this.numVerts = buffers.vertexFloatArray.length / 3;
 
+    // console.log("numVerts", this.numVerts);
+    // console.log("numFaces", buffers.indexIntArray.length / 3);
+    // console.log("indices", buffers.indexIntArray);
+    // console.log("verts", buffers.vertexFloatArray);
+    // console.log("normals", buffers.normalFloatArray);
+
     this.physicsBody = world.softBodyHelpers.CreateFromTriMesh(
       world.physicsWorld.getWorldInfo(),
       buffers.vertexFloatArray as any,
@@ -64,6 +70,7 @@ export class SoftBody {
     sbConfig.set_kDP(damping);
     // Pressure
     sbConfig.set_kPR(pressure);
+
     // Stiffness
     this.physicsBody.get_m_materials().at(0).set_m_kLST(linearStiffness);
     this.physicsBody.get_m_materials().at(0).set_m_kAST(angularStiffness);
@@ -96,10 +103,6 @@ export class SoftBody {
 
       const nodePos = node.get_m_x();
       const bufferIndex = vertexIndex * 3;
-
-      // if (vertexIndex === 0) {
-      //   console.log(nodePos.x(), nodePos.y(), nodePos.z());
-      // }
 
       this.buffers.vertexFloatArray[bufferIndex] = nodePos.x();
       this.buffers.vertexFloatArray[bufferIndex + 1] = nodePos.y();

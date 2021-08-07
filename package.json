@@ -58,8 +58,7 @@
   },
   "dependencies": {
     "ammo-debug-drawer": "^1.0.1",
-    "ammo.js": "kripken/ammo.js",
-    "three-to-ammo": "^1.0.0"
+    "ammo.js": "kripken/ammo.js"
   },
   "peerDependencies": {
     "@react-three/fiber": "^7.0.6",

@@ -1,5 +1,5 @@
 import { Matrix4 } from "three";
-import { iterateGeometries } from "three-to-ammo";
+import { iterateGeometries } from "../../three-to-ammo";
 import AmmoWorker from "web-worker:../worker/ammo.worker";
 import {
   MessageType,

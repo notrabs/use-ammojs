@@ -8081,11 +8081,6 @@ text-table@^0.2.0:
   resolved "https://registry.yarnpkg.com/text-table/-/text-table-0.2.0.tgz#7f5ee823ae805207c00af2df4a84ec3fcfa570b4"
   integrity sha1-f17oI66AUgfACvLfSoTsP8+lcLQ=
 
-three-to-ammo@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/three-to-ammo/-/three-to-ammo-1.0.0.tgz#e4f7ca98d1eef29c56f627f6cc3f8ff2887222cb"
-  integrity sha512-JqaKAcC5y+Nz90n0+P4eCu/M2th0B/2whhCi+0yaZh9iv//UF+1IaQuebiN1n24tx3eFpL+LcJIG7H5VIyySJA==
-
 three@^0.127.0:
   version "0.127.0"
   resolved "https://registry.yarnpkg.com/three/-/three-0.127.0.tgz#c463f4d41b2c735dcf8e9e51a388815e80cd3791"

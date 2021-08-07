@@ -19,7 +19,7 @@ import {
   vector3Tmp2,
   world,
 } from "./world-manager";
-import { createCollisionShapes } from "three-to-ammo";
+import { createCollisionShapes } from "../../../three-to-ammo";
 
 export const bodies: Record<UUID, RigidBody> = {};
 export const shapes: Record<UUID, any> = {};

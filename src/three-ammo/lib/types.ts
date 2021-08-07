@@ -84,6 +84,7 @@ export interface BodyConfig {
   scaleAutoUpdate?: boolean;
 }
 
+// see https://pybullet.org/Bullet/phpBB3/viewtopic.php?t=7070
 export interface SoftBodyConfig {
   type?: SoftBodyType;
 
@@ -298,7 +299,7 @@ export enum CollisionFlag {
 
 export interface SharedSoftBodyBuffers {
   uuid: UUID;
-  indexIntArray: Uint32Array;
+  indexIntArray: Uint32Array | Uint16Array;
   vertexFloatArray: Float32Array;
   normalFloatArray: Float32Array;
 }

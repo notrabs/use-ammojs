@@ -246,13 +246,21 @@ export function Physics({
         throw new Error("useSoftBody is only supported on BufferGeometries");
       }
 
-      BufferGeometryUtils.mergeVertices(mesh.geometry);
+      // console.log("before merge ", mesh.geometry.attributes.position.count);
+      mesh.geometry.deleteAttribute("normal");
+      mesh.geometry.deleteAttribute("uv");
+      mesh.geometry = BufferGeometryUtils.mergeVertices(mesh.geometry);
+      mesh.geometry.computeVertexNormals();
+      // console.log("after merge ", mesh.geometry.attributes.position.count);
 
-      const indexLength = mesh.geometry.index.count * 3;
-      const vertexLength = mesh.geometry.attributes.position.count * 3;
-      const normalLength = mesh.geometry.attributes.normal.count * 3;
-
-      console.log(mesh.geometry);
+      const indexLength =
+        mesh.geometry.index.count * mesh.geometry.index.itemSize;
+      const vertexLength =
+        mesh.geometry.attributes.position.count *
+        mesh.geometry.attributes.position.itemSize;
+      const normalLength =
+        mesh.geometry.attributes.normal.count *
+        mesh.geometry.attributes.normal.itemSize;
 
       const buffer = allocateCompatibleBuffer(
         indexLength * 4 + vertexLength * 4 + normalLength * 4
@@ -260,7 +268,11 @@ export function Physics({
 
       const sharedSoftBodyBuffers: SharedSoftBodyBuffers = {
         uuid,
-        indexIntArray: new Uint32Array(buffer, 0, indexLength),
+        indexIntArray: new (indexLength > 65535 ? Uint32Array : Uint16Array)(
+          buffer,
+          0,
+          indexLength
+        ),
         vertexFloatArray: new Float32Array(
           buffer,
           indexLength * 4,
@@ -281,6 +293,8 @@ export function Physics({
       mesh.position.set(0, 0, 0);
       mesh.quaternion.set(0, 0, 0, 1);
       mesh.scale.set(1, 1, 1);
+
+      mesh.frustumCulled = false;
 
       sharedSoftBodyBuffers.indexIntArray.set(mesh.geometry.index.array);
       sharedSoftBodyBuffers.vertexFloatArray.set(
@@ -349,8 +363,6 @@ export function Physics({
       debugIndex,
       softBodies,
     } = physicsState;
-
-    // console.log(sharedBuffersRef.current.objectMatricesFloatArray.byteLength);
 
     const sharedBuffers = sharedBuffersRef.current;
 

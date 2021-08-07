@@ -23,7 +23,13 @@ function tick() {
   if (isBufferConsumed()) {
     const now = performance.now();
     const dt = now - lastTick;
-    world.step(dt * simulationSpeed);
+    try {
+      world.step(dt * simulationSpeed);
+    } catch (err) {
+      console.error("The ammo worker has crashed:", err);
+      clearInterval(tickInterval);
+      self.onmessage = null;
+    }
     const stepDuration = performance.now() - now;
     lastTick = now;
 
