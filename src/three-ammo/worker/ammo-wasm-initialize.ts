@@ -17,6 +17,8 @@ export function initializeAmmoWasm(wasmUrl: string | undefined) {
   });
 }
 
+// non-wasm Ammo build for testing
+
 // import Ammo from "../lib/builds/ammo.js";
 //
 // export function initializeAmmoWasm(wasmUrl: string | undefined) {

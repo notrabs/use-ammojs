@@ -28,7 +28,7 @@ export class SoftBody {
 
       friction = 0.1,
       damping = 0.01,
-      pressure = 200,
+      pressure = 100,
 
       linearStiffness = 0.9,
       angularStiffness = 0.9,
@@ -65,8 +65,8 @@ export class SoftBody {
     );
 
     const sbConfig = this.physicsBody.get_m_cfg();
-    // sbConfig.set_viterations(viterations);
-    // sbConfig.set_piterations(piterations);
+    sbConfig.set_viterations(viterations);
+    sbConfig.set_piterations(piterations);
 
     sbConfig.set_collisions(collisionFlag);
 
@@ -84,7 +84,7 @@ export class SoftBody {
 
     this.physicsBody.setTotalMass(mass, false);
 
-    this.physicsBody.setPose(true, true);
+    // this.physicsBody.setPose(true, true);
 
     Ammo.castObject<Ammo.btCollisionObject>(
       this.physicsBody,
@@ -93,7 +93,9 @@ export class SoftBody {
       .getCollisionShape()
       .setMargin(margin);
 
-    this.physicsBody.generateClusters(clusters);
+    if (clusters > 0) {
+      this.physicsBody.generateClusters(clusters);
+    }
 
     this.world.physicsWorld.addSoftBody(
       this.physicsBody,

@@ -1308,7 +1308,7 @@ declare module Ammo {
     getTotalMass(): number;
     setTotalMass(mass: number, fromfaces: boolean): void;
     setMass(node: number, mass: number): void;
-    setPose(bvolume: boolean, bframe: boolean);
+    // setPose(bvolume: boolean, bframe: boolean);
     transform(trs: btTransform): void;
     translate(trs: btVector3): void;
     rotate(rot: btQuaternion): void;
