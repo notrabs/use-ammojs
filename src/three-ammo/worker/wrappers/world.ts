@@ -27,7 +27,7 @@ export class World {
       worldConfig.debugDrawMode || AmmoDebugConstants.NoDebug;
     this.maxSubSteps = worldConfig.maxSubSteps || 4;
     this.fixedTimeStep = worldConfig.fixedTimeStep || 1 / 60;
-    this.collisionConfiguration = new Ammo.btDefaultCollisionConfiguration();
+    this.collisionConfiguration = new Ammo.btSoftBodyRigidBodyCollisionConfiguration();
     this.dispatcher = new Ammo.btCollisionDispatcher(
       this.collisionConfiguration
     );

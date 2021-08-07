@@ -9,16 +9,21 @@ import { world, worldEventReceivers } from "./managers/world-manager";
 import { debugEventReceivers } from "./managers/debug-manager";
 import { constraintEventReceivers } from "./managers/constraint-manager";
 import { SIMULATION_RATE } from "../lib/constants";
-import { copyToSoftBodyBuffers, softBodyEventReceivers } from "./managers/soft-body-manager";
+import {
+  copyToSoftBodyBuffers,
+  softBodyEventReceivers,
+} from "./managers/soft-body-manager";
 
 let lastTick;
 let tickInterval;
+
+let simulationSpeed = 1 / 1000;
 
 function tick() {
   if (isBufferConsumed()) {
     const now = performance.now();
     const dt = now - lastTick;
-    world.step(dt / 1000);
+    world.step(dt * simulationSpeed);
     const stepDuration = performance.now() - now;
     lastTick = now;
 
@@ -29,7 +34,12 @@ function tick() {
   }
 }
 
+function setSimulationSpeed({ simulationSpeed: newSimulationSpeed }) {
+  simulationSpeed = newSimulationSpeed / 1000;
+}
+
 const eventReceivers: Record<MessageType, (eventData: any) => void> = {
+  [MessageType.SET_SIMULATION_SPEED]: setSimulationSpeed,
   ...worldEventReceivers,
   ...debugEventReceivers,
   ...rigidBodyEventReceivers,

@@ -62,6 +62,9 @@ interface AmmoPhysicsProps {
 
   // default = 10
   solverIterations?: number;
+
+  // default = 1
+  simulationSpeed?: number;
 }
 
 interface PhysicsState {
@@ -91,6 +94,7 @@ export function Physics({
   fixedTimeStep,
   maxSubSteps,
   solverIterations,
+  simulationSpeed = 1,
   children,
 }: PropsWithChildren<AmmoPhysicsProps>) {
   const [physicsState, setPhysicsState] = useState<PhysicsState>();
@@ -446,6 +450,12 @@ export function Physics({
       }
     }
   }, [drawDebug, physicsState]);
+
+  useEffect(() => {
+    if (physicsState?.workerHelpers) {
+      workerHelpers.setSimulationSpeed(simulationSpeed);
+    }
+  }, [physicsState?.workerHelpers, simulationSpeed]);
 
   if (!physicsState) {
     return null;

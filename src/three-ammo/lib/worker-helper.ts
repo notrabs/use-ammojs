@@ -258,5 +258,12 @@ export function WorkerHelpers(ammoWorker: Worker) {
         });
       }
     },
+
+    setSimulationSpeed(simulationSpeed: number) {
+      ammoWorker.postMessage({
+        type: MessageType.SET_SIMULATION_SPEED,
+        simulationSpeed,
+      });
+    },
   };
 }

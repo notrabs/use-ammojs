@@ -31,6 +31,9 @@ export class SoftBody {
       angularStiffness = 0.9,
       volumeStiffness = 0.9,
 
+      collisionFilterGroup = 1,
+      collisionFilterMask = 1,
+
       randomizeConstraints = true,
       activationState = BodyActivationState.DISABLE_DEACTIVATION,
     }: SoftBodyConfig
@@ -75,7 +78,11 @@ export class SoftBody {
       .getCollisionShape()
       .setMargin(margin);
 
-    this.world.physicsWorld.addSoftBody(this.physicsBody, 1, -1);
+    this.world.physicsWorld.addSoftBody(
+      this.physicsBody,
+      collisionFilterGroup,
+      collisionFilterMask
+    );
 
     // Disable deactivation
     this.physicsBody.setActivationState(activationState);

@@ -103,6 +103,11 @@ export interface SoftBodyConfig {
 
   randomizeConstraints?: boolean;
   activationState?: BodyActivationState;
+
+  //32-bit mask, default = 1
+  collisionFilterGroup?: number;
+  //32-bit mask, default = 1
+  collisionFilterMask?: number;
 }
 
 export enum SoftBodyType {
@@ -236,6 +241,7 @@ export enum BufferState {
 export enum MessageType {
   INIT,
   TRANSFER_BUFFERS,
+  SET_SIMULATION_SPEED,
 
   ADD_RIGIDBODY,
   UPDATE_RIGIDBODY,
