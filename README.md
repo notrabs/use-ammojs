@@ -21,18 +21,28 @@ At the time of writing however use-cannon is more mature and great for most proj
 
 ## Roadmap
 
+#### Main goals:
+
 - [x] Create a Physics World as a React context and simulate it in a web-worker
 - [x] Sync three objects to physics rigid-bodies
 - [x] Add Rigidbody support
 - [ ] Add [Softbody](https://pybullet.org/Bullet/BulletFull/classbtSoftBody.html) support
   - [x] Volumes/Cloth from Triangle Mesh
   - [ ] Ropes
+  - [ ] Support textures on Softbodies
   - [ ] Deformables
 - [ ] Add Constraints between rigid bodies
+- [ ] Add Constraints to soft bodies (ability to pin nodes in place or to rigid bodies)
 - [ ] Improve Physics API
   - [ ] Make _all_ props reactive
   - [ ] Expose more methods trough the hook (e.g. setPosition/applyImpulse/[more...](https://pybullet.org/Bullet/BulletFull/classbtRigidBody.html))
   - [ ] Support collision callbacks
+- [ ] Add Examples to the documentation
+- [ ] Simulation managment
+  - [x] Configurable Simulation Speed/Pausing
+  - [ ] Expose performance info
+
+#### Low priority goals:
 - [ ] Add [Raycast](https://pybullet.org/Bullet/BulletFull/classbtCollisionWorld.html#aaac6675c8134f6695fecb431c72b0a6a) queries
   - [x] One Time (async) raytests
   - [ ] Continuous queries trough a fixed scene component
@@ -40,14 +50,8 @@ At the time of writing however use-cannon is more mature and great for most proj
   - [x] Rigid Bodies
   - [x] Soft Bodies
   - [ ] Debug Rendering
-- [ ] Add Examples to the documentation
-- [ ] Simulation managment
-  - [x] Configurable Simulation Speed/Pausing
-  - [ ] Expose performance info
-
-- Low priority
-  - [ ] Improve the automatic shape detection (set shapeType automatically based on the three Mesh type)
-  - [ ] Raycast Vehicle API
+- [ ] Improve the automatic shape detection (set shapeType automatically based on the three Mesh type)
+- [ ] Raycast Vehicle API
 
 ## Examples
 
