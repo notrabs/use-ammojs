@@ -24,28 +24,29 @@ At the time of writing however use-cannon is more mature and great for most proj
 #### Main goals:
 
 - [x] Create a Physics World as a React context and simulate it in a web-worker
-- [x] Sync three objects to physics rigid-bodies
-- [x] Add Rigidbody support
-- [ ] Add [Softbody](https://pybullet.org/Bullet/BulletFull/classbtSoftBody.html) support
+- [x] Sync three objects to physics Rigid Bodies
+- [x] Add Rigid Body support
+- [ ] Add [Soft Body](https://pybullet.org/Bullet/BulletFull/classbtSoftBody.html) support
   - [x] Volumes/Cloth from Triangle Mesh
   - [ ] Ropes
-  - [ ] Support textures on Softbodies
+  - [ ] Support textures on Soft Bodies
   - [ ] Deformables
-- [ ] Add Constraints between rigid bodies
-- [ ] Add Constraints to soft bodies (ability to pin nodes in place or to rigid bodies)
+- [ ] Add Constraints between Rigid Bodies
+- [ ] Add Constraints to Soft Bodies (ability to pin nodes in place or to Rigid Bodies)
 - [ ] Improve Physics API
   - [ ] Make _all_ props reactive
   - [ ] Expose more methods trough the hook (e.g. setPosition/applyImpulse/[more...](https://pybullet.org/Bullet/BulletFull/classbtRigidBody.html))
   - [ ] Support collision callbacks
 - [ ] Add Examples to the documentation
 - [ ] Simulation managment
-  - [x] Configurable Simulation Speed/Pausing
+  - [x] Configurable simulation speed
   - [ ] Expose performance info
+- [ ] Set up Benchmarks to compare cannon, ammo with ArrayBuffers and ammo with SharedArrayBuffers
 
 #### Low priority goals:
 - [ ] Add [Raycast](https://pybullet.org/Bullet/BulletFull/classbtCollisionWorld.html#aaac6675c8134f6695fecb431c72b0a6a) queries
-  - [x] One Time (async) raytests
-  - [ ] Continuous queries trough a fixed scene component
+  - [x] One-time (async) ray-tests
+  - [ ] Continuous queries trough a fixed scene component to mitigate worker latency (TODO: check if necessary)
 - [x] Use ArrayBuffers as a fallback for missing cross-origin isolation
   - [x] Rigid Bodies
   - [x] Soft Bodies
@@ -62,7 +63,7 @@ Mainly relevant for SoftBody performance, which require additional Buffer copies
 - [Soft Bodies](https://codesandbox.io/s/use-ammojs-softbody-example-k59jz)
 - TODO
 
-## Documentation
+## Quick Start
 
 ### 1. Wrap your scene in a Physics Provider
 
@@ -121,7 +122,7 @@ useRigidbody(
 );
 ```
 
-### 2.a Make objects squishy
+### 2.a Make objects squishy (Soft Bodies)
 
 ```tsx
 const [ref] = useSoftBody(() => ({
@@ -159,7 +160,7 @@ if (hits.length) {
 }
 ```
 
-### 3.b Updating Motion State
+### 3.b Update Motion State
 
 ```tsx
 const [playerRef, api] = useRigidbody(() => ({
@@ -178,7 +179,43 @@ function handleRespawn() {
 }
 ```
 
-## Developing locally using use-ammojs
+## Documentation
+
+TODO
+
+### Components
+
+```tsx
+<Physics />
+```
+
+### Hooks
+
+```tsx
+const { rayTest } = useAmmo();
+```
+
+```tsx
+const [ref, api] = useRigidBody();
+```
+
+```tsx
+const [ref, api] = useSoftBody();
+```
+
+### Cross-origin isolation
+
+To use `SharedArrayBuffers` for better communication between the main-thread and the web-worker-thread, a cross-origin isolated environment is necessary in [modern browsers](https://caniuse.com/sharedarraybuffer).
+This requires sending the following HTTP headers in the response of the main html document ([Learn more](https://web.dev/coop-coep/)):
+
+```http request
+Cross-Origin-Embedder-Policy: require-corp
+Cross-Origin-Opener-Policy: same-origin
+```
+
+use-ammojs will fallback to using `ArrayBuffers` and `postMessage()` transfers if `SharedArrayBuffers` are not available. This is not as bad as a full copy on each transfer, but it does not allow the data to be availble on both threads at the same time.
+
+### Developing locally using use-ammojs
 
 <details> 
 <summary> Setting up react-scripts to work with yarn link using @craco/craco </summary>
