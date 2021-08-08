@@ -182,19 +182,23 @@ function handleRespawn() {
 
 ## Documentation
 
-TODO
-
 ### Components
 
 ```tsx
 <Physics />
 ```
 
+Phyiscs Context. Use to wrap all phyical objects within the same physics world.
+
+
 ### Hooks
 
 ```tsx
 const { rayTest } = useAmmo();
 ```
+
+Utility funcionts available anywhere in the `<Physics />` context.
+
 
 ```tsx
 const [ref, api] = useRigidBody();
