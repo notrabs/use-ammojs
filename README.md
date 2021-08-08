@@ -13,12 +13,6 @@ yarn add use-ammojs
 npm i use-ammojs
 ```
 
-## Why not use [use-cannon](https://github.com/pmndrs/use-cannon) instead?
-
-use-cannon is great and a inspiration for this package, but it is missing features like soft-bodies and lacks performance in scenes with large triangle meshes. ammo.js is a direct wrapper around the powerful [Bullet Physics](http://www.bulletphysics.org/) engine, which solves these problems.
-
-At the time of writing however use-cannon is more mature and great for most projects.
-
 ## Examples
 
 ⚠️ **Note that the codesandbox examples do not support SharedArrayBuffers [due to missing cross-origin isolation](https://web.dev/coop-coep/).**
@@ -28,6 +22,12 @@ Mainly relevant for SoftBody performance, which require additional Buffer copies
 - [Soft Bodies](https://codesandbox.io/s/use-ammojs-softbody-example-k59jz)
 - TODO
 
+
+## Why not use [use-cannon](https://github.com/pmndrs/use-cannon) instead?
+
+use-cannon is great and a inspiration for this package, but it is missing features like soft-bodies and lacks performance in scenes with large triangle meshes. ammo.js is a direct wrapper around the powerful [Bullet Physics](http://www.bulletphysics.org/) engine, which solves these problems.
+
+At the time of writing however use-cannon is more mature and great for most projects.
 
 ## Roadmap
 
