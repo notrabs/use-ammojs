@@ -20,14 +20,14 @@ At the time of writing however use-cannon is more mature and great for most proj
   - [x] Volumes/Cloth from Triangle Mesh
   - [ ] Ropes
   - [ ] Deformables
-- [ ] Add [Raycast](https://pybullet.org/Bullet/BulletFull/classbtCollisionWorld.html#aaac6675c8134f6695fecb431c72b0a6a) queries
-  - [ ] One Time (async) raytests
-  - [ ] Continuous queries trough a fixed scene component
 - [ ] Add Constraints between rigid bodies
 - [ ] Improve Physics API
   - [ ] Make _all_ props reactive
   - [ ] Expose more methods trough the hook (e.g. setPosition/applyImpulse/[more...](https://pybullet.org/Bullet/BulletFull/classbtRigidBody.html))
   - [ ] Support collision callbacks
+- [ ] Add [Raycast](https://pybullet.org/Bullet/BulletFull/classbtCollisionWorld.html#aaac6675c8134f6695fecb431c72b0a6a) queries
+  - [x] One Time (async) raytests
+  - [ ] Continuous queries trough a fixed scene component
 - [x] Use ArrayBuffers as a fallback for missing cross-origin isolation
   - [x] Rigid Bodies
   - [x] Soft Bodies
@@ -36,7 +36,6 @@ At the time of writing however use-cannon is more mature and great for most proj
 - [ ] Simulation managment
   - [x] Configurable Simulation Speed/Pausing
   - [ ] Expose performance info
-
 
 - Low priority
   - [ ] Improve the automatic shape detection (set shapeType automatically based on the three Mesh type)
@@ -124,19 +123,31 @@ return (
 );
 ```
 
-### 3.a Add Constraints
+### 2.c Add Constraints
 
-```
-TODO
-```
-
-### 3.b Add Raycasts
-
-```
-TODO
+```tsx
+TODO;
 ```
 
-### 4 Updating Motion State
+### 3.a Raycasts
+
+```tsx
+const { rayTest } = useAmmo();
+
+[...]
+
+const hits = await rayTest({
+  from: new Vector3(0, 5, 7),
+  to: new Vector3(0, -1, 7),
+  multiple: true
+})
+
+if (hits.length) {
+    console.log(hits[0].object.name, hits[0].hitPosition)
+}
+```
+
+### 3.b Updating Motion State
 
 ```tsx
 const [playerRef, api] = useRigidbody(() => ({
