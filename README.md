@@ -5,6 +5,11 @@ _Fast_ Physics hooks for use with [react-three-fiber](https://github.com/pmndrs/
 Built on top of [three-ammo](https://github.com/infinitelee/three-ammo), running the wasm ammo.js library in a seperate web-worker.
 Data is synced with fast SharedArrayBuffers in environments that support them.
 
+```
+yarn add use-ammojs
+npm i use-ammojs
+```
+
 ## Why not use [use-cannon](https://github.com/pmndrs/use-cannon) instead?
 
 use-cannon is great and a inspiration for this package, but it is missing features like soft-bodies and lacks performance in scenes with large triangle meshes. ammo.js is a direct wrapper around the powerful [Bullet Physics](http://www.bulletphysics.org/) engine, which solves these problems.
