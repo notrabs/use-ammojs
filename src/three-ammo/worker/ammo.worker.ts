@@ -1,11 +1,14 @@
 import { MessageType } from "../lib/types";
 import {
   copyToRigidBodyBuffer,
-  isBufferConsumed,
-  releaseBuffer,
   rigidBodyEventReceivers,
 } from "./managers/rigid-body-manager";
-import { world, worldEventReceivers } from "./managers/world-manager";
+import {
+  isBufferConsumed,
+  releaseBuffer,
+  world,
+  worldEventReceivers,
+} from "./managers/world-manager";
 import { debugEventReceivers } from "./managers/debug-manager";
 import { constraintEventReceivers } from "./managers/constraint-manager";
 import { SIMULATION_RATE } from "../lib/constants";

@@ -4,8 +4,9 @@ import { World } from "../wrappers/world";
 import {
   ClientMessageType,
   SharedBuffers,
-  MessageType,
+  MessageType, BufferState,
 } from "../../lib/types";
+import { updateSoftBodyBuffers } from "./soft-body-manager";
 
 export let world;
 
@@ -56,6 +57,47 @@ async function initWorld({
 
 function transferBuffers({ sharedBuffers: receivedSharedBuffers }) {
   sharedBuffers = receivedSharedBuffers;
+
+  updateSoftBodyBuffers(sharedBuffers);
+}
+
+export function isBufferConsumed() {
+  if (usingSharedArrayBuffer) {
+    return (
+        sharedBuffers.rigidBodies.headerIntArray &&
+        Atomics.load(sharedBuffers.rigidBodies.headerIntArray, 0) !=
+        BufferState.READY
+    );
+  } else {
+    return (
+        sharedBuffers.rigidBodies.objectMatricesFloatArray &&
+        sharedBuffers.rigidBodies.objectMatricesFloatArray.buffer.byteLength !== 0
+    );
+  }
+}
+
+export function releaseBuffer(stepDuration: number) {
+  sharedBuffers.rigidBodies.headerFloatArray[1] = stepDuration;
+
+  if (usingSharedArrayBuffer) {
+    Atomics.store(
+        sharedBuffers.rigidBodies.headerIntArray,
+        0,
+        BufferState.READY
+    );
+  } else {
+    postMessage(
+        {
+          type: ClientMessageType.TRANSFER_BUFFERS,
+          sharedBuffers,
+        },
+        [
+          sharedBuffers.rigidBodies.headerIntArray.buffer,
+          sharedBuffers.debug.vertexFloatArray.buffer,
+          ...sharedBuffers.softBodies.map((sb) => sb.vertexFloatArray.buffer),
+        ]
+    );
+  }
 }
 
 export const worldEventReceivers = {

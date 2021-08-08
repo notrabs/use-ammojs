@@ -1,11 +1,4 @@
-import {
-  BufferAttribute,
-  BufferGeometry,
-  DynamicDrawUsage,
-  Mesh,
-  Object3D,
-  Vector3,
-} from "three";
+import { BufferAttribute, BufferGeometry, DynamicDrawUsage, Mesh, Object3D, Vector3, } from "three";
 import React, { PropsWithChildren, useEffect, useRef, useState } from "react";
 import { DefaultBufferSize } from "ammo-debug-drawer";
 import { AmmoPhysicsContext, PhysicsState } from "./physics-context";
@@ -15,10 +8,7 @@ import {
   ammoDebugOptionsToNumber,
   isSharedArrayBufferSupported,
 } from "../utils/utils";
-import {
-  createAmmoWorker,
-  WorkerHelpers,
-} from "../three-ammo/lib/worker-helper";
+import { createAmmoWorker, WorkerHelpers, } from "../three-ammo/lib/worker-helper";
 import {
   BodyConfig,
   BufferState,
@@ -76,6 +66,9 @@ export function Physics({
   const [physicsState, setPhysicsState] = useState<PhysicsState>();
 
   const sharedBuffersRef = useRef<SharedBuffers>({} as any);
+
+  // Functions that are executed while the main thread holds control over the shared data
+  const threadSafeQueueRef = useRef<(() => void)[]>([]);
 
   useEffect(() => {
     const uuids: string[] = [];
@@ -193,9 +186,11 @@ export function Physics({
           uuidToIndex[uuid] = event.data.index;
           IndexToUuid[event.data.index] = uuid;
         } else if (event.data.type === ClientMessageType.SOFTBODY_READY) {
-          sharedBuffersRef.current.softBodies.push(
-            event.data.sharedSoftBodyBuffers
-          );
+          threadSafeQueueRef.current.push(() => {
+            sharedBuffersRef.current.softBodies.push(
+              event.data.sharedSoftBodyBuffers
+            );
+          });
         } else if (event.data.type === ClientMessageType.TRANSFER_BUFFERS) {
           sharedBuffersRef.current = event.data.sharedBuffers;
         }
@@ -365,7 +360,9 @@ export function Physics({
         object3Ds: physicsState.object3Ds,
       }}
     >
-      <PhysicsUpdate {...{ physicsState, sharedBuffersRef }} />
+      <PhysicsUpdate
+        {...{ physicsState, sharedBuffersRef, threadSafeQueueRef }}
+      />
       {drawDebug && <PhysicsDebug geometry={debugGeometry} />}
       {children}
     </AmmoPhysicsContext.Provider>

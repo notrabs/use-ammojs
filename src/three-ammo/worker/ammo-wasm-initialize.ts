@@ -1,7 +1,5 @@
 // TODO: figure out why rollup doesn't like the file out of the ammo.js repo and throws a missing "default export" error
-
-// TODO: custom ammo build adds "btSoftBody::setPose" function. should be merged upstream
-
+// current workaround is to append "export default Ammo;" to the end of the file
 import Ammo from "../lib/builds/ammo.wasm.js";
 import AmmoWasm from "../lib/builds/ammo.wasm.wasm";
 

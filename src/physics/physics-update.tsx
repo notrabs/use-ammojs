@@ -9,6 +9,7 @@ import { MutableRefObject } from "react";
 interface PhysicsUpdateProps {
   physicsState: PhysicsState;
   sharedBuffersRef: MutableRefObject<SharedBuffers>;
+  threadSafeQueueRef: MutableRefObject<(() => void)[]>;
 }
 
 // temporary storage
@@ -20,6 +21,7 @@ const scale = new Vector3();
 export function PhysicsUpdate({
   physicsState,
   sharedBuffersRef,
+  threadSafeQueueRef,
 }: PhysicsUpdateProps) {
   useFrame(() => {
     if (!physicsState) {
@@ -47,6 +49,11 @@ export function PhysicsUpdate({
         Atomics.load(sharedBuffers.rigidBodies.headerIntArray, 0) ===
           BufferState.READY)
     ) {
+      while (threadSafeQueueRef.current.length) {
+        const fn = threadSafeQueueRef.current.shift();
+        fn!();
+      }
+
       for (let i = 0; i < uuids.length; i++) {
         const uuid = uuids[i];
         const type = bodyOptions[uuid].type

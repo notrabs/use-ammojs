@@ -1,6 +1,5 @@
 import {
   BodyType,
-  BufferState,
   ClientMessageType,
   MessageType,
   ShapeType,
@@ -14,7 +13,6 @@ import {
   freeIndexArray,
   quatTmp1,
   sharedBuffers,
-  usingSharedArrayBuffer,
   vector3Tmp1,
   vector3Tmp2,
   world,
@@ -285,7 +283,6 @@ export function copyToRigidBodyBuffer() {
       //   sharedBuffers.rigidBodies.objectMatricesFloatArray,
       //   index * BUFFER_CONFIG.BODY_DATA_SIZE + BUFFER_CONFIG.MATRIX_OFFSET
       // );
-
       // body.syncToPhysics(false);
     }
 
@@ -313,45 +310,6 @@ export function copyToRigidBodyBuffer() {
         }
       }
     }
-  }
-}
-
-export function isBufferConsumed() {
-  if (usingSharedArrayBuffer) {
-    return (
-      sharedBuffers.rigidBodies.headerIntArray &&
-      Atomics.load(sharedBuffers.rigidBodies.headerIntArray, 0) !=
-        BufferState.READY
-    );
-  } else {
-    return (
-      sharedBuffers.rigidBodies.objectMatricesFloatArray &&
-      sharedBuffers.rigidBodies.objectMatricesFloatArray.buffer.byteLength !== 0
-    );
-  }
-}
-
-export function releaseBuffer(stepDuration: number) {
-  sharedBuffers.rigidBodies.headerFloatArray[1] = stepDuration;
-
-  if (usingSharedArrayBuffer) {
-    Atomics.store(
-      sharedBuffers.rigidBodies.headerIntArray,
-      0,
-      BufferState.READY
-    );
-  } else {
-    postMessage(
-      {
-        type: ClientMessageType.TRANSFER_BUFFERS,
-        sharedBuffers,
-      },
-      [
-        sharedBuffers.rigidBodies.headerIntArray.buffer,
-        sharedBuffers.debug.vertexFloatArray.buffer,
-        ...sharedBuffers.softBodies.map((sb) => sb.vertexFloatArray.buffer),
-      ]
-    );
   }
 }
 
