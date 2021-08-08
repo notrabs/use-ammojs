@@ -2,21 +2,13 @@ import {
   BufferAttribute,
   BufferGeometry,
   DynamicDrawUsage,
-  Matrix4,
   Mesh,
   Object3D,
   Vector3,
 } from "three";
-import React, {
-  MutableRefObject,
-  PropsWithChildren,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
-import { useFrame } from "@react-three/fiber";
+import React, { PropsWithChildren, useEffect, useRef, useState } from "react";
 import { DefaultBufferSize } from "ammo-debug-drawer";
-import { AmmoPhysicsContext } from "./physics-context";
+import { AmmoPhysicsContext, PhysicsState } from "./physics-context";
 import {
   allocateCompatibleBuffer,
   AmmoDebugOptions,
@@ -29,7 +21,6 @@ import {
 } from "../three-ammo/lib/worker-helper";
 import {
   BodyConfig,
-  BodyType,
   BufferState,
   ClientMessageType,
   SharedBuffers,
@@ -40,6 +31,8 @@ import {
 } from "../three-ammo/lib/types";
 import { BUFFER_CONFIG } from "../three-ammo/lib/constants";
 import { BufferGeometryUtils } from "three/examples/jsm/utils/BufferGeometryUtils";
+import { PhysicsUpdate } from "./physics-update";
+import { PhysicsDebug } from "./physics-debug";
 
 interface AmmoPhysicsProps {
   // Draw a collision debug mesh into the scene
@@ -65,23 +58,6 @@ interface AmmoPhysicsProps {
 
   // default = 1
   simulationSpeed?: number;
-}
-
-interface PhysicsState {
-  workerHelpers: ReturnType<typeof WorkerHelpers>;
-  debugGeometry: BufferGeometry;
-  debugBuffer: SharedArrayBuffer | ArrayBuffer;
-  bodyOptions: Record<UUID, BodyConfig>;
-  uuids: UUID[];
-  object3Ds: Record<UUID, Object3D>;
-  softBodies: Record<UUID, Mesh>;
-  sharedBuffersRef: MutableRefObject<SharedBuffers>;
-  uuidToIndex: Record<UUID, number>;
-  debugIndex: Uint32Array;
-  addRigidBody(uuid: UUID, mesh: Object3D, options?: BodyConfig);
-  removeRigidBody(uuid: UUID);
-  addSoftBody(uuid: UUID, mesh: Object3D, options?: SoftBodyConfig);
-  removeSoftBody(uuid: UUID);
 }
 
 const DEFAULT_DEBUG_MODE = { DrawWireframe: true };
@@ -345,109 +321,6 @@ export function Physics({
     };
   }, []);
 
-  useFrame(() => {
-    const transform = new Matrix4();
-    const inverse = new Matrix4();
-    const matrix = new Matrix4();
-    const scale = new Vector3();
-
-    if (!physicsState) {
-      return;
-    }
-
-    const {
-      workerHelpers,
-      debugGeometry,
-      bodyOptions,
-      uuids,
-      object3Ds,
-      uuidToIndex,
-      debugIndex,
-      softBodies,
-    } = physicsState;
-
-    const sharedBuffers = sharedBuffersRef.current;
-
-    if (
-      // Check if the worker is finished with the buffer
-      (!isSharedArrayBufferSupported &&
-        sharedBuffers.rigidBodies.objectMatricesFloatArray.byteLength !== 0) ||
-      (isSharedArrayBufferSupported &&
-        Atomics.load(sharedBuffers.rigidBodies.headerIntArray, 0) ===
-          BufferState.READY)
-    ) {
-      for (let i = 0; i < uuids.length; i++) {
-        const uuid = uuids[i];
-        const type = bodyOptions[uuid].type
-          ? bodyOptions[uuid].type
-          : BodyType.DYNAMIC;
-        const object3D = object3Ds[uuid];
-        if (type === BodyType.DYNAMIC) {
-          matrix.fromArray(
-            sharedBuffers.rigidBodies.objectMatricesFloatArray,
-            uuidToIndex[uuid] * BUFFER_CONFIG.BODY_DATA_SIZE
-          );
-
-          inverse.copy(object3D.parent!.matrixWorld).invert();
-          transform.multiplyMatrices(inverse, matrix);
-          transform.decompose(object3D.position, object3D.quaternion, scale);
-        } else {
-          // sharedBuffers.rigidBodies.objectMatricesFloatArray.set(
-          //   object3D.matrixWorld.elements,
-          //   uuidToIndex[uuid] * BUFFER_CONFIG.BODY_DATA_SIZE
-          // );
-        }
-
-        // print velocities
-        // console.log(
-        //   uuid,
-        //   objectMatricesFloatArray[indexes[uuid] * BUFFER_CONFIG.BODY_DATA_SIZE + 16],
-        //   objectMatricesFloatArray[indexes[uuid] * BUFFER_CONFIG.BODY_DATA_SIZE + 17]
-        // );
-
-        // print coliisions
-        // const collisions = [];
-        // for (let j = 18; j < 26; j++) {
-        //   const collidingIndex = objectMatricesIntArray[uuidToIndex[uuid] * BUFFER_CONFIG.BODY_DATA_SIZE + j];
-        //   if (collidingIndex !== -1) {
-        //     collisions.push(IndexToUuid[collidingIndex]);
-        //   }
-        // }
-        // console.log(uuid, collisions);
-      }
-
-      for (const softBodyBuffers of sharedBuffersRef.current.softBodies) {
-        const softBodyMesh = softBodies[softBodyBuffers.uuid];
-
-        if (softBodyMesh) {
-          softBodyMesh.geometry.attributes.position.needsUpdate = true;
-          softBodyMesh.geometry.attributes.normal.needsUpdate = true;
-        }
-      }
-
-      if (isSharedArrayBufferSupported) {
-        Atomics.store(
-          sharedBuffers.rigidBodies.headerIntArray,
-          0,
-          BufferState.CONSUMED
-        );
-      } else {
-        workerHelpers.transferSharedBuffers(sharedBuffersRef.current);
-      }
-    }
-
-    if (isSharedArrayBufferSupported) {
-      /* DEBUG RENDERING */
-      const index = Atomics.load(debugIndex, 0);
-      if (!!index) {
-        debugGeometry.attributes.position.needsUpdate = true;
-        debugGeometry.attributes.color.needsUpdate = true;
-        debugGeometry.setDrawRange(0, index);
-      }
-      Atomics.store(debugIndex, 0, 0);
-    }
-  });
-
   useEffect(() => {
     if (!isSharedArrayBufferSupported) {
       if (drawDebug) {
@@ -492,19 +365,8 @@ export function Physics({
         object3Ds: physicsState.object3Ds,
       }}
     >
-      {drawDebug && (
-        <lineSegments
-          geometry={debugGeometry}
-          frustumCulled={false}
-          renderOrder={999}
-        >
-          <lineBasicMaterial
-            attach="material"
-            vertexColors={true}
-            depthTest={true}
-          />
-        </lineSegments>
-      )}
+      <PhysicsUpdate {...{ physicsState, sharedBuffersRef }} />
+      {drawDebug && <PhysicsDebug geometry={debugGeometry} />}
       {children}
     </AmmoPhysicsContext.Provider>
   );

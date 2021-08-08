@@ -1,13 +1,15 @@
-import { createContext, useContext } from "react";
-import { Quaternion, Vector3 } from "@react-three/fiber";
-import { Object3D } from "three";
+import { createContext, MutableRefObject, useContext } from "react";
+import { BufferGeometry, Mesh, Object3D, Vector3, Quaternion } from "three";
 import {
   BodyConfig,
   ConstraintType,
   ShapeConfig,
+  SharedBuffers,
   SoftBodyConfig,
   UpdateBodyOptions,
+  UUID,
 } from "../three-ammo/lib/types";
+import { WorkerHelpers } from "../three-ammo/lib/worker-helper";
 
 export interface ConstraintOptions {
   type: ConstraintType;
@@ -17,6 +19,23 @@ export interface ConstraintOptions {
 
   axis?: Vector3;
   targetAxis?: Vector3;
+}
+
+export interface PhysicsState {
+  workerHelpers: ReturnType<typeof WorkerHelpers>;
+  debugGeometry: BufferGeometry;
+  debugBuffer: SharedArrayBuffer | ArrayBuffer;
+  bodyOptions: Record<UUID, BodyConfig>;
+  uuids: UUID[];
+  object3Ds: Record<UUID, Object3D>;
+  softBodies: Record<UUID, Mesh>;
+  sharedBuffersRef: MutableRefObject<SharedBuffers>;
+  uuidToIndex: Record<UUID, number>;
+  debugIndex: Uint32Array;
+  addRigidBody(uuid: UUID, mesh: Object3D, options?: BodyConfig);
+  removeRigidBody(uuid: UUID);
+  addSoftBody(uuid: UUID, mesh: Object3D, options?: SoftBodyConfig);
+  removeSoftBody(uuid: UUID);
 }
 
 export interface AmmoPhysicsContext {

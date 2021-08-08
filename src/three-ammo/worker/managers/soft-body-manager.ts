@@ -6,7 +6,7 @@ import {
   UUID,
 } from "../../lib/types";
 import { SoftBody } from "../wrappers/soft-body";
-import { usingSharedArrayBuffer, world } from "./world-manager";
+import { sharedBuffers, usingSharedArrayBuffer, world } from "./world-manager";
 
 const softbodies: Record<UUID, SoftBody> = {};
 
@@ -20,6 +20,8 @@ function addSoftbody({
   softBodyConfig: SoftBodyConfig;
 }) {
   softbodies[uuid] = new SoftBody(world, sharedSoftBodyBuffers, softBodyConfig);
+
+  sharedBuffers.softBodies.push(sharedSoftBodyBuffers);
 
   if (usingSharedArrayBuffer) {
     postMessage({
