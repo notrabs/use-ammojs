@@ -28,7 +28,7 @@ export class SoftBody {
 
       friction = 0.1,
       damping = 0.01,
-      pressure = 100,
+      pressure = 10,
 
       linearStiffness = 0.9,
       angularStiffness = 0.9,
@@ -74,7 +74,7 @@ export class SoftBody {
     sbConfig.set_kDF(friction);
     // Damping
     sbConfig.set_kDP(damping);
-    // // Pressure
+    // Pressure
     sbConfig.set_kPR(pressure);
 
     // Stiffness

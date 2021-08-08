@@ -1,6 +1,5 @@
 import { AmmoPhysicsContext } from "../physics-context";
-import { Vector3, Quaternion } from "three";
-import { UpdateBodyOptions, UUID } from "../../three-ammo/lib/types";
+import { UUID } from "../../three-ammo/lib/types";
 
 export interface SoftbodyApi {
   // setLinearVelocity(velocity: Vector3): void;
