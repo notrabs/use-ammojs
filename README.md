@@ -19,6 +19,16 @@ use-cannon is great and a inspiration for this package, but it is missing featur
 
 At the time of writing however use-cannon is more mature and great for most projects.
 
+## Examples
+
+⚠️ **Note that the codesandbox examples do not support SharedArrayBuffers [due to missing cross-origin isolation](https://web.dev/coop-coep/).**
+Mainly relevant for SoftBody performance, which require additional Buffer copies in the current implementation.
+
+- [Hello Physics World](https://codesandbox.io/s/oc1op?file=/src/index.js)
+- [Soft Bodies](https://codesandbox.io/s/use-ammojs-softbody-example-k59jz)
+- TODO
+
+
 ## Roadmap
 
 #### Main goals:
@@ -53,15 +63,6 @@ At the time of writing however use-cannon is more mature and great for most proj
   - [ ] Debug Rendering
 - [ ] Improve the automatic shape detection (set shapeType automatically based on the three Mesh type)
 - [ ] Raycast Vehicle API
-
-## Examples
-
-⚠️ **Note that the codesandbox examples do not support SharedArrayBuffers [due to missing cross-origin isolation](https://web.dev/coop-coep/).**
-Mainly relevant for SoftBody performance, which require additional Buffer copies in the current implementation.
-
-- [Hello Physics World](https://codesandbox.io/s/oc1op?file=/src/index.js)
-- [Soft Bodies](https://codesandbox.io/s/use-ammojs-softbody-example-k59jz)
-- TODO
 
 ## Quick Start
 
