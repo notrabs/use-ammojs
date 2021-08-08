@@ -2,35 +2,53 @@
 
 _Fast_ Physics hooks for use with [react-three-fiber](https://github.com/pmndrs/react-three-fiber).
 
-Built on top of [three-ammo](https://github.com/infinitelee/three-ammo), which runs the wasm ammo.js library in a seperate web-worker and syncs three objects using SharedArrayBuffers.
+Built on top of [three-ammo](https://github.com/infinitelee/three-ammo), running the wasm ammo.js library in a seperate web-worker.
+Data is synced with fast SharedArrayBuffers in environments that support them.
 
 ## Why not use [use-cannon](https://github.com/pmndrs/use-cannon) instead?
 
-use-cannon is great and a inspiration for this package, but it is missing features and lacks performance with many objects or large gltf imports. ammo.js is a direct wrapper around the powerful [Bullet Physics](http://www.bulletphysics.org/) engine.
+use-cannon is great and a inspiration for this package, but it is missing features like soft-bodies and lacks performance in scenes with large triangle meshes. ammo.js is a direct wrapper around the powerful [Bullet Physics](http://www.bulletphysics.org/) engine, which solves these problems.
 
-At the time of writing however use-cannon is more mature and great for small projects.
+At the time of writing however use-cannon is more mature and great for most projects.
 
 ## Roadmap
 
 - [x] Create a Physics World as a React context and simulate it in a web-worker
 - [x] Sync three objects to physics rigid-bodies
-- [ ] Add Softbody support (ropes, cloth, squishy balls, [see docs](https://pybullet.org/Bullet/BulletFull/classbtSoftBody.html))
-- [ ] Expose useful functions from the bullet api trough the hook (e.g. setPosition/applyImpulse/[more...](https://pybullet.org/Bullet/BulletFull/classbtRigidBody.html))
+- [x] Add Rigidbody support
+- [ ] Add [Softbody](https://pybullet.org/Bullet/BulletFull/classbtSoftBody.html) support
+  - [x] Volumes/Cloth from Triangle Mesh
+  - [ ] Ropes
+  - [ ] Deformables
 - [ ] Add [Raycast](https://pybullet.org/Bullet/BulletFull/classbtCollisionWorld.html#aaac6675c8134f6695fecb431c72b0a6a) queries
+  - [ ] One Time (async) raytests
+  - [ ] Continuous queries trough a fixed scene component
 - [ ] Add Constraints between rigid bodies
+- [ ] Improve Physics API
+  - [ ] Make _all_ props reactive
+  - [ ] Expose more methods trough the hook (e.g. setPosition/applyImpulse/[more...](https://pybullet.org/Bullet/BulletFull/classbtRigidBody.html))
+  - [ ] Support collision callbacks
 - [x] Use ArrayBuffers as a fallback for missing cross-origin isolation
-- [ ] Use ArrayBuffers as a fallback for missing cross-origin isolation for debug rendering
+  - [x] Rigid Bodies
+  - [x] Soft Bodies
+  - [ ] Debug Rendering
 - [ ] Add Examples to the documentation
-- [ ] Implement convenience features (pausing simulation / access to physics performance info)
-- [ ] Support collision callbacks
-- [ ] Implement reactive props for physics hooks instead of initializer function
-- [ ] Improve the automatic shape detection (set shapeType automatically based on the three Mesh type)
+- [ ] Simulation managment
+  - [x] Configurable Simulation Speed/Pausing
+  - [ ] Expose performance info
+
+
+- Low priority
+  - [ ] Improve the automatic shape detection (set shapeType automatically based on the three Mesh type)
+  - [ ] Raycast Vehicle API
 
 ## Examples
 
 ⚠️ **Note that the codesandbox examples do not support SharedArrayBuffers [due to missing cross-origin isolation](https://web.dev/coop-coep/).**
+Mainly relevant for SoftBody performance, which require additional Buffer copies in the current implementation.
 
 - [Hello Physics World](https://codesandbox.io/s/oc1op?file=/src/index.js)
+- [Soft Bodies](https://codesandbox.io/s/use-ammojs-softbody-example-k59jz)
 - TODO
 
 ## Documentation
@@ -40,9 +58,7 @@ At the time of writing however use-cannon is more mature and great for small pro
 ```tsx
 import { Physics } from "use-ammojs";
 
-<Physics drawDebug>
-    [...]
-</Physics>
+<Physics drawDebug>[...]</Physics>;
 ```
 
 ### 2.a Make objects physical
@@ -96,8 +112,16 @@ useRigidbody(
 
 ### 2.a Make objects squishy
 
-```
-TODO
+```tsx
+const [ref] = useSoftBody(() => ({
+  type: SoftBodyType.TRIMESH,
+}));
+
+return (
+  <Sphere position={[0, 2, 7]} args={[1, 16, 16]} ref={ref}>
+    <meshPhysicalMaterial attach="material" color="blue" />
+  </Sphere>
+);
 ```
 
 ### 3.a Add Constraints
@@ -144,27 +168,27 @@ function handleRespawn() {
 const path = require("path");
 
 module.exports = {
-    webpack: {
-        configure: (webpackConfig) => {
-            // Fix that prevents a duplicate react library being imported when using a linked yarn package
-            webpackConfig.resolve.alias = {
-                ...webpackConfig.resolve.alias,
-                react: path.resolve("./node_modules/react"),
-                "@react-three/fiber": path.resolve("./node_modules/@react-three/fiber"),
-                three: path.resolve("./node_modules/three"),
-            };
+  webpack: {
+    configure: (webpackConfig) => {
+      // Fix that prevents a duplicate react library being imported when using a linked yarn package
+      webpackConfig.resolve.alias = {
+        ...webpackConfig.resolve.alias,
+        react: path.resolve("./node_modules/react"),
+        "@react-three/fiber": path.resolve("./node_modules/@react-three/fiber"),
+        three: path.resolve("./node_modules/three"),
+      };
 
-            return webpackConfig;
-        },
+      return webpackConfig;
     },
+  },
 
-    // Make sure SharedArrayBuffers are available locally
-    devServer: {
-        headers: {
-            "Cross-Origin-Embedder-Policy": "require-corp",
-            "Cross-Origin-Opener-Policy": "same-origin",
-        },
+  // Make sure SharedArrayBuffers are available locally
+  devServer: {
+    headers: {
+      "Cross-Origin-Embedder-Policy": "require-corp",
+      "Cross-Origin-Opener-Policy": "same-origin",
     },
+  },
 };
 ```
 

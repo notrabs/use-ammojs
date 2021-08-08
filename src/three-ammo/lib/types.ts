@@ -142,9 +142,8 @@ export interface SoftBodyConfig {
 }
 
 export enum SoftBodyType {
-  VOLUME = "volume",
+  TRIMESH = "trimesh",
   ROPE = "rope",
-  CLOTH = "cloth",
 }
 
 export type UpdateBodyOptions = Pick<
