@@ -7,9 +7,11 @@ import {
   SharedSoftBodyBuffers,
   SoftBodyConfig,
   UUID,
+  WorkerRequestId,
   WorldConfig,
 } from "./types";
 import { isSharedArrayBufferSupported } from "../../utils/utils";
+import { Vector3 } from "@react-three/fiber";
 
 export function createAmmoWorker(): Worker {
   return new AmmoWorker();
@@ -18,6 +20,9 @@ export function createAmmoWorker(): Worker {
 export function WorkerHelpers(ammoWorker: Worker) {
   const transform = new Matrix4();
   const inverse = new Matrix4();
+
+  let lastRequestId: number = 0;
+  let requests: Record<WorkerRequestId, (data: any) => void> = {};
 
   return {
     initWorld(worldConfig: WorldConfig, sharedBuffers: SharedBuffers) {
@@ -46,6 +51,26 @@ export function WorkerHelpers(ammoWorker: Worker) {
             ...sharedBuffers.softBodies.map((sb) => sb.vertexFloatArray.buffer),
           ]
         );
+      }
+    },
+
+    async makeAsyncRequest<T = any>(data): Promise<T> {
+      return new Promise((resolve) => {
+        const requestId = lastRequestId++;
+
+        requests[requestId] = resolve;
+
+        ammoWorker.postMessage({
+          ...data,
+          requestId,
+        });
+      });
+    },
+
+    resolveAsyncRequest(data) {
+      if (requests[data.requestId]) {
+        requests[data.requestId](data);
+        delete requests[data.requestId];
       }
     },
 

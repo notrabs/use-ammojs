@@ -25,6 +25,8 @@ export const matrices: Record<UUID, Matrix4> = {};
 export const indexes: Record<UUID, number> = {};
 export const ptrToIndex: Record<number, number> = {};
 
+export const ptrToRigidBody: Record<number, UUID> = {};
+
 let freeIndex = 0;
 
 export const uuids: UUID[] = [];
@@ -47,6 +49,7 @@ function addBody({ uuid, matrix, options }) {
     bodies[uuid] = new RigidBody(options || {}, transform, world);
     const ptr = Ammo.getPointer(bodies[uuid].physicsBody);
     ptrToIndex[ptr] = freeIndex;
+    ptrToRigidBody[ptr] = uuid;
 
     postMessage({
       type: ClientMessageType.RIGIDBODY_READY,
@@ -133,7 +136,9 @@ function bodyApplyCentralForce({ uuid, force }) {
 }
 
 function removeBody({ uuid }) {
-  delete ptrToIndex[Ammo.getPointer(bodies[uuid].physicsBody)];
+  const ptr = Ammo.getPointer(bodies[uuid].physicsBody);
+  delete ptrToIndex[ptr];
+  delete ptrToRigidBody[ptr];
   bodies[uuid].destroy();
   delete bodies[uuid];
   delete matrices[uuid];

@@ -11,6 +11,8 @@ import { usingSharedArrayBuffer, world } from "./world-manager";
 
 const softbodies: Record<UUID, SoftBody> = {};
 
+export const ptrToSoftBody: Record<number, UUID> = {};
+
 function addSoftbody({
   uuid,
   sharedSoftBodyBuffers,
@@ -21,6 +23,8 @@ function addSoftbody({
   softBodyConfig: SoftBodyConfig;
 }) {
   softbodies[uuid] = new SoftBody(world, sharedSoftBodyBuffers, softBodyConfig);
+
+  ptrToSoftBody[Ammo.getPointer(softbodies[uuid].physicsBody)] = uuid;
 
   if (usingSharedArrayBuffer) {
     postMessage({
@@ -38,6 +42,8 @@ function addSoftbody({
 
 function removeSoftbody({ uuid }: { uuid: UUID }) {
   if (softbodies[uuid]) {
+    delete ptrToSoftBody[Ammo.getPointer(softbodies[uuid].physicsBody)];
+
     softbodies[uuid].destroy();
 
     delete softbodies[uuid];

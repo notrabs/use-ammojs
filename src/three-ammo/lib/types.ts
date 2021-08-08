@@ -1,6 +1,10 @@
-import { Quaternion, Vector3 } from "three";
+import { Quaternion, Vector3, Object3D } from "three";
 
 export type UUID = string;
+
+export type WorkerRequestId = number;
+
+export type SerializedVector3 = Vector3 | { x: number; y: number; z: number };
 
 export interface WorldConfig {
   // default = 10e-6
@@ -132,9 +136,9 @@ export interface SoftBodyConfig {
   randomizeConstraints?: boolean;
   activationState?: BodyActivationState;
 
-  //32-bit mask, default = 1
+  //32-bit mask, default = 0x0001
   collisionFilterGroup?: number;
-  //32-bit mask, default = 1
+  //32-bit mask, default = 0xffff
   collisionFilterMask?: number;
 
   // see SoftBodyFCollisionFlag  (btSoftBody::fCollision)
@@ -308,6 +312,8 @@ export enum MessageType {
   SET_SPINNING_FRICTION,
   // GET_ROLLING_FRICTION,
   SET_ROLLING_FRICTION,
+
+  RAYCAST_REQUEST,
 }
 
 export enum ClientMessageType {
@@ -315,6 +321,8 @@ export enum ClientMessageType {
   RIGIDBODY_READY,
   SOFTBODY_READY,
   TRANSFER_BUFFERS,
+
+  RAYCAST_RESPONSE,
 }
 
 export enum CollisionFlag {
@@ -349,4 +357,56 @@ export interface SharedBuffers {
     vertexFloatArray: Float32Array;
     colorFloatArray: Float32Array;
   };
+}
+
+export interface AsyncRequestOptions {
+  requestId: WorkerRequestId;
+}
+
+// unused, needs ammo.js idl update
+export enum RaycastFlag {
+  filterBackfaces = 1 << 0,
+
+  // Prevents returned face normal getting flipped when a ray hits a back-facing triangle
+  keepUnflippedNormal = 1 << 1,
+
+  ///SubSimplexConvexCastRaytest is the default, even if kF_None is set.
+  useSubSimplexConvexCastRaytest = 1 << 2,
+
+  // Uses an approximate but faster ray versus convex intersection algorithm
+  useGjkConvexCastRaytest = 1 << 3,
+
+  //don't use the heightfield raycast accelerator. See https://github.com/bulletphysics/bullet3/pull/2062
+  disableHeightfieldAccelerator = 1 << 4,
+
+  terminator = 0xffffffff,
+}
+
+export interface RaycastOptions {
+  from: Vector3;
+  to: Vector3;
+
+  // If false, only the closest result is returned, default = false
+  multiple?: boolean;
+
+  //32-bit mask, default = 0x0001
+  collisionFilterGroup?: number;
+  //32-bit mask, default = 0xffff
+  collisionFilterMask?: number;
+}
+
+export interface RaycastHitMessage {
+  uuid: string;
+
+  hitPosition: SerializedVector3;
+
+  normal: SerializedVector3;
+}
+
+export interface RaycastHit {
+  object?: Object3D;
+
+  hitPosition: Vector3;
+
+  normal: Vector3;
 }

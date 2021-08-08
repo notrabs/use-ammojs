@@ -9,7 +9,7 @@ import { World } from "./world";
 export class SoftBody {
   world: World;
   buffers: SharedSoftBodyBuffers;
-  private physicsBody: Ammo.btSoftBody;
+  physicsBody: Ammo.btSoftBody;
   numVerts: number;
 
   constructor(
@@ -34,8 +34,8 @@ export class SoftBody {
       angularStiffness = 0.9,
       volumeStiffness = 0.9,
 
-      collisionFilterGroup = 1,
-      collisionFilterMask = 1,
+      collisionFilterGroup = 0x0001,
+      collisionFilterMask = 0xffff,
 
       // Soft-soft and soft-rigid collisions
       collisionFlag = SoftBodyFCollisionFlag.SDF_RS |

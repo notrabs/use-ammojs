@@ -1,8 +1,9 @@
 import { createContext, MutableRefObject, useContext } from "react";
-import { BufferGeometry, Mesh, Object3D, Vector3, Quaternion } from "three";
+import { BufferGeometry, Mesh, Object3D, Quaternion, Vector3 } from "three";
 import {
   BodyConfig,
   ConstraintType,
+  RaycastOptions,
   ShapeConfig,
   SharedBuffers,
   SoftBodyConfig,
@@ -36,21 +37,22 @@ export interface PhysicsState {
   removeRigidBody(uuid: UUID);
   addSoftBody(uuid: UUID, mesh: Object3D, options?: SoftBodyConfig);
   removeSoftBody(uuid: UUID);
+  rayTest(options: RaycastOptions);
 }
 
 export interface AmmoPhysicsContext {
-  addRigidBody(uuid: string, mesh: Object3D, options?: BodyConfig);
-  removeRigidBody(uuid: string);
+  addRigidBody(uuid: UUID, mesh: Object3D, options?: BodyConfig);
+  removeRigidBody(uuid: UUID);
 
   addShapes(
-    bodyUuid: string,
-    shapesUuid: string,
+    bodyUuid: UUID,
+    shapesUuid: UUID,
     mesh: Object3D,
     options?: ShapeConfig
   );
-  removeShapes(bodyUuid: string, shapesUuid: string);
+  removeShapes(bodyUuid: UUID, shapesUuid: UUID);
 
-  addSoftBody(uuid: string, mesh: Object3D, options?: SoftBodyConfig);
+  addSoftBody(uuid: UUID, mesh: Object3D, options?: SoftBodyConfig);
   removeSoftBody(uuid: string);
 
   addConstraint(
@@ -61,23 +63,25 @@ export interface AmmoPhysicsContext {
   );
   removeConstraint(constraintId: string);
 
-  updateRigidBody(uuid: string, options: UpdateBodyOptions);
+  updateRigidBody(uuid: UUID, options: UpdateBodyOptions);
 
   enableDebug(enable: boolean, debugSharedArrayBuffer: SharedArrayBuffer);
 
-  resetDynamicBody(uuid: string);
+  resetDynamicBody(uuid: UUID);
 
-  activateBody(uuid: string);
+  activateBody(uuid: UUID);
 
-  bodySetMotionState(uuid: string, position?: Vector3, rotation?: Quaternion);
-  bodySetLinearVelocity(uuid: string, velocity: Vector3);
-  bodyApplyImpulse(uuid: string, impulse: Vector3, relativeOffset?: Vector3);
-  bodyApplyForce(uuid: string, force: Vector3, relativeOffset?: Vector3);
+  bodySetMotionState(uuid: UUID, position?: Vector3, rotation?: Quaternion);
+  bodySetLinearVelocity(uuid: UUID, velocity: Vector3);
+  bodyApplyImpulse(uuid: UUID, impulse: Vector3, relativeOffset?: Vector3);
+  bodyApplyForce(uuid: UUID, force: Vector3, relativeOffset?: Vector3);
 
   // Applies an (local) offset to all shapes of the rigidbody, without moving its origin
   bodySetShapesOffset(uuid: string, offset: Vector3);
 
   object3Ds: Record<string, Object3D>;
+
+  rayTest(options: RaycastOptions);
 }
 
 export const AmmoPhysicsContext = createContext<AmmoPhysicsContext | null>(

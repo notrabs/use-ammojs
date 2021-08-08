@@ -16,6 +16,7 @@ import {
   copyToSoftBodyBuffers,
   softBodyEventReceivers,
 } from "./managers/soft-body-manager";
+import { raycastEventReceivers } from "./managers/raycast-manager";
 
 let lastTick;
 let tickInterval;
@@ -54,6 +55,7 @@ const eventReceivers: Record<MessageType, (eventData: any) => void> = {
   ...rigidBodyEventReceivers,
   ...softBodyEventReceivers,
   ...constraintEventReceivers,
+  ...raycastEventReceivers,
 };
 
 onmessage = async (event) => {

@@ -13,6 +13,10 @@ import {
   BodyConfig,
   BufferState,
   ClientMessageType,
+  MessageType,
+  RaycastHit,
+  RaycastHitMessage,
+  RaycastOptions,
   SharedBuffers,
   SharedSoftBodyBuffers,
   SoftBodyConfig,
@@ -159,41 +163,58 @@ export function Physics({
 
     const workerInitPromise = new Promise<PhysicsState>((resolve) => {
       ammoWorker.onmessage = async (event) => {
-        if (event.data.type === ClientMessageType.READY) {
-          if (event.data.sharedBuffers) {
-            sharedBuffersRef.current = event.data.sharedBuffers;
-          }
+        const type: ClientMessageType = event.data.type;
 
-          resolve({
-            workerHelpers,
-            sharedBuffersRef,
-            debugGeometry,
-            debugBuffer,
-            bodyOptions,
-            uuids,
-            object3Ds,
-            softBodies,
-            uuidToIndex,
-            debugIndex,
-            addRigidBody,
-            removeRigidBody,
-            addSoftBody,
-            removeSoftBody,
-          });
-        } else if (event.data.type === ClientMessageType.RIGIDBODY_READY) {
-          const uuid = event.data.uuid;
-          uuids.push(uuid);
-          uuidToIndex[uuid] = event.data.index;
-          IndexToUuid[event.data.index] = uuid;
-        } else if (event.data.type === ClientMessageType.SOFTBODY_READY) {
-          threadSafeQueueRef.current.push(() => {
-            sharedBuffersRef.current.softBodies.push(
-              event.data.sharedSoftBodyBuffers
-            );
-          });
-        } else if (event.data.type === ClientMessageType.TRANSFER_BUFFERS) {
-          sharedBuffersRef.current = event.data.sharedBuffers;
+        switch (type) {
+          case ClientMessageType.READY: {
+            if (event.data.sharedBuffers) {
+              sharedBuffersRef.current = event.data.sharedBuffers;
+            }
+
+            resolve({
+              workerHelpers,
+              sharedBuffersRef,
+              debugGeometry,
+              debugBuffer,
+              bodyOptions,
+              uuids,
+              object3Ds,
+              softBodies,
+              uuidToIndex,
+              debugIndex,
+              addRigidBody,
+              removeRigidBody,
+              addSoftBody,
+              removeSoftBody,
+              rayTest,
+            });
+            return;
+          }
+          case ClientMessageType.RIGIDBODY_READY: {
+            const uuid = event.data.uuid;
+            uuids.push(uuid);
+            uuidToIndex[uuid] = event.data.index;
+            IndexToUuid[event.data.index] = uuid;
+            return;
+          }
+          case ClientMessageType.SOFTBODY_READY: {
+            threadSafeQueueRef.current.push(() => {
+              sharedBuffersRef.current.softBodies.push(
+                event.data.sharedSoftBodyBuffers
+              );
+            });
+            return;
+          }
+          case ClientMessageType.TRANSFER_BUFFERS: {
+            sharedBuffersRef.current = event.data.sharedBuffers;
+            return;
+          }
+          case ClientMessageType.RAYCAST_RESPONSE: {
+            workerHelpers.resolveAsyncRequest(event.data);
+            return;
+          }
         }
+        throw new Error("unknown message type" + type);
       };
     });
 
@@ -310,6 +331,29 @@ export function Physics({
       );
     }
 
+    async function rayTest(options: RaycastOptions): Promise<RaycastHit[]> {
+      const { hits } = await workerHelpers.makeAsyncRequest({
+        type: MessageType.RAYCAST_REQUEST,
+        ...options,
+      });
+
+      return hits.map(
+        (hit: RaycastHitMessage): RaycastHit => {
+          return {
+            object: object3Ds[hit.uuid] || softBodies[hit.uuid],
+
+            hitPosition: new Vector3(
+              hit.hitPosition.x,
+              hit.hitPosition.y,
+              hit.hitPosition.z
+            ),
+
+            normal: new Vector3(hit.normal.x, hit.normal.y, hit.normal.z),
+          };
+        }
+      );
+    }
+
     return () => {
       ammoWorker.terminate();
       setPhysicsState(undefined);
@@ -358,6 +402,8 @@ export function Physics({
         removeSoftBody: physicsState.removeSoftBody,
 
         object3Ds: physicsState.object3Ds,
+
+        rayTest: physicsState.rayTest,
       }}
     >
       <PhysicsUpdate
