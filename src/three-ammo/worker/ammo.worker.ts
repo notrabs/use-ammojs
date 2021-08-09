@@ -6,6 +6,7 @@ import {
 import {
   isBufferConsumed,
   releaseBuffer,
+  sharedBuffers,
   world,
   worldEventReceivers,
 } from "./managers/world-manager";
@@ -28,19 +29,25 @@ function tick() {
     const now = performance.now();
     const dt = now - lastTick;
     try {
-      world.step(dt * simulationSpeed);
+      const numSubsteps = world.step(dt * simulationSpeed);
+
+      const stepDuration = performance.now() - now;
+      lastTick = now;
+
+      if (numSubsteps > 0) {
+        sharedBuffers.rigidBodies.headerFloatArray[1] = stepDuration;
+        sharedBuffers.rigidBodies.headerFloatArray[2] = lastTick;
+
+        copyToRigidBodyBuffer();
+        copyToSoftBodyBuffers();
+      }
     } catch (err) {
       console.error("The ammo worker has crashed:", err);
       clearInterval(tickInterval);
       self.onmessage = null;
     }
-    const stepDuration = performance.now() - now;
-    lastTick = now;
 
-    copyToRigidBodyBuffer();
-    copyToSoftBodyBuffers();
-
-    releaseBuffer(stepDuration);
+    releaseBuffer();
   }
 }
 

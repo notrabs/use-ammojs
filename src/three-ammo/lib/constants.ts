@@ -5,7 +5,8 @@ export const SIMULATION_RATE = 8.333; // 8.333ms / 120hz
 export const EPS = 10e-6;
 
 export const BUFFER_CONFIG = {
-  HEADER_LENGTH: 2,
+  // Header length in number of int32/float32
+  HEADER_LENGTH: 3,
   MAX_BODIES: 10000,
   MATRIX_OFFSET: 0,
   LINEAR_VELOCITY_OFFSET: 16,

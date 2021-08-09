@@ -2,7 +2,7 @@ import { useFrame } from "@react-three/fiber";
 import { isSharedArrayBufferSupported } from "../utils/utils";
 import { BodyType, BufferState, SharedBuffers } from "../three-ammo/lib/types";
 import { BUFFER_CONFIG } from "../three-ammo/lib/constants";
-import { PhysicsState } from "./physics-context";
+import { PhysicsPerformanceInfo, PhysicsState } from "./physics-context";
 import { Matrix4, Vector3 } from "three";
 import { MutableRefObject } from "react";
 
@@ -10,6 +10,7 @@ interface PhysicsUpdateProps {
   physicsState: PhysicsState;
   sharedBuffersRef: MutableRefObject<SharedBuffers>;
   threadSafeQueueRef: MutableRefObject<(() => void)[]>;
+  physicsPerformanceInfoRef: MutableRefObject<PhysicsPerformanceInfo>;
 }
 
 // temporary storage
@@ -22,6 +23,7 @@ export function PhysicsUpdate({
   physicsState,
   sharedBuffersRef,
   threadSafeQueueRef,
+  physicsPerformanceInfoRef,
 }: PhysicsUpdateProps) {
   useFrame(() => {
     if (!physicsState) {
@@ -49,6 +51,11 @@ export function PhysicsUpdate({
         Atomics.load(sharedBuffers.rigidBodies.headerIntArray, 0) ===
           BufferState.READY)
     ) {
+      physicsPerformanceInfoRef.current.lastTickMs =
+        sharedBuffers.rigidBodies.headerFloatArray[1];
+      physicsPerformanceInfoRef.current.lastTickTime =
+        sharedBuffers.rigidBodies.headerFloatArray[2];
+
       while (threadSafeQueueRef.current.length) {
         const fn = threadSafeQueueRef.current.shift();
         fn!();

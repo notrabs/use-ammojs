@@ -40,6 +40,11 @@ export interface PhysicsState {
   rayTest(options: RaycastOptions);
 }
 
+export interface PhysicsPerformanceInfo {
+  lastTickMs: number;
+  lastTickTime: number;
+}
+
 export interface AmmoPhysicsContext {
   addRigidBody(uuid: UUID, mesh: Object3D, options?: BodyConfig);
   removeRigidBody(uuid: UUID);
@@ -82,6 +87,8 @@ export interface AmmoPhysicsContext {
   object3Ds: Record<string, Object3D>;
 
   rayTest(options: RaycastOptions);
+
+  physicsPerformanceInfoRef: MutableRefObject<PhysicsPerformanceInfo>;
 }
 
 export const AmmoPhysicsContext = createContext<AmmoPhysicsContext | null>(

@@ -2,13 +2,14 @@ import { BUFFER_CONFIG } from "../../lib/constants";
 import { initializeAmmoWasm } from "../ammo-wasm-initialize";
 import { World } from "../wrappers/world";
 import {
+  BufferState,
   ClientMessageType,
+  MessageType,
   SharedBuffers,
-  MessageType, BufferState,
 } from "../../lib/types";
 import { updateSoftBodyBuffers } from "./soft-body-manager";
 
-export let world;
+export let world: World;
 
 export let freeIndexArray: Int32Array;
 
@@ -64,38 +65,36 @@ function transferBuffers({ sharedBuffers: receivedSharedBuffers }) {
 export function isBufferConsumed() {
   if (usingSharedArrayBuffer) {
     return (
-        sharedBuffers.rigidBodies.headerIntArray &&
-        Atomics.load(sharedBuffers.rigidBodies.headerIntArray, 0) !=
+      sharedBuffers.rigidBodies.headerIntArray &&
+      Atomics.load(sharedBuffers.rigidBodies.headerIntArray, 0) !=
         BufferState.READY
     );
   } else {
     return (
-        sharedBuffers.rigidBodies.objectMatricesFloatArray &&
-        sharedBuffers.rigidBodies.objectMatricesFloatArray.buffer.byteLength !== 0
+      sharedBuffers.rigidBodies.objectMatricesFloatArray &&
+      sharedBuffers.rigidBodies.objectMatricesFloatArray.buffer.byteLength !== 0
     );
   }
 }
 
-export function releaseBuffer(stepDuration: number) {
-  sharedBuffers.rigidBodies.headerFloatArray[1] = stepDuration;
-
+export function releaseBuffer() {
   if (usingSharedArrayBuffer) {
     Atomics.store(
-        sharedBuffers.rigidBodies.headerIntArray,
-        0,
-        BufferState.READY
+      sharedBuffers.rigidBodies.headerIntArray,
+      0,
+      BufferState.READY
     );
   } else {
     postMessage(
-        {
-          type: ClientMessageType.TRANSFER_BUFFERS,
-          sharedBuffers,
-        },
-        [
-          sharedBuffers.rigidBodies.headerIntArray.buffer,
-          sharedBuffers.debug.vertexFloatArray.buffer,
-          ...sharedBuffers.softBodies.map((sb) => sb.vertexFloatArray.buffer),
-        ]
+      {
+        type: ClientMessageType.TRANSFER_BUFFERS,
+        sharedBuffers,
+      },
+      [
+        sharedBuffers.rigidBodies.headerIntArray.buffer,
+        sharedBuffers.debug.vertexFloatArray.buffer,
+        ...sharedBuffers.softBodies.map((sb) => sb.vertexFloatArray.buffer),
+      ]
     );
   }
 }

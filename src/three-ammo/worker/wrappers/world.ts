@@ -87,8 +87,8 @@ export class World {
     }
   }
 
-  step(deltaTime) {
-    this.physicsWorld.stepSimulation(
+  step(deltaTime): number {
+    const numSubsteps = this.physicsWorld.stepSimulation(
       deltaTime,
       this.maxSubSteps,
       this.fixedTimeStep
@@ -131,6 +131,8 @@ export class World {
     if (this.debugDrawer) {
       this.debugDrawer.update();
     }
+
+    return numSubsteps;
   }
 
   destroy() {

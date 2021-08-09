@@ -1,14 +1,28 @@
-import { BufferAttribute, BufferGeometry, DynamicDrawUsage, Mesh, Object3D, Vector3, } from "three";
+import {
+  BufferAttribute,
+  BufferGeometry,
+  DynamicDrawUsage,
+  Mesh,
+  Object3D,
+  Vector3,
+} from "three";
 import React, { PropsWithChildren, useEffect, useRef, useState } from "react";
 import { DefaultBufferSize } from "ammo-debug-drawer";
-import { AmmoPhysicsContext, PhysicsState } from "./physics-context";
+import {
+  AmmoPhysicsContext,
+  PhysicsPerformanceInfo,
+  PhysicsState,
+} from "./physics-context";
 import {
   allocateCompatibleBuffer,
   AmmoDebugOptions,
   ammoDebugOptionsToNumber,
   isSharedArrayBufferSupported,
 } from "../utils/utils";
-import { createAmmoWorker, WorkerHelpers, } from "../three-ammo/lib/worker-helper";
+import {
+  createAmmoWorker,
+  WorkerHelpers,
+} from "../three-ammo/lib/worker-helper";
 import {
   BodyConfig,
   BufferState,
@@ -73,6 +87,11 @@ export function Physics({
 
   // Functions that are executed while the main thread holds control over the shared data
   const threadSafeQueueRef = useRef<(() => void)[]>([]);
+
+  const physicsPerformanceInfoRef = useRef<PhysicsPerformanceInfo>({
+    lastTickTime: 0,
+    lastTickMs: 0,
+  });
 
   useEffect(() => {
     const uuids: string[] = [];
@@ -404,10 +423,17 @@ export function Physics({
         object3Ds: physicsState.object3Ds,
 
         rayTest: physicsState.rayTest,
+
+        physicsPerformanceInfoRef,
       }}
     >
       <PhysicsUpdate
-        {...{ physicsState, sharedBuffersRef, threadSafeQueueRef }}
+        {...{
+          physicsState,
+          sharedBuffersRef,
+          threadSafeQueueRef,
+          physicsPerformanceInfoRef,
+        }}
       />
       {drawDebug && <PhysicsDebug geometry={debugGeometry} />}
       {children}
