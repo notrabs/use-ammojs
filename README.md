@@ -15,16 +15,16 @@ npm i use-ammojs
 
 ## Examples
 
-⚠️ **Note that the codesandbox examples do not support SharedArrayBuffers [due to missing cross-origin isolation](https://web.dev/coop-coep/).**
-Mainly relevant for SoftBody performance, which require additional Buffer copies in the current implementation.
+#### API Demos
 
 - [Hello Physics World](https://codesandbox.io/s/oc1op?file=/src/index.js)
 - [Soft Bodies](https://codesandbox.io/s/use-ammojs-softbody-example-k59jz)
-- TODO
 
 #### Stress Tests
 
 - [Lots of cubes](https://codesandbox.io/s/use-ammojs-lotsofcubes-f5xdz?file=/src/index.js)
+
+> ⚠️ Note that the codesandbox examples do not support SharedArrayBuffers [due to missing cross-origin isolation](https://web.dev/coop-coep/) and use regular ArrayBuffers as fallback. Currently the debug-drawer has no fallback implemented and will not render anything.
 
 ## Why not use [use-cannon](https://github.com/pmndrs/use-cannon) instead?
 
@@ -203,7 +203,7 @@ Phyiscs Context. Use to wrap all physical objects within the same physics world.
 <PhysicsStats />
 ```
 
-Shows a stats.js panel with physics timing info.
+Shows a stats.js panel with physics timing info. Use within a `<Physics />` Context
 
 ### Hooks
 
