@@ -1,4 +1,5 @@
-import { Quaternion, Vector3, Object3D } from "three";
+import { Object3D, Quaternion, Vector3 } from "three";
+import { Matrix4 } from "@react-three/fiber";
 
 export type UUID = string;
 
@@ -256,15 +257,235 @@ export interface ShapeConfig {
   flipQuadEdges?: boolean;
 }
 
+// https://pybullet.org/Bullet/BulletFull/classbtTypedConstraint.html
 export enum ConstraintType {
-  LOCK = "lock",
-  FIXED = "fixed",
-  SPRING = "spring",
-  SLIDER = "slider",
-  HINGE = "hinge",
+  // can be used to simulate ragdoll joints (upper arm, leg etc)
+  // https://pybullet.org/Bullet/BulletFull/classbtConeTwistConstraint.html
+  // single body & two body
   CONE_TWIST = "coneTwist",
+
+  // not implemented, but available in bullet
+  // CONTACT = "contact",
+  // GEAR = "gear",
+
+  // https://pybullet.org/Bullet/BulletFull/classbtGeneric6DofConstraint.html#details
+  // single body & two body
+  GENERIC_6_DOF = "generic6DOF",
+
+  // Generic 6 DOF constraint that allows to set spring motors to any translational and rotational DOF.
+  // https://pybullet.org/Bullet/BulletFull/classbtGeneric6DofSpringConstraint.html
+  // single body & two body
+  GENERIC_6_DOF_SPRING = "generic6DOFSpring",
+
+  // not implemented
+  // https://pybullet.org/Bullet/BulletFull/classbtUniversalConstraint.html
+  // two body
+  // UNIVERSAL = "universal",
+
+  // not implemented. Improved version of GENERIC_6_DOF_SPRING
+  // GENERIC_6_DOF_SPRING2 = "generic6DOFSpring2",
+
+  // https://pybullet.org/Bullet/BulletFull/classbtFixedConstraint.html
+  // two body
+  FIXED = "fixed",
+
+  // https://pybullet.org/Bullet/BulletFull/classbtHinge2Constraint.html
+  // two body
+  // HINGE_2 = "hinge2",
+
+  // hinge constraint between two rigidbodies each with a pivotpoint that descibes the axis location in local space axis defines the orientation of the hinge axis
+  // https://pybullet.org/Bullet/BulletFull/classbtHingeConstraint.html
+  // single body & two body
+  HINGE = "hinge",
+
+  // The getAccumulatedHingeAngle returns the accumulated hinge angle, taking rotation across the -PI/PI boundary into account.
+  // not implemented
+  // single body & two body
+  // HINGE_ACCUMULATED_ANGLE = "hinge_accumulated_angle",
+
+  // point to point constraint between two rigidbodies each with a pivotpoint that descibes the 'ballsocket' location in local space
+  // https://pybullet.org/Bullet/BulletFull/classbtPoint2PointConstraint.html#details
+  // single body & two body
   POINT_TO_POINT = "pointToPoint",
+
+  // https://pybullet.org/Bullet/BulletFull/classbtSliderConstraint.html
+  // single body & two body
+  SLIDER = "slider",
 }
+
+interface ConeTwistConstraintDynamicConfig {
+  angularOnly?: boolean;
+
+  swingSpan1?: number; // setLimit with index 5
+  swingSpan2?: number; // setLimit with index 4
+  twistSpan?: number; // setLimit with index 3
+
+  damping?: number;
+
+  motorEnabled?: boolean;
+
+  maxMotorImpulse?: number;
+
+  motorTarget?: Quaternion
+
+  fixThresh?: number;
+}
+
+interface Generic6DOFDynamicConfig {
+  linearLowerLimit?: Vector3;
+  linearUpperLimit?: Vector3;
+  angularLowerLimit?: Vector3;
+  angularUpperLimit?: Vector3;
+}
+interface Generic6DOFSpringDynamicConfig {
+  springEnabled?: [boolean, boolean, boolean, boolean, boolean, boolean];
+  equilibriumPoint?: [number, number, number, number, number, number];
+  stiffness?: [number, number, number, number, number, number];
+  damping?: [number, number, number, number, number, number];
+}
+
+interface HingeDynamicConfig {
+  angularOnly?: boolean;
+
+  enableAngularMotor?: boolean;
+  motorTargetVelocity?: number;
+  maxMotorImpulse?: number;
+
+  // TODO implement events:
+  // setMotorTarget(btScalar targetAngle, btScalar dt)
+  // getHingeAngle()
+}
+
+interface FixedDynamicConfig {
+  // nothing to configure
+}
+
+interface PointToPointDynamicConfig {
+  // nothing to configure
+}
+
+interface SliderDynamicConfig {
+  linearLowerLimit?: number;
+  linearUpperLimit?: number;
+  angularLowerLimit?: number;
+  angularUpperLimit?: number;
+  softnessDirLin?: number;
+  restitutionDirLin?: number;
+  dampingDirLin?: number;
+  softnessDirAng?: number;
+  restitutionDirAng?: number;
+  dampingDirAng?: number;
+  softnessLimLin?: number;
+  restitutionLimLin?: number;
+  dampingLimLin?: number;
+  softnessLimAng?: number;
+  restitutionLimAng?: number;
+  dampingLimAng?: number;
+  softnessOrthoLin?: number;
+  restitutionOrthoLin?: number;
+  dampingOrthoLin?: number;
+  softnessOrthoAng?: number;
+  restitutionOrthoAng?: number;
+  dampingOrthoAng?: number;
+
+  poweredLinearMotor?: boolean;
+  targetLinMotorVelocity?: number;
+  maxLinMotorForce?: number;
+
+  poweredAngularMotor?: boolean;
+  targetAngMotorVelocity?: number;
+  maxAngMotorForce?: number;
+
+  useFrameOffset?: boolean;
+}
+
+export type TwoBodyConstraintConfig =
+  | ({
+      type: ConstraintType.CONE_TWIST;
+
+      frameInA?: Matrix4;
+      frameInB?: Matrix4;
+    } & ConeTwistConstraintDynamicConfig)
+  | ({
+      type: ConstraintType.GENERIC_6_DOF;
+
+      frameInA?: Matrix4;
+      frameInB?: Matrix4;
+      useLinearReferenceFrameA: boolean;
+    } & Generic6DOFDynamicConfig)
+  | ({
+      type: ConstraintType.FIXED;
+
+      frameInA?: Matrix4;
+      frameInB?: Matrix4;
+    } & FixedDynamicConfig)
+  | ({
+      type: ConstraintType.GENERIC_6_DOF_SPRING;
+
+      frameIA?: Matrix4;
+      frameInB?: Matrix4;
+      useLinearReferenceFrameA: boolean;
+    } & Generic6DOFSpringDynamicConfig)
+  | ({
+      type: ConstraintType.HINGE;
+
+      pivot: Vector3;
+      axis: Vector3;
+      targetPivot: Vector3;
+      targetAxis: Vector3;
+
+      useReferenceFrameA: boolean;
+    } & HingeDynamicConfig)
+  | ({
+      type: ConstraintType.POINT_TO_POINT;
+
+      pivot: Vector3;
+      targetPivot: Vector3;
+    } & PointToPointDynamicConfig)
+  | ({
+      type: ConstraintType.SLIDER;
+
+      frameInA?: Matrix4;
+      frameInB?: Matrix4;
+    } & SliderDynamicConfig);
+
+export type SingleBodyConstraintConfig =
+  | ({
+      type: ConstraintType.CONE_TWIST;
+
+      frameInA?: Matrix4;
+    } & ConeTwistConstraintDynamicConfig)
+  | ({
+      type: ConstraintType.GENERIC_6_DOF;
+
+      frameInB?: Matrix4;
+      useLinearReferenceFrameA: boolean;
+    } & Generic6DOFDynamicConfig)
+  | ({
+      type: ConstraintType.GENERIC_6_DOF_SPRING;
+    } & Generic6DOFSpringDynamicConfig)
+  | ({
+      type: ConstraintType.HINGE;
+
+      pivot: Vector3;
+      axis: Vector3;
+      useReferenceFrameA: boolean;
+    } & HingeDynamicConfig)
+  | ({
+      type: ConstraintType.POINT_TO_POINT;
+
+      pivot: Vector3;
+    } & PointToPointDynamicConfig)
+  | ({
+      type: ConstraintType.SLIDER;
+
+      frameInB?: Matrix4;
+      useLinearReferenceFrameA: boolean;
+    } & SliderDynamicConfig);
+
+export type ConstraintConfig =
+  | SingleBodyConstraintConfig
+  | TwoBodyConstraintConfig;
 
 export enum BufferState {
   UNINITIALIZED = 0,

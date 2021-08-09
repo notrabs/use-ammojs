@@ -5,7 +5,7 @@ import { world } from "./world-manager";
 
 const constraints: Record<UUID, Constraint> = {};
 
-function addConstraint({ constraintId, bodyUuid, targetUuid, options = {} }) {
+function addConstraint({ constraintId, bodyUuid, targetUuid, options }) {
   if (bodies[bodyUuid] && bodies[targetUuid]) {
     constraints[constraintId] = new Constraint(
       options,

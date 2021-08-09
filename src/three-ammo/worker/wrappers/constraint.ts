@@ -1,18 +1,19 @@
-import { ConstraintType } from "../../lib/types";
-
-const CONSTRAINTS = Object.values(ConstraintType);
+import { ConstraintConfig, ConstraintType, TwoBodyConstraintConfig, } from "../../lib/types";
+import { toBtVector3 } from "../utils";
+import { RigidBody } from "./rigid-body";
+import { World } from "./world";
 
 export class Constraint {
   private world: any;
   private physicsConstraint: Ammo.btTypedConstraint;
 
-  constructor(constraintConfig, body, targetBody, world) {
+  constructor(
+    constraintConfig: TwoBodyConstraintConfig,
+    body: RigidBody,
+    targetBody: RigidBody,
+    world: World
+  ) {
     this.world = world;
-
-    const type =
-      constraintConfig.type && CONSTRAINTS.indexOf(constraintConfig.type)
-        ? constraintConfig.type
-        : ConstraintType.LOCK;
 
     const bodyTransform = body.physicsBody
       .getCenterOfMassTransform()
@@ -21,34 +22,54 @@ export class Constraint {
     const targetTransform = new Ammo.btTransform();
     targetTransform.setIdentity();
 
-    switch (type) {
-      case ConstraintType.LOCK: {
-        this.physicsConstraint = new Ammo.btGeneric6DofConstraint(
+    const tmp = new Ammo.btVector3(0, 0, 0);
+
+    switch (constraintConfig.type) {
+      // case ConstraintType.CONE_TWIST: {
+      //   // if (!constraintConfig.pivot) {
+      //   //   throw new Error("pivot must be defined for type: cone-twist");
+      //   // }
+      //   // if (!constraintConfig.targetPivot) {
+      //   //   throw new Error("targetPivot must be defined for type: cone-twist");
+      //   // }
+      //   //
+      //   // const pivotTransform = new Ammo.btTransform();
+      //   // pivotTransform.setIdentity();
+      //   // pivotTransform
+      //   //   .getOrigin()
+      //   //   .setValue(
+      //   //     constraintConfig.targetPivot.x,
+      //   //     constraintConfig.targetPivot.y,
+      //   //     constraintConfig.targetPivot.z
+      //   //   );
+      //   // this.physicsConstraint = new Ammo.btConeTwistConstraint(
+      //   //   body.physicsBody,
+      //   //   pivotTransform
+      //   // );
+      //   // Ammo.destroy(pivotTransform);
+      //   break;
+      // }
+      case ConstraintType.GENERIC_6_DOF: {
+        const dofConstraint = (this.physicsConstraint = new Ammo.btGeneric6DofConstraint(
           body.physicsBody,
           targetBody.physicsBody,
           bodyTransform,
           targetTransform,
           true
-        );
-        const zero = new Ammo.btVector3(0, 0, 0);
-        //TODO: allow these to be configurable
-        (this
-          .physicsConstraint as Ammo.btGeneric6DofConstraint).setLinearLowerLimit(
-          zero
-        );
-        (this
-          .physicsConstraint as Ammo.btGeneric6DofConstraint).setLinearUpperLimit(
-          zero
-        );
-        (this
-          .physicsConstraint as Ammo.btGeneric6DofConstraint).setAngularLowerLimit(
-          zero
-        );
-        (this
-          .physicsConstraint as Ammo.btGeneric6DofConstraint).setAngularUpperLimit(
-          zero
-        );
-        Ammo.destroy(zero);
+        ));
+
+        toBtVector3(tmp, constraintConfig.linearLowerLimit);
+        dofConstraint.setLinearLowerLimit(tmp);
+
+        toBtVector3(tmp, constraintConfig.linearUpperLimit);
+        dofConstraint.setLinearUpperLimit(tmp);
+
+        toBtVector3(tmp, constraintConfig.angularLowerLimit);
+        dofConstraint.setAngularLowerLimit(tmp);
+
+        toBtVector3(tmp, constraintConfig.angularUpperLimit);
+        dofConstraint.setAngularUpperLimit(tmp);
+
         break;
       }
       //TODO: test and verify all other constraint types
@@ -68,7 +89,7 @@ export class Constraint {
         );
         break;
       }
-      case ConstraintType.SPRING: {
+      case ConstraintType.GENERIC_6_DOF_SPRING: {
         this.physicsConstraint = new Ammo.btGeneric6DofSpringConstraint(
           body.physicsBody,
           targetBody.physicsBody,
@@ -100,11 +121,12 @@ export class Constraint {
         if (!constraintConfig.pivot) {
           throw new Error("pivot must be defined for type: hinge");
         }
-        if (!constraintConfig.targetPivot) {
-          throw new Error("targetPivot must be defined for type: hinge");
-        }
+
         if (!constraintConfig.axis) {
           throw new Error("axis must be defined for type: hinge");
+        }
+        if (!constraintConfig.targetPivot) {
+          throw new Error("targetPivot must be defined for type: hinge");
         }
         if (!constraintConfig.targetAxis) {
           throw new Error("targetAxis must be defined for type: hinge");
@@ -115,16 +137,17 @@ export class Constraint {
           constraintConfig.pivot.y,
           constraintConfig.pivot.z
         );
-        const targetPivot = new Ammo.btVector3(
-          constraintConfig.targetPivot.x,
-          constraintConfig.targetPivot.y,
-          constraintConfig.targetPivot.z
-        );
 
         const axis = new Ammo.btVector3(
           constraintConfig.axis.x,
           constraintConfig.axis.y,
           constraintConfig.axis.z
+        );
+
+        const targetPivot = new Ammo.btVector3(
+          constraintConfig.targetPivot.x,
+          constraintConfig.targetPivot.y,
+          constraintConfig.targetPivot.z
         );
         const targetAxis = new Ammo.btVector3(
           constraintConfig.targetAxis.x,
@@ -146,30 +169,6 @@ export class Constraint {
         Ammo.destroy(targetPivot);
         Ammo.destroy(axis);
         Ammo.destroy(targetAxis);
-        break;
-      }
-      case ConstraintType.CONE_TWIST: {
-        if (!constraintConfig.pivot) {
-          throw new Error("pivot must be defined for type: cone-twist");
-        }
-        if (!constraintConfig.targetPivot) {
-          throw new Error("targetPivot must be defined for type: cone-twist");
-        }
-
-        const pivotTransform = new Ammo.btTransform();
-        pivotTransform.setIdentity();
-        pivotTransform
-          .getOrigin()
-          .setValue(
-            constraintConfig.targetPivot.x,
-            constraintConfig.targetPivot.y,
-            constraintConfig.targetPivot.z
-          );
-        this.physicsConstraint = new Ammo.btConeTwistConstraint(
-          body.physicsBody,
-          pivotTransform
-        );
-        Ammo.destroy(pivotTransform);
         break;
       }
       case ConstraintType.POINT_TO_POINT: {
@@ -205,10 +204,14 @@ export class Constraint {
         break;
       }
       default:
-        throw new Error("unknown constraint type: " + type);
+        throw new Error(
+          "unknown constraint type: " +
+            (constraintConfig as ConstraintConfig).type
+        );
     }
 
     Ammo.destroy(targetTransform);
+    Ammo.destroy(tmp);
 
     this.world.physicsWorld.addConstraint(this.physicsConstraint, false);
   }
