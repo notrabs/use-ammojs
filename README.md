@@ -83,7 +83,7 @@ import { Physics } from "use-ammojs";
 <Physics drawDebug>[...]</Physics>;
 ```
 
-### 2.a Make objects physical
+### 2.a Make objects physical (Rigid Bodies)
 
 Automatically parse Shape parameters from the three Mesh (courtesy of [three-to-ammo](https://github.com/InfiniteLee/three-to-ammo)):
 
