@@ -11,11 +11,14 @@ export function PhysicsStats() {
   const [physicsPanel] = useState(() => {
     return new Stats.Panel("Physics (ms)", "#f8f", "#212");
   });
+
   const [stats] = useState(() => {
     const stats = new Stats();
 
     stats.addPanel(physicsPanel);
     stats.showPanel(3);
+
+    stats.dom.style.pointerEvents = "none";
 
     return stats;
   });
