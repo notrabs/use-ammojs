@@ -5,13 +5,16 @@
 
 _Fast_ Physics hooks for use with [react-three-fiber](https://github.com/pmndrs/react-three-fiber).
 
-Built on top of [three-ammo](https://github.com/infinitelee/three-ammo), running the wasm ammo.js library in a seperate web-worker.
-Data is synced with fast SharedArrayBuffers in environments that support them.
+Achieved by running the [ammo.js](https://github.com/kripken/ammo.js/) physics library in a web-worker. 
+Ammo is a WebAssembly wrapper around the powerful [Bullet Physics](http://www.bulletphysics.org/) engine.
+Data is synced with SharedArrayBuffers in environments that support them.
 
 ```
 yarn add use-ammojs
 npm i use-ammojs
 ```
+
+Built on top of [three-ammo](https://github.com/infinitelee/three-ammo) and its related work.
 
 ## Examples
 
