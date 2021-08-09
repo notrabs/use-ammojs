@@ -243,6 +243,14 @@ export function Physics({
       bodyOptions[uuid] = options;
       object3Ds[uuid] = mesh;
 
+      if (!mesh.userData.useAmmo) {
+        mesh.userData.useAmmo = {};
+      }
+
+      mesh.userData.useAmmo.rigidBody = {
+        uuid,
+      };
+
       workerHelpers.addRigidBody(uuid, mesh, options);
     }
 
@@ -251,6 +259,7 @@ export function Physics({
       delete IndexToUuid[uuidToIndex[uuid]];
       delete uuidToIndex[uuid];
       delete bodyOptions[uuid];
+      delete object3Ds[uuid].userData.useAmmo.rigidBody;
       delete object3Ds[uuid];
       workerHelpers.removeRigidBody(uuid);
     }

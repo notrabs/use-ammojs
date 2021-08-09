@@ -5,14 +5,16 @@ import { world } from "./world-manager";
 
 const constraints: Record<UUID, Constraint> = {};
 
-function addConstraint({ constraintId, bodyUuid, targetUuid, options }) {
-  if (bodies[bodyUuid] && bodies[targetUuid]) {
+function addConstraint({ constraintId, bodyAUuid, bodyBUuid, options }) {
+  if (bodies[bodyAUuid] && (bodies[bodyBUuid] || !bodyBUuid)) {
     constraints[constraintId] = new Constraint(
       options,
-      bodies[bodyUuid],
-      bodies[targetUuid],
+      bodies[bodyAUuid],
+      bodies[bodyBUuid],
       world
     );
+  } else {
+    console.error("Could not add constraint: Rigid Bodies are not registered");
   }
 }
 

@@ -313,6 +313,8 @@ export enum ConstraintType {
 }
 
 interface ConeTwistConstraintDynamicConfig {
+  type: ConstraintType.CONE_TWIST;
+
   angularOnly?: boolean;
 
   swingSpan1?: number; // setLimit with index 5
@@ -331,12 +333,16 @@ interface ConeTwistConstraintDynamicConfig {
 }
 
 interface Generic6DOFDynamicConfig {
+  type: ConstraintType.GENERIC_6_DOF;
+
   linearLowerLimit?: Vector3;
   linearUpperLimit?: Vector3;
   angularLowerLimit?: Vector3;
   angularUpperLimit?: Vector3;
 }
 interface Generic6DOFSpringDynamicConfig {
+  type: ConstraintType.GENERIC_6_DOF_SPRING;
+
   springEnabled?: [boolean, boolean, boolean, boolean, boolean, boolean];
   equilibriumPoint?: [number, number, number, number, number, number];
   stiffness?: [number, number, number, number, number, number];
@@ -344,6 +350,8 @@ interface Generic6DOFSpringDynamicConfig {
 }
 
 interface HingeDynamicConfig {
+  type: ConstraintType.HINGE;
+
   angularOnly?: boolean;
 
   enableAngularMotor?: boolean;
@@ -359,14 +367,20 @@ interface HingeDynamicConfig {
 }
 
 interface FixedDynamicConfig {
+  type: ConstraintType.FIXED;
+
   // nothing to configure
 }
 
 interface PointToPointDynamicConfig {
+  type: ConstraintType.POINT_TO_POINT;
+
   // nothing to configure
 }
 
 interface SliderDynamicConfig {
+  type: ConstraintType.SLIDER;
+
   linearLowerLimit?: number;
   linearUpperLimit?: number;
   angularLowerLimit?: number;
@@ -398,6 +412,15 @@ interface SliderDynamicConfig {
   targetAngMotorVelocity?: number;
   maxAngMotorForce?: number;
 }
+
+export type DynamicConstraintConfig =
+  | ConeTwistConstraintDynamicConfig
+  | Generic6DOFDynamicConfig
+  | FixedDynamicConfig
+  | Generic6DOFSpringDynamicConfig
+  | HingeDynamicConfig
+  | PointToPointDynamicConfig
+  | SliderDynamicConfig;
 
 export interface Transform {
   position: Vector3;
@@ -493,9 +516,12 @@ export type SingleBodyConstraintConfig =
       useLinearReferenceFrameA: boolean;
     } & SliderDynamicConfig);
 
-export type ConstraintConfig = {
+export interface CommonConstraintConfig {
   disableCollisionsBetweenLinkedBodies?: boolean;
-} & (SingleBodyConstraintConfig | TwoBodyConstraintConfig);
+}
+
+export type ConstraintConfig = CommonConstraintConfig &
+  (SingleBodyConstraintConfig | TwoBodyConstraintConfig);
 
 export enum BufferState {
   UNINITIALIZED = 0,

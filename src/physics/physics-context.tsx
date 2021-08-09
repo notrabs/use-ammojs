@@ -2,26 +2,19 @@ import { createContext, MutableRefObject, useContext } from "react";
 import { BufferGeometry, Mesh, Object3D, Quaternion, Vector3 } from "three";
 import {
   BodyConfig,
-  ConstraintType,
+  CommonConstraintConfig,
+  DynamicConstraintConfig,
   RaycastHit,
   RaycastOptions,
   ShapeConfig,
   SharedBuffers,
+  SingleBodyConstraintConfig,
   SoftBodyConfig,
+  TwoBodyConstraintConfig,
   UpdateBodyOptions,
   UUID,
 } from "../three-ammo/lib/types";
 import { WorkerHelpers } from "../three-ammo/lib/worker-helper";
-
-export interface ConstraintOptions {
-  type: ConstraintType;
-
-  pivot?: Vector3;
-  targetPivot?: Vector3;
-
-  axis?: Vector3;
-  targetAxis?: Vector3;
-}
 
 export interface PhysicsState {
   workerHelpers: ReturnType<typeof WorkerHelpers>;
@@ -62,12 +55,19 @@ export interface AmmoPhysicsContext {
   removeSoftBody(uuid: string);
 
   addConstraint(
-    constraintId: string,
-    bodyUuid: string,
-    targetUuid: string,
-    options?: ConstraintOptions
+    constraintId: UUID,
+    bodyUuid: UUID,
+    targetUuid: undefined,
+    options: SingleBodyConstraintConfig & CommonConstraintConfig
   );
-  removeConstraint(constraintId: string);
+  addConstraint(
+    constraintId: UUID,
+    bodyUuid: UUID,
+    targetUuid: UUID,
+    options: TwoBodyConstraintConfig & CommonConstraintConfig
+  );
+  updateConstraint(constraintId: UUID, options?: DynamicConstraintConfig);
+  removeConstraint(constraintId: UUID);
 
   updateRigidBody(uuid: UUID, options: UpdateBodyOptions);
 

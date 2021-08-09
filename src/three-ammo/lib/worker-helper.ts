@@ -11,7 +11,6 @@ import {
   WorldConfig,
 } from "./types";
 import { isSharedArrayBufferSupported } from "../../utils/utils";
-import { Vector3 } from "@react-three/fiber";
 
 export function createAmmoWorker(): Worker {
   return new AmmoWorker();
@@ -194,12 +193,20 @@ export function WorkerHelpers(ammoWorker: Worker) {
       });
     },
 
-    addConstraint(constraintId, bodyUuid, targetUuid, options = {}) {
+    addConstraint(constraintId, bodyUuid, targetUuid, options) {
       ammoWorker.postMessage({
         type: MessageType.ADD_CONSTRAINT,
         constraintId,
         bodyUuid,
         targetUuid,
+        options,
+      });
+    },
+
+    updateConstraint(constraintId, options) {
+      ammoWorker.postMessage({
+        type: MessageType.UPDATE_CONSTRAINT,
+        constraintId,
         options,
       });
     },
