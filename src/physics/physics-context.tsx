@@ -2,7 +2,7 @@ import { createContext, MutableRefObject, useContext } from "react";
 import { BufferGeometry, Mesh, Object3D, Quaternion, Vector3 } from "three";
 import {
   BodyConfig,
-  ConstraintType,
+  ConstraintType, RaycastHit,
   RaycastOptions,
   ShapeConfig,
   SharedBuffers,
@@ -37,7 +37,7 @@ export interface PhysicsState {
   removeRigidBody(uuid: UUID);
   addSoftBody(uuid: UUID, mesh: Object3D, options?: SoftBodyConfig);
   removeSoftBody(uuid: UUID);
-  rayTest(options: RaycastOptions);
+  rayTest(options: RaycastOptions): Promise<RaycastHit[]>;
 }
 
 export interface PhysicsPerformanceInfo {
@@ -86,7 +86,7 @@ export interface AmmoPhysicsContext {
 
   object3Ds: Record<string, Object3D>;
 
-  rayTest(options: RaycastOptions);
+  rayTest(options: RaycastOptions): Promise<RaycastHit[]>;
 
   physicsPerformanceInfoRef: MutableRefObject<PhysicsPerformanceInfo>;
 }

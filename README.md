@@ -19,6 +19,7 @@ npm i use-ammojs
 
 - [Hello Physics World](https://codesandbox.io/s/oc1op?file=/src/index.js)
 - [Soft Bodies](https://codesandbox.io/s/use-ammojs-softbody-example-k59jz)
+- [Raycast](https://codesandbox.io/s/use-ammojs-raycast-example-cibin?file=/src/index.js)
 
 #### Stress Tests
 
