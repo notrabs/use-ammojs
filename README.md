@@ -22,6 +22,9 @@ Mainly relevant for SoftBody performance, which require additional Buffer copies
 - [Soft Bodies](https://codesandbox.io/s/use-ammojs-softbody-example-k59jz)
 - TODO
 
+#### Stress Tests
+
+* [Lots of cubes](https://codesandbox.io/s/use-ammojs-lotsofcubes-f5xdz?file=/src/index.js)
 
 ## Why not use [use-cannon](https://github.com/pmndrs/use-cannon) instead?
 
