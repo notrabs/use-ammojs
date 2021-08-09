@@ -701,6 +701,7 @@ declare module Ammo {
     setMaxMotorImpulseNormalized(maxMotorImpulse: number): void;
     setMotorTarget(q: btQuaternion): void;
     setMotorTargetInConstraintSpace(q: btQuaternion): void;
+    setFixThresh(fixThresh: number);
   }
   class btHingeConstraint extends btTypedConstraint {
     constructor(
@@ -727,8 +728,8 @@ declare module Ammo {
     setLimit(
       low: number,
       high: number,
-      softness: number,
-      biasFactor: number,
+      softness?: number,
+      biasFactor?: number,
       relaxationFactor?: number
     ): void;
     enableAngularMotor(
@@ -738,8 +739,13 @@ declare module Ammo {
     ): void;
     setAngularOnly(angularOnly: boolean): void;
     enableMotor(enableMotor: boolean): void;
+    setMotorTargetVelocity(motorTargetVelocity: number): void;
     setMaxMotorImpulse(maxMotorImpulse: number): void;
     setMotorTarget(targetAngle: number, dt: number): void;
+
+    getLowerLimit(): number;
+    getUpperLimit(): number;
+    getHingeAngle(): number;
   }
   class btSliderConstraint extends btTypedConstraint {
     constructor(
@@ -758,6 +764,32 @@ declare module Ammo {
     setUpperLinLimit(upperLimit: number): void;
     setLowerAngLimit(lowerAngLimit: number): void;
     setUpperAngLimit(upperAngLimit: number): void;
+
+    setSoftnessDirLin(softnessDirLin: number);
+    setRestitutionDirLin(restitutionDirLin: number);
+    setDampingDirLin(dampingDirLin: number);
+    setSoftnessDirAng(softnessDirAng: number);
+    setRestitutionDirAng(restitutionDirAng: number);
+    setDampingDirAng(dampingDirAng: number);
+    setSoftnessLimLin(softnessLimLin: number);
+    setRestitutionLimLin(restitutionLimLin: number);
+    setDampingLimLin(dampingLimLin: number);
+    setSoftnessLimAng(softnessLimAng: number);
+    setRestitutionLimAng(restitutionLimAng: number);
+    setDampingLimAng(dampingLimAng: number);
+    setSoftnessOrthoLin(softnessOrthoLin: number);
+    setRestitutionOrthoLin(restitutionOrthoLin: number);
+    setDampingOrthoLin(dampingOrthoLin: number);
+    setSoftnessOrthoAng(softnessOrthoAng: number);
+    setRestitutionOrthoAng(restitutionOrthoAng: number);
+    setDampingOrthoAng(dampingOrthoAng: number);
+
+    setPoweredLinMotor(onOff: boolean);
+    setTargetLinMotorVelocity(targetLinMotorVelocity: number);
+    setMaxLinMotorForce(maxLinMotorForce: number);
+    setPoweredAngMotor(onOff: boolean);
+    setTargetAngMotorVelocity(targetAngMotorVelocity: number);
+    setMaxAngMotorForce(maxAngMotorForce: number);
   }
   class btFixedConstraint extends btTypedConstraint {
     constructor(

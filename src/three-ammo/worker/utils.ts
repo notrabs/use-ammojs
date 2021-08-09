@@ -40,6 +40,9 @@ export function almostEqualsQuaternion(
 export function toBtVector3(btVec: Ammo.btVector3, vec: Vector3) {
   btVec.setValue(vec.x, vec.y, vec.z);
 }
+export function toBtQuaternion(btQuat: Ammo.btQuaternion, vec: Quaternion) {
+  btQuat.setValue(vec.x, vec.y, vec.z, vec.w);
+}
 
 export function notImplementedEventReceiver(data) {
   console.error("not implemented event: ", data);

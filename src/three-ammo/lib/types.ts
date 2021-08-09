@@ -326,7 +326,7 @@ interface ConeTwistConstraintDynamicConfig {
 
   maxMotorImpulse?: number;
 
-  motorTarget?: Quaternion
+  motorTarget?: Quaternion;
 
   fixThresh?: number;
 }
@@ -350,6 +350,9 @@ interface HingeDynamicConfig {
   enableAngularMotor?: boolean;
   motorTargetVelocity?: number;
   maxMotorImpulse?: number;
+
+  lowerLimit?: number;
+  upperLimit?: number;
 
   // TODO implement events:
   // setMotorTarget(btScalar targetAngle, btScalar dt)
@@ -395,8 +398,6 @@ interface SliderDynamicConfig {
   poweredAngularMotor?: boolean;
   targetAngMotorVelocity?: number;
   maxAngMotorForce?: number;
-
-  useFrameOffset?: boolean;
 }
 
 export type TwoBodyConstraintConfig =
@@ -463,6 +464,9 @@ export type SingleBodyConstraintConfig =
     } & Generic6DOFDynamicConfig)
   | ({
       type: ConstraintType.GENERIC_6_DOF_SPRING;
+
+      frameInB?: Matrix4;
+      useLinearReferenceFrameB: boolean;
     } & Generic6DOFSpringDynamicConfig)
   | ({
       type: ConstraintType.HINGE;
