@@ -48,12 +48,9 @@ At the time of writing however use-cannon is more mature and great for most proj
   - [ ] Expose more methods trough the hook (e.g. setPosition/applyImpulse/[more...](https://pybullet.org/Bullet/BulletFull/classbtRigidBody.html))
   - [ ] Support collision callbacks
 - [ ] Add Examples to the documentation
-- [ ] Simulation managment
-  - [x] Configurable simulation speed
-  - [ ] Expose performance info
 - [ ] Set up Benchmarks to compare cannon, ammo with ArrayBuffers and ammo with SharedArrayBuffers
 
-#### Low priority goals:
+#### Low priority goals (for unchecked tasks):
 - [ ] Add [Raycast](https://pybullet.org/Bullet/BulletFull/classbtCollisionWorld.html#aaac6675c8134f6695fecb431c72b0a6a) queries
   - [x] One-time (async) ray-tests
   - [ ] Continuous queries trough a fixed scene component to mitigate worker latency (TODO: check if necessary)
@@ -61,6 +58,10 @@ At the time of writing however use-cannon is more mature and great for most proj
   - [x] Rigid Bodies
   - [x] Soft Bodies
   - [ ] Debug Rendering
+- [x] Simulation managment
+  - [x] Configurable simulation speed
+  - [x] Expose performance info
+    - [ ] Integrate to @react-three/drei Stats component
 - [ ] Improve the automatic shape detection (set shapeType automatically based on the three Mesh type)
 - [ ] Raycast Vehicle API
 
@@ -188,8 +189,13 @@ function handleRespawn() {
 <Physics />
 ```
 
-Phyiscs Context. Use to wrap all phyical objects within the same physics world.
+Phyiscs Context. Use to wrap all physical objects within the same physics world.
 
+```tsx
+<PhysicsStats />
+```
+
+Shows a stats.js panel with physics timing info.
 
 ### Hooks
 
