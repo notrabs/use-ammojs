@@ -3,7 +3,19 @@ import Stats from "stats.js";
 import { useAmmoPhysicsContext } from "../physics-context";
 import { useFrame } from "@react-three/fiber";
 
-export function PhysicsStats() {
+interface PhysicsStatsProps {
+  top?: number | string;
+  left?: number | string;
+  bottom?: number | string;
+  right?: number | string;
+}
+
+export function PhysicsStats({
+  top = 0,
+  left = 0,
+  right = "auto",
+  bottom = "auto",
+}: PhysicsStatsProps) {
   const { physicsPerformanceInfoRef } = useAmmoPhysicsContext();
 
   const lastTickTimeRef = useRef(0);
@@ -30,6 +42,14 @@ export function PhysicsStats() {
       document.body.removeChild(stats.dom);
     };
   }, []);
+
+  useEffect(() => {
+    stats.dom.style.top = typeof top === "number" ? top + "px" : top;
+    stats.dom.style.left = typeof left === "number" ? left + "px" : left;
+    stats.dom.style.right = typeof right === "number" ? right + "px" : right;
+    stats.dom.style.bottom =
+      typeof bottom === "number" ? bottom + "px" : bottom;
+  }, [top, left, right, bottom]);
 
   useFrame(() => {
     if (
