@@ -1,5 +1,4 @@
 import { Object3D, Quaternion, Vector3 } from "three";
-import { Matrix4 } from "@react-three/fiber";
 
 export type UUID = string;
 
@@ -400,31 +399,36 @@ interface SliderDynamicConfig {
   maxAngMotorForce?: number;
 }
 
+export interface Transform {
+  position: Vector3;
+  rotation: Quaternion;
+}
+
 export type TwoBodyConstraintConfig =
   | ({
       type: ConstraintType.CONE_TWIST;
 
-      frameInA?: Matrix4;
-      frameInB?: Matrix4;
+      frameInA: Transform;
+      frameInB: Transform;
     } & ConeTwistConstraintDynamicConfig)
   | ({
       type: ConstraintType.GENERIC_6_DOF;
 
-      frameInA?: Matrix4;
-      frameInB?: Matrix4;
+      frameInA: Transform;
+      frameInB: Transform;
       useLinearReferenceFrameA: boolean;
     } & Generic6DOFDynamicConfig)
   | ({
       type: ConstraintType.FIXED;
 
-      frameInA?: Matrix4;
-      frameInB?: Matrix4;
+      frameInA: Transform;
+      frameInB: Transform;
     } & FixedDynamicConfig)
   | ({
       type: ConstraintType.GENERIC_6_DOF_SPRING;
 
-      frameIA?: Matrix4;
-      frameInB?: Matrix4;
+      frameInA: Transform;
+      frameInB: Transform;
       useLinearReferenceFrameA: boolean;
     } & Generic6DOFSpringDynamicConfig)
   | ({
@@ -446,33 +450,35 @@ export type TwoBodyConstraintConfig =
   | ({
       type: ConstraintType.SLIDER;
 
-      frameInA?: Matrix4;
-      frameInB?: Matrix4;
+      frameInA: Transform;
+      frameInB: Transform;
+      useLinearReferenceFrameA: boolean;
     } & SliderDynamicConfig);
 
 export type SingleBodyConstraintConfig =
   | ({
       type: ConstraintType.CONE_TWIST;
 
-      frameInA?: Matrix4;
+      frameInA: Transform;
     } & ConeTwistConstraintDynamicConfig)
   | ({
       type: ConstraintType.GENERIC_6_DOF;
 
-      frameInB?: Matrix4;
+      frameInB: Transform;
       useLinearReferenceFrameA: boolean;
     } & Generic6DOFDynamicConfig)
   | ({
       type: ConstraintType.GENERIC_6_DOF_SPRING;
 
-      frameInB?: Matrix4;
+      frameInB: Transform;
       useLinearReferenceFrameB: boolean;
     } & Generic6DOFSpringDynamicConfig)
   | ({
       type: ConstraintType.HINGE;
 
-      pivot: Vector3;
-      axis: Vector3;
+      // Cant use pivot+axis constructor here
+      frameInA: Transform;
+
       useReferenceFrameA: boolean;
     } & HingeDynamicConfig)
   | ({
@@ -483,13 +489,13 @@ export type SingleBodyConstraintConfig =
   | ({
       type: ConstraintType.SLIDER;
 
-      frameInB?: Matrix4;
+      frameInB: Transform;
       useLinearReferenceFrameA: boolean;
     } & SliderDynamicConfig);
 
-export type ConstraintConfig =
-  | SingleBodyConstraintConfig
-  | TwoBodyConstraintConfig;
+export type ConstraintConfig = {
+  disableCollisionsBetweenLinkedBodies?: boolean;
+} & (SingleBodyConstraintConfig | TwoBodyConstraintConfig);
 
 export enum BufferState {
   UNINITIALIZED = 0,
@@ -510,6 +516,7 @@ export enum MessageType {
   ADD_SOFTBODY,
   REMOVE_SOFTBODY,
   ADD_CONSTRAINT,
+  UPDATE_CONSTRAINT,
   REMOVE_CONSTRAINT,
   ENABLE_DEBUG,
   RESET_DYNAMIC_BODY,

@@ -1,9 +1,10 @@
 import {
   ConstraintConfig,
   ConstraintType,
+  SingleBodyConstraintConfig,
   TwoBodyConstraintConfig,
 } from "../../lib/types";
-import { toBtQuaternion, toBtVector3 } from "../utils";
+import { toBtQuaternion, toBtTransform, toBtVector3 } from "../utils";
 import { RigidBody } from "./rigid-body";
 import { World } from "./world";
 
@@ -13,7 +14,7 @@ export class Constraint {
   private type: ConstraintType;
 
   constructor(
-    constraintConfig: TwoBodyConstraintConfig,
+    constraintConfig: ConstraintConfig,
     bodyA: RigidBody,
     bodyB: RigidBody | undefined,
     world: World
@@ -21,133 +22,203 @@ export class Constraint {
     this.world = world;
     this.type = constraintConfig.type;
 
-    const bodyTransform = bodyA.physicsBody
-      .getCenterOfMassTransform()
-      .inverse()
-      .op_mul(targetBody.physicsBody.getWorldTransform());
-    const targetTransform = new Ammo.btTransform();
-    targetTransform.setIdentity();
+    if (bodyB) {
+      this.physicsConstraint = this.initTwoBodyConstraint(
+        constraintConfig as TwoBodyConstraintConfig,
+        bodyA,
+        bodyB
+      );
+    } else {
+      this.physicsConstraint = this.initSingleBodyConstraint(
+        constraintConfig as SingleBodyConstraintConfig,
+        bodyA
+      );
+    }
+
+    this.applyDynamicConfig(constraintConfig);
+
+    this.world.physicsWorld.addConstraint(
+      this.physicsConstraint,
+      constraintConfig.disableCollisionsBetweenLinkedBodies ?? false
+    );
+  }
+
+  private initSingleBodyConstraint(
+    constraintConfig: SingleBodyConstraintConfig,
+    bodyA: RigidBody
+  ): Ammo.btTypedConstraint {
+    let constraint: Ammo.btTypedConstraint;
+
+    const transform = new Ammo.btTransform();
 
     switch (constraintConfig.type) {
-      // case ConstraintType.CONE_TWIST: {
-      //   // if (!constraintConfig.pivot) {
-      //   //   throw new Error("pivot must be defined for type: cone-twist");
-      //   // }
-      //   // if (!constraintConfig.targetPivot) {
-      //   //   throw new Error("targetPivot must be defined for type: cone-twist");
-      //   // }
-      //   //
-      //   // const pivotTransform = new Ammo.btTransform();
-      //   // pivotTransform.setIdentity();
-      //   // pivotTransform
-      //   //   .getOrigin()
-      //   //   .setValue(
-      //   //     constraintConfig.targetPivot.x,
-      //   //     constraintConfig.targetPivot.y,
-      //   //     constraintConfig.targetPivot.z
-      //   //   );
-      //   // this.physicsConstraint = new Ammo.btConeTwistConstraint(
-      //   //   body.physicsBody,
-      //   //   pivotTransform
-      //   // );
-      //   // Ammo.destroy(pivotTransform);
-      //   break;
-      // }
-      case ConstraintType.GENERIC_6_DOF: {
-        this.physicsConstraint = new Ammo.btGeneric6DofConstraint(
-          bodyA.physicsBody,
-          targetBody.physicsBody,
-          bodyTransform,
-          targetTransform,
-          true
-        );
+      case ConstraintType.CONE_TWIST: {
+        toBtTransform(transform, constraintConfig.frameInA);
 
+        constraint = new Ammo.btConeTwistConstraint(
+          bodyA.physicsBody,
+          transform
+        );
         break;
       }
-      //TODO: test and verify all other constraint types
-      case ConstraintType.FIXED: {
-        //btFixedConstraint does not seem to debug render
-        bodyTransform.setRotation(
-          bodyA.physicsBody.getWorldTransform().getRotation()
-        );
-        targetTransform.setRotation(
-          targetBody.physicsBody.getWorldTransform().getRotation()
-        );
-        this.physicsConstraint = new Ammo.btFixedConstraint(
+      case ConstraintType.GENERIC_6_DOF: {
+        toBtTransform(transform, constraintConfig.frameInB);
+
+        constraint = new Ammo.btGeneric6DofConstraint(
           bodyA.physicsBody,
-          targetBody.physicsBody,
-          bodyTransform,
-          targetTransform
+          transform,
+          constraintConfig.useLinearReferenceFrameA
         );
+
         break;
       }
       case ConstraintType.GENERIC_6_DOF_SPRING: {
-        this.physicsConstraint = new Ammo.btGeneric6DofSpringConstraint(
+        toBtTransform(transform, constraintConfig.frameInB);
+
+        constraint = new Ammo.btGeneric6DofSpringConstraint(
           bodyA.physicsBody,
-          targetBody.physicsBody,
-          bodyTransform,
-          targetTransform,
-          true
+          transform,
+          constraintConfig.useLinearReferenceFrameB
         );
         break;
       }
       case ConstraintType.SLIDER: {
-        //TODO: support setting linear and angular limits
-        this.physicsConstraint = new Ammo.btSliderConstraint(
+        toBtTransform(transform, constraintConfig.frameInB);
+
+        constraint = new Ammo.btSliderConstraint(
           bodyA.physicsBody,
-          targetBody.physicsBody,
-          bodyTransform,
-          targetTransform,
-          true
+          transform,
+          constraintConfig.useLinearReferenceFrameA
         );
         break;
       }
       case ConstraintType.HINGE: {
-        if (!constraintConfig.pivot) {
-          throw new Error("pivot must be defined for type: hinge");
-        }
+        toBtTransform(transform, constraintConfig.frameInA);
 
-        if (!constraintConfig.axis) {
-          throw new Error("axis must be defined for type: hinge");
-        }
-        if (!constraintConfig.targetPivot) {
-          throw new Error("targetPivot must be defined for type: hinge");
-        }
-        if (!constraintConfig.targetAxis) {
-          throw new Error("targetAxis must be defined for type: hinge");
-        }
-
-        const pivot = new Ammo.btVector3(
-          constraintConfig.pivot.x,
-          constraintConfig.pivot.y,
-          constraintConfig.pivot.z
-        );
-
-        const axis = new Ammo.btVector3(
-          constraintConfig.axis.x,
-          constraintConfig.axis.y,
-          constraintConfig.axis.z
-        );
-
-        const targetPivot = new Ammo.btVector3(
-          constraintConfig.targetPivot.x,
-          constraintConfig.targetPivot.y,
-          constraintConfig.targetPivot.z
-        );
-        const targetAxis = new Ammo.btVector3(
-          constraintConfig.targetAxis.x,
-          constraintConfig.targetAxis.y,
-          constraintConfig.targetAxis.z
-        );
-
-        this.physicsConstraint = new Ammo.btHingeConstraint(
+        constraint = new Ammo.btHingeConstraint(
           bodyA.physicsBody,
-          targetBody.physicsBody,
+          transform,
+          constraintConfig.useReferenceFrameA
+        );
+        break;
+      }
+      case ConstraintType.POINT_TO_POINT: {
+        const pivot = new Ammo.btVector3();
+        toBtVector3(pivot, constraintConfig.pivot);
+
+        constraint = new Ammo.btPoint2PointConstraint(bodyA.physicsBody, pivot);
+
+        Ammo.destroy(pivot);
+        break;
+      }
+      default:
+        throw new Error(
+          "unknown constraint type: " +
+            (constraintConfig as ConstraintConfig).type
+        );
+    }
+
+    Ammo.destroy(transform);
+
+    return constraint;
+  }
+
+  private initTwoBodyConstraint(
+    constraintConfig: TwoBodyConstraintConfig,
+    bodyA: RigidBody,
+    bodyB: RigidBody
+  ): Ammo.btTypedConstraint {
+    let constraint: Ammo.btTypedConstraint;
+
+    const transformA = new Ammo.btTransform();
+    const transformB = new Ammo.btTransform();
+
+    switch (constraintConfig.type) {
+      case ConstraintType.CONE_TWIST: {
+        toBtTransform(transformA, constraintConfig.frameInA);
+        toBtTransform(transformB, constraintConfig.frameInB);
+
+        constraint = new Ammo.btConeTwistConstraint(
+          bodyA.physicsBody,
+          bodyB.physicsBody,
+          transformA,
+          transformB
+        );
+        break;
+      }
+      case ConstraintType.GENERIC_6_DOF: {
+        toBtTransform(transformA, constraintConfig.frameInA);
+        toBtTransform(transformB, constraintConfig.frameInB);
+
+        constraint = new Ammo.btGeneric6DofConstraint(
+          bodyA.physicsBody,
+          bodyB.physicsBody,
+          transformA,
+          transformB,
+          constraintConfig.useLinearReferenceFrameA
+        );
+
+        break;
+      }
+      case ConstraintType.FIXED: {
+        toBtTransform(transformA, constraintConfig.frameInA);
+        toBtTransform(transformB, constraintConfig.frameInB);
+
+        constraint = new Ammo.btFixedConstraint(
+          bodyA.physicsBody,
+          bodyB.physicsBody,
+          transformA,
+          transformB
+        );
+        break;
+      }
+      case ConstraintType.GENERIC_6_DOF_SPRING: {
+        toBtTransform(transformA, constraintConfig.frameInA);
+        toBtTransform(transformB, constraintConfig.frameInB);
+
+        constraint = new Ammo.btGeneric6DofSpringConstraint(
+          bodyA.physicsBody,
+          bodyB.physicsBody,
+          transformA,
+          transformB,
+          constraintConfig.useLinearReferenceFrameA
+        );
+        break;
+      }
+      case ConstraintType.SLIDER: {
+        toBtTransform(transformA, constraintConfig.frameInA);
+        toBtTransform(transformB, constraintConfig.frameInB);
+
+        constraint = new Ammo.btSliderConstraint(
+          bodyA.physicsBody,
+          bodyB.physicsBody,
+          transformA,
+          transformB,
+          constraintConfig.useLinearReferenceFrameA
+        );
+        break;
+      }
+      case ConstraintType.HINGE: {
+        const pivot = new Ammo.btVector3();
+        toBtVector3(pivot, constraintConfig.pivot);
+
+        const axis = new Ammo.btVector3();
+        toBtVector3(axis, constraintConfig.axis);
+
+        const targetPivot = new Ammo.btVector3();
+        toBtVector3(targetPivot, constraintConfig.targetPivot);
+
+        const targetAxis = new Ammo.btVector3();
+        toBtVector3(targetAxis, constraintConfig.targetAxis);
+
+        constraint = new Ammo.btHingeConstraint(
+          bodyA.physicsBody,
+          bodyB.physicsBody,
           pivot,
           targetPivot,
           axis,
           targetAxis,
-          true
+          constraintConfig.useReferenceFrameA
         );
 
         Ammo.destroy(pivot);
@@ -157,29 +228,15 @@ export class Constraint {
         break;
       }
       case ConstraintType.POINT_TO_POINT: {
-        if (!constraintConfig.pivot) {
-          throw new Error("pivot must be defined for type: point-to-point");
-        }
-        if (!constraintConfig.targetPivot) {
-          throw new Error(
-            "targetPivot must be defined for type: point-to-point"
-          );
-        }
+        const pivot = new Ammo.btVector3();
+        toBtVector3(pivot, constraintConfig.pivot);
 
-        const pivot = new Ammo.btVector3(
-          constraintConfig.pivot.x,
-          constraintConfig.pivot.y,
-          constraintConfig.pivot.z
-        );
-        const targetPivot = new Ammo.btVector3(
-          constraintConfig.targetPivot.x,
-          constraintConfig.targetPivot.y,
-          constraintConfig.targetPivot.z
-        );
+        const targetPivot = new Ammo.btVector3();
+        toBtVector3(targetPivot, constraintConfig.targetPivot);
 
-        this.physicsConstraint = new Ammo.btPoint2PointConstraint(
+        constraint = new Ammo.btPoint2PointConstraint(
           bodyA.physicsBody,
-          targetBody.physicsBody,
+          bodyB.physicsBody,
           pivot,
           targetPivot
         );
@@ -195,10 +252,10 @@ export class Constraint {
         );
     }
 
-    Ammo.destroy(targetTransform);
-    this.applyDynamicConfig(constraintConfig);
+    Ammo.destroy(transformA);
+    Ammo.destroy(transformB);
 
-    this.world.physicsWorld.addConstraint(this.physicsConstraint, false);
+    return constraint;
   }
 
   applyDynamicConfig(constraintConfig: ConstraintConfig): void {

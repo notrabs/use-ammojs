@@ -1,5 +1,5 @@
 import { Constraint } from "../wrappers/constraint";
-import { MessageType, UUID } from "../../lib/types";
+import { ConstraintConfig, MessageType, UUID } from "../../lib/types";
 import { bodies } from "./rigid-body-manager";
 import { world } from "./world-manager";
 
@@ -16,6 +16,15 @@ function addConstraint({ constraintId, bodyUuid, targetUuid, options }) {
   }
 }
 
+function updateConstraint({
+  constraintId,
+  ...config
+}: ConstraintConfig & { constraintId: UUID }) {
+  if (constraints[constraintId]) {
+    constraints[constraintId].applyDynamicConfig(config);
+  }
+}
+
 function removeConstraint({ constraintId }) {
   if (constraints[constraintId]) {
     constraints[constraintId].destroy();
@@ -25,5 +34,6 @@ function removeConstraint({ constraintId }) {
 
 export const constraintEventReceivers = {
   [MessageType.ADD_CONSTRAINT]: addConstraint,
+  [MessageType.UPDATE_CONSTRAINT]: updateConstraint,
   [MessageType.REMOVE_CONSTRAINT]: removeConstraint,
 };

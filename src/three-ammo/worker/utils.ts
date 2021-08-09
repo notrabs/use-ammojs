@@ -1,4 +1,5 @@
 import { Quaternion, Vector3 } from "three";
+import { Transform } from "../lib/types";
 
 export function almostEqualsVector3(epsilon: number, u: Vector3, v: Vector3) {
   return (
@@ -40,8 +41,27 @@ export function almostEqualsQuaternion(
 export function toBtVector3(btVec: Ammo.btVector3, vec: Vector3) {
   btVec.setValue(vec.x, vec.y, vec.z);
 }
+
 export function toBtQuaternion(btQuat: Ammo.btQuaternion, vec: Quaternion) {
   btQuat.setValue(vec.x, vec.y, vec.z, vec.w);
+}
+
+export function toBtTransform(
+  btTransform: Ammo.btTransform,
+  transform: Transform
+) {
+  btTransform.setIdentity();
+  btTransform
+    .getOrigin()
+    .setValue(transform.position.x, transform.position.y, transform.position.z);
+  const tmp = new Ammo.btQuaternion(
+    transform.rotation.x,
+    transform.rotation.y,
+    transform.rotation.z,
+    transform.rotation.w
+  );
+  btTransform.setRotation(tmp);
+  Ammo.destroy(tmp);
 }
 
 export function notImplementedEventReceiver(data) {
