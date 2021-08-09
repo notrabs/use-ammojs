@@ -3,7 +3,7 @@ import { isSharedArrayBufferSupported } from "../utils/utils";
 import { BodyType, BufferState, SharedBuffers } from "../three-ammo/lib/types";
 import { BUFFER_CONFIG } from "../three-ammo/lib/constants";
 import { PhysicsPerformanceInfo, PhysicsState } from "./physics-context";
-import { Matrix4, Vector3 } from "three";
+import { BufferAttribute, Matrix4, Vector3 } from "three";
 import { MutableRefObject } from "react";
 
 interface PhysicsUpdateProps {
@@ -110,10 +110,12 @@ export function PhysicsUpdate({
 
           if (softBodyMesh) {
             if (!isSharedArrayBufferSupported) {
-              softBodyMesh.geometry.attributes.position.set(
+              (softBodyMesh.geometry.attributes
+                .position as BufferAttribute).copyArray(
                 softBodyBuffers.vertexFloatArray
               );
-              softBodyMesh.geometry.attributes.normal.set(
+              (softBodyMesh.geometry.attributes
+                .normal as BufferAttribute).copyArray(
                 softBodyBuffers.normalFloatArray
               );
             }

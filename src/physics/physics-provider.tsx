@@ -278,7 +278,7 @@ export function Physics({
       // console.log("after merge ", mesh.geometry.attributes.position.count);
 
       const indexLength =
-        mesh.geometry.index.count * mesh.geometry.index.itemSize;
+        mesh.geometry.index!.count * mesh.geometry.index!.itemSize;
       const vertexLength =
         mesh.geometry.attributes.position.count *
         mesh.geometry.attributes.position.itemSize;
@@ -320,7 +320,7 @@ export function Physics({
 
       mesh.frustumCulled = false;
 
-      sharedSoftBodyBuffers.indexIntArray.set(mesh.geometry.index.array);
+      sharedSoftBodyBuffers.indexIntArray.set(mesh.geometry.index!.array);
       sharedSoftBodyBuffers.vertexFloatArray.set(
         mesh.geometry.attributes.position.array
       );
