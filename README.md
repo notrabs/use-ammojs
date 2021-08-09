@@ -66,6 +66,7 @@ At the time of writing however use-cannon is more mature and great for most proj
   - [x] Configurable simulation speed
   - [x] Expose performance info
     - [ ] Integrate to @react-three/drei Stats component
+  - [ ] Automatically pause simulation if tab is out of focus or not rendering (as option)
 - [ ] Improve the automatic shape detection (set shapeType automatically based on the three Mesh type)
 - [ ] Raycast Vehicle API
 - [ ] Support for instanced objects
