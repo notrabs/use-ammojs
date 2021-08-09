@@ -24,7 +24,7 @@ Mainly relevant for SoftBody performance, which require additional Buffer copies
 
 #### Stress Tests
 
-* [Lots of cubes](https://codesandbox.io/s/use-ammojs-lotsofcubes-f5xdz?file=/src/index.js)
+- [Lots of cubes](https://codesandbox.io/s/use-ammojs-lotsofcubes-f5xdz?file=/src/index.js)
 
 ## Why not use [use-cannon](https://github.com/pmndrs/use-cannon) instead?
 
@@ -54,6 +54,7 @@ At the time of writing however use-cannon is more mature and great for most proj
 - [ ] Set up Benchmarks to compare cannon, ammo with ArrayBuffers and ammo with SharedArrayBuffers
 
 #### Low priority goals (for unchecked tasks):
+
 - [ ] Add [Raycast](https://pybullet.org/Bullet/BulletFull/classbtCollisionWorld.html#aaac6675c8134f6695fecb431c72b0a6a) queries
   - [x] One-time (async) ray-tests
   - [ ] Continuous queries trough a fixed scene component to mitigate worker latency (TODO: check if necessary)
@@ -67,6 +68,9 @@ At the time of writing however use-cannon is more mature and great for most proj
     - [ ] Integrate to @react-three/drei Stats component
 - [ ] Improve the automatic shape detection (set shapeType automatically based on the three Mesh type)
 - [ ] Raycast Vehicle API
+- [ ] Support for instanced objects
+- [ ] Support and document manual bundling of the wasm file
+  - Currently the wasm library is inlined with a base64 string for ease of use. Users who want to save a few bytes can serve it as a seperate file with the `application/wasm` Content-Type in their own deployment. There should be a bundle available without the inlined wasm for that use-case.
 
 ## Quick Start
 
@@ -207,7 +211,6 @@ const { rayTest } = useAmmo();
 ```
 
 Utility funcionts available anywhere in the `<Physics />` context.
-
 
 ```tsx
 const [ref, api] = useRigidBody();
