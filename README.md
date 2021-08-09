@@ -6,8 +6,8 @@
 _Fast_ Physics hooks for use with [react-three-fiber](https://github.com/pmndrs/react-three-fiber).
 
 Achieved by running the [ammo.js](https://github.com/kripken/ammo.js/) physics library in a web-worker. 
-Ammo is a WebAssembly wrapper around the powerful [Bullet Physics](http://www.bulletphysics.org/) engine.
-Data is synced with SharedArrayBuffers in environments that support them.
+Ammo itself is a WebAssembly wrapper around the powerful [Bullet Physics](http://www.bulletphysics.org/) engine.
+Data is synced with SharedArrayBuffers having minimal impact on the main thread.
 
 ```
 yarn add use-ammojs
@@ -28,7 +28,7 @@ Built on top of [three-ammo](https://github.com/infinitelee/three-ammo) and its 
 
 - [Lots of cubes](https://codesandbox.io/s/use-ammojs-lotsofcubes-f5xdz?file=/src/index.js)
 
-> ⚠️ Note that the codesandbox examples do not support SharedArrayBuffers [due to missing cross-origin isolation](https://web.dev/coop-coep/) and use regular ArrayBuffers as fallback. Currently the debug-drawer has no fallback implemented and will not render anything.
+> ⚠️ Note that the codesandbox examples do not support SharedArrayBuffers [due to missing cross-origin isolation](https://web.dev/coop-coep/) and use regular ArrayBuffers as a fallback. Currently the debug-drawer has no ArrayBuffer fallback implemented and will not render anything.
 
 ## Why not use [use-cannon](https://github.com/pmndrs/use-cannon) instead?
 
