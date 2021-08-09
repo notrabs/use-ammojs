@@ -12,4 +12,5 @@ export {
   SoftBodyType,
   WorldConfig,
   ShapeFit,
+  RaycastHit,
 } from "./three-ammo/lib/types";
