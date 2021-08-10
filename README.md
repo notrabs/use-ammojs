@@ -1,7 +1,7 @@
 [![npm](https://img.shields.io/npm/v/use-ammojs?color=%23F69500)](https://www.npmjs.com/package/use-ammojs)
 [![npm](https://img.shields.io/badge/bulletphysics%20(fork)-3.17-%23F69500)](https://github.com/notrabs/ammo.js/tree/bullet_submodule)
 ![npm](https://img.shields.io/npm/types/use-ammojs?label=%20)
-# [WIP] use-ammojs
+# use-ammojs
 
 _Fast_ Physics hooks for use with [react-three-fiber](https://github.com/pmndrs/react-three-fiber).
 
