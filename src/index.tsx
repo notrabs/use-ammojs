@@ -3,12 +3,13 @@ export * from "./physics";
 export { AmmoDebugConstants } from "ammo-debug-drawer";
 
 export {
-  BodyConfig,
   ConstraintType,
   ShapeConfig,
   UpdateBodyOptions,
   ShapeType,
+  BodyConfig,
   BodyType,
+  BodyActivationState,
   SoftBodyType,
   WorldConfig,
   ShapeFit,
