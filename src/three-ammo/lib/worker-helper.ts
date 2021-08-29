@@ -193,12 +193,12 @@ export function WorkerHelpers(ammoWorker: Worker) {
       });
     },
 
-    addConstraint(constraintId, bodyUuid, targetUuid, options) {
+    addConstraint(constraintId, bodyAUuid, bodyBUuid, options) {
       ammoWorker.postMessage({
         type: MessageType.ADD_CONSTRAINT,
         constraintId,
-        bodyUuid,
-        targetUuid,
+        bodyAUuid,
+        bodyBUuid,
         options,
       });
     },

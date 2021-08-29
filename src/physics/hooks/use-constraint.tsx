@@ -8,17 +8,37 @@ import {
   UUID,
 } from "../../three-ammo/lib/types";
 
+type SingleBodyConstraintRefs = {
+  bodyARef: MutableRefObject<Object3D | undefined>;
+  bodyBRef?: undefined;
+};
+
+type TwoBodyConstraintRefs = {
+  bodyARef: MutableRefObject<Object3D | undefined>;
+  bodyBRef: MutableRefObject<Object3D | undefined>;
+};
+
 type UseConstraintProps = CommonConstraintConfig &
   (
-    | ({
-        bodyARef: MutableRefObject<Object3D>;
-        bodyBRef: undefined;
-      } & SingleBodyConstraintConfig)
-    | ({
-        bodyARef: MutableRefObject<Object3D>;
-        bodyBRef: MutableRefObject<Object3D>;
-      } & TwoBodyConstraintConfig)
+    | (SingleBodyConstraintRefs & SingleBodyConstraintConfig)
+    | (TwoBodyConstraintRefs & TwoBodyConstraintConfig)
   );
+
+export function useSingleBodyConstraint(
+  props: CommonConstraintConfig &
+    SingleBodyConstraintRefs &
+    SingleBodyConstraintConfig
+) {
+  return useConstraint(props);
+}
+
+export function useTwoBodyConstraint(
+  props: CommonConstraintConfig &
+    TwoBodyConstraintRefs &
+    TwoBodyConstraintConfig
+) {
+  return useConstraint(props);
+}
 
 export function useConstraint(props: UseConstraintProps) {
   const {
@@ -29,12 +49,12 @@ export function useConstraint(props: UseConstraintProps) {
 
   const [constraintId] = useState(() => MathUtils.generateUUID());
 
-  const uuidA: UUID | undefined =
-    props.bodyARef.current?.userData?.useAmmo?.rigidBody?.uuid;
-  const uuidB: UUID | undefined =
-    props.bodyARef.current?.userData?.useAmmo?.uuid;
-
   useEffect(() => {
+    const uuidA: UUID | undefined =
+      props.bodyARef.current?.userData?.useAmmo?.rigidBody?.uuid;
+    const uuidB: UUID | undefined =
+      props.bodyARef.current?.userData?.useAmmo?.rigidBody?.uuid;
+
     if (props.bodyBRef === undefined && uuidA) {
       const { bodyARef, bodyBRef, ...constraintConfig } = props;
 
@@ -64,5 +84,5 @@ export function useConstraint(props: UseConstraintProps) {
     }
 
     return () => {};
-  }, [uuidA, uuidB]);
+  }, []);
 }
