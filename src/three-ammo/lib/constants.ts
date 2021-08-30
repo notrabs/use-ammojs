@@ -1,3 +1,5 @@
+import { Vector3 } from "three";
+
 export const GRAVITY = -9.81;
 export const EPS = 10e-6;
 
@@ -13,3 +15,5 @@ export const BUFFER_CONFIG = {
   COLLISIONS_OFFSET: 18,
   BODY_DATA_SIZE: 26,
 };
+
+export const ZERO = new Vector3(0, 0, 0);

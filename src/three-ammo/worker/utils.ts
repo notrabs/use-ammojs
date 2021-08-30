@@ -1,5 +1,11 @@
 import { Quaternion, Vector3 } from "three";
-import { Transform } from "../lib/types";
+import {
+  SoftBodyAnchor,
+  SoftBodyAnchorRef,
+  SoftBodyRigidBodyAnchor,
+  SoftBodyRigidBodyAnchorRef,
+  Transform,
+} from "../lib/types";
 
 export function almostEqualsVector3(epsilon: number, u: Vector3, v: Vector3) {
   return (
@@ -42,6 +48,10 @@ export function toBtVector3(btVec: Ammo.btVector3, vec: Vector3) {
   btVec.setValue(vec.x, vec.y, vec.z);
 }
 
+export function toVector3(btVec: Ammo.btVector3) {
+  return new Vector3(btVec.x(), btVec.y(), btVec.z());
+}
+
 export function toBtQuaternion(btQuat: Ammo.btQuaternion, vec: Quaternion) {
   btQuat.setValue(vec.x, vec.y, vec.z, vec.w);
 }
@@ -66,4 +76,16 @@ export function toBtTransform(
 
 export function notImplementedEventReceiver(data) {
   console.error("not implemented event: ", data);
+}
+
+export function isSoftBodyRigidBodyAnchor(
+  anchor: SoftBodyAnchor
+): anchor is SoftBodyRigidBodyAnchor {
+  return anchor.hasOwnProperty("rigidBodyUUID");
+}
+
+export function isSoftBodyRigidBodyAnchorRef(
+  anchor: SoftBodyAnchorRef
+): anchor is SoftBodyRigidBodyAnchorRef {
+  return !!(anchor as SoftBodyRigidBodyAnchorRef).rigidBodyRef;
 }

@@ -54,6 +54,10 @@ export function useRigidBody(
       objectToUse.updateMatrixWorld();
     }
 
+    if (!objectToUse) {
+      throw new Error("useRigidBody ref does not contain a object");
+    }
+
     addRigidBody(bodyUUID, objectToUse, { type: bodyType, ...rest });
 
     const meshToUse = mesh ? mesh : objectToUse;

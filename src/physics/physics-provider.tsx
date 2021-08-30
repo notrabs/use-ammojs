@@ -34,6 +34,7 @@ import {
   SharedBuffers,
   SharedSoftBodyBuffers,
   SoftBodyConfig,
+  SoftBodyType,
   UUID,
   WorldConfig,
 } from "../three-ammo/lib/types";
@@ -270,21 +271,40 @@ export function Physics({
         throw new Error("useSoftBody is only supported on BufferGeometries");
       }
 
-      // console.log("before merge ", mesh.geometry.attributes.position.count);
-      mesh.geometry.deleteAttribute("normal");
-      mesh.geometry.deleteAttribute("uv");
-      mesh.geometry = BufferGeometryUtils.mergeVertices(mesh.geometry);
-      mesh.geometry.computeVertexNormals();
-      // console.log("after merge ", mesh.geometry.attributes.position.count);
+      let indexLength: number;
+      let vertexLength: number;
+      let normalLength: number;
 
-      const indexLength =
-        mesh.geometry.index!.count * mesh.geometry.index!.itemSize;
-      const vertexLength =
-        mesh.geometry.attributes.position.count *
-        mesh.geometry.attributes.position.itemSize;
-      const normalLength =
-        mesh.geometry.attributes.normal.count *
-        mesh.geometry.attributes.normal.itemSize;
+      switch (options.type) {
+        case SoftBodyType.TRIMESH:
+          // console.log("before merge ", mesh.geometry.attributes.position.count);
+          mesh.geometry.deleteAttribute("normal");
+          mesh.geometry.deleteAttribute("uv");
+          mesh.geometry = BufferGeometryUtils.mergeVertices(mesh.geometry);
+          mesh.geometry.computeVertexNormals();
+          // console.log("after merge ", mesh.geometry.attributes.position.count);
+
+          indexLength =
+            mesh.geometry.index!.count * mesh.geometry.index!.itemSize;
+          vertexLength =
+            mesh.geometry.attributes.position.count *
+            mesh.geometry.attributes.position.itemSize;
+          normalLength =
+            mesh.geometry.attributes.normal.count *
+            mesh.geometry.attributes.normal.itemSize;
+
+          break;
+        case SoftBodyType.ROPE:
+          indexLength = 0;
+          vertexLength =
+            mesh.geometry.attributes.instanceStart.count *
+            mesh.geometry.attributes.instanceStart.itemSize;
+          normalLength = 0;
+
+          break;
+        default:
+          throw new Error("unknown soft body type " + options.type);
+      }
 
       const buffer = allocateCompatibleBuffer(
         indexLength * 4 + vertexLength * 4 + normalLength * 4
@@ -320,29 +340,47 @@ export function Physics({
 
       mesh.frustumCulled = false;
 
-      sharedSoftBodyBuffers.indexIntArray.set(mesh.geometry.index!.array);
-      sharedSoftBodyBuffers.vertexFloatArray.set(
-        mesh.geometry.attributes.position.array
-      );
-      sharedSoftBodyBuffers.normalFloatArray.set(
-        mesh.geometry.attributes.normal.array
-      );
+      if (options.type === SoftBodyType.TRIMESH) {
+        sharedSoftBodyBuffers.vertexFloatArray.set(
+          mesh.geometry.attributes.position.array
+        );
+
+        sharedSoftBodyBuffers.indexIntArray.set(mesh.geometry.index!.array);
+        sharedSoftBodyBuffers.normalFloatArray.set(
+          mesh.geometry.attributes.normal.array
+        );
+      } else {
+        for (let i = 0; i < vertexLength; i++) {
+          sharedSoftBodyBuffers.vertexFloatArray[
+            i * 3
+          ] = mesh.geometry.attributes.instanceStart.getX(i);
+          sharedSoftBodyBuffers.vertexFloatArray[
+            i * 3 + 1
+          ] = mesh.geometry.attributes.instanceStart.getY(i);
+          sharedSoftBodyBuffers.vertexFloatArray[
+            i * 3 + 2
+          ] = mesh.geometry.attributes.instanceStart.getZ(i);
+        }
+      }
 
       if (isSharedArrayBufferSupported) {
-        mesh.geometry.setAttribute(
-          "position",
-          new BufferAttribute(
-            sharedSoftBodyBuffers.vertexFloatArray,
-            3
-          ).setUsage(DynamicDrawUsage)
-        );
-        mesh.geometry.setAttribute(
-          "normal",
-          new BufferAttribute(
-            sharedSoftBodyBuffers.normalFloatArray,
-            3
-          ).setUsage(DynamicDrawUsage)
-        );
+        if (options.type === SoftBodyType.TRIMESH) {
+          mesh.geometry.setAttribute(
+            "position",
+            new BufferAttribute(
+              sharedSoftBodyBuffers.vertexFloatArray,
+              3
+            ).setUsage(DynamicDrawUsage)
+          );
+
+          mesh.geometry.setAttribute(
+            "normal",
+            new BufferAttribute(
+              sharedSoftBodyBuffers.normalFloatArray,
+              3
+            ).setUsage(DynamicDrawUsage)
+          );
+        }
       }
 
       softBodies[uuid] = mesh;

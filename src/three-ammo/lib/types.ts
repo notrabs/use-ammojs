@@ -1,4 +1,5 @@
 import { Object3D, Quaternion, Vector3 } from "three";
+import { MutableRefObject } from "react";
 
 export type UUID = string;
 
@@ -143,7 +144,35 @@ export interface SoftBodyConfig {
 
   // see SoftBodyFCollisionFlag  (btSoftBody::fCollision)
   collisionFlag?: number;
+
+  anchors?: SoftBodyAnchor[];
 }
+
+export interface SoftBodyWorldAnchor {
+  nodeIndex: number;
+  worldPosition: Vector3;
+}
+
+export interface SoftBodyRigidBodyAnchor {
+  nodeIndex: number;
+  rigidBodyUUID: UUID;
+  localOffset?: Vector3;
+  disableCollisionBetweenLinkedBodies?: boolean;
+  influence?: number;
+}
+
+export type SoftBodyRigidBodyAnchorRef = Omit<
+  SoftBodyRigidBodyAnchor,
+  "rigidBodyUUID"
+> & {
+  rigidBodyRef: MutableRefObject<Object3D | undefined>;
+};
+
+export type SoftBodyAnchor = SoftBodyWorldAnchor | SoftBodyRigidBodyAnchor;
+
+export type SoftBodyAnchorRef =
+  | SoftBodyWorldAnchor
+  | SoftBodyRigidBodyAnchorRef;
 
 export enum SoftBodyType {
   TRIMESH = "trimesh",

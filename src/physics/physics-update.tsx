@@ -5,6 +5,7 @@ import { BUFFER_CONFIG } from "../three-ammo/lib/constants";
 import { PhysicsPerformanceInfo, PhysicsState } from "./physics-context";
 import { BufferAttribute, Matrix4, Vector3 } from "three";
 import { MutableRefObject } from "react";
+import { LineGeometry } from "three/examples/jsm/lines/LineGeometry";
 
 interface PhysicsUpdateProps {
   physicsState: PhysicsState;
@@ -109,19 +110,27 @@ export function PhysicsUpdate({
           const softBodyMesh = softBodies[softBodyBuffers.uuid];
 
           if (softBodyMesh) {
-            if (!isSharedArrayBufferSupported) {
-              (softBodyMesh.geometry.attributes
-                .position as BufferAttribute).copyArray(
+            if ((softBodyMesh.geometry as LineGeometry).isLineGeometry) {
+              (softBodyMesh.geometry as LineGeometry).setPositions(
                 softBodyBuffers.vertexFloatArray
               );
-              (softBodyMesh.geometry.attributes
-                .normal as BufferAttribute).copyArray(
-                softBodyBuffers.normalFloatArray
-              );
-            }
+            } else {
+              if (!isSharedArrayBufferSupported) {
+                (softBodyMesh.geometry.attributes
+                  .position as BufferAttribute).copyArray(
+                  softBodyBuffers.vertexFloatArray
+                );
+                (softBodyMesh.geometry.attributes
+                  .normal as BufferAttribute).copyArray(
+                  softBodyBuffers.normalFloatArray
+                );
+              }
 
-            softBodyMesh.geometry.attributes.position.needsUpdate = true;
-            softBodyMesh.geometry.attributes.normal.needsUpdate = true;
+              softBodyMesh.geometry.attributes.position.needsUpdate = true;
+              if (softBodyMesh.geometry.attributes.normal) {
+                softBodyMesh.geometry.attributes.normal.needsUpdate = true;
+              }
+            }
           }
         }
       }
