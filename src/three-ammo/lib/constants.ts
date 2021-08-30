@@ -1,8 +1,7 @@
 export const GRAVITY = -9.81;
-export const MAX_INTERVAL = 4 / 60;
-export const ITERATIONS = 10;
-export const SIMULATION_RATE = 8.333; // 8.333ms / 120hz
 export const EPS = 10e-6;
+
+export const DEFAULT_TIMESTEP = 1 / 60;
 
 export const BUFFER_CONFIG = {
   // Header length in number of int32/float32

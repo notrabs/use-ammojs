@@ -12,12 +12,12 @@ import {
 } from "./managers/world-manager";
 import { debugEventReceivers } from "./managers/debug-manager";
 import { constraintEventReceivers } from "./managers/constraint-manager";
-import { SIMULATION_RATE } from "../lib/constants";
 import {
   copyToSoftBodyBuffers,
   softBodyEventReceivers,
 } from "./managers/soft-body-manager";
 import { raycastEventReceivers } from "./managers/raycast-manager";
+import { DEFAULT_TIMESTEP } from "../lib/constants";
 
 let lastTick;
 let tickInterval;
@@ -82,10 +82,7 @@ onmessage = async (event) => {
       await eventReceivers[MessageType.INIT](event.data);
 
       lastTick = performance.now();
-      tickInterval = self.setInterval(
-        tick,
-        event.data.simulationRate ?? SIMULATION_RATE
-      );
+      tickInterval = self.setInterval(tick, event.data.fixedTimeStep ?? DEFAULT_TIMESTEP);
     } else {
       console.error("Error: World Not Initialized", event.data);
     }

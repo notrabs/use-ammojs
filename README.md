@@ -59,6 +59,7 @@ At the time of writing however use-cannon is more mature and great for most proj
 
 #### Low priority goals (for unchecked tasks):
 
+- [ ] Automatic refresh rate detection and performance throttling (i.e. match the simulation rate to the requestAnimationFrame-rate and throttle performance if simulation steps take too long)
 - [ ] Add [Raycast](https://pybullet.org/Bullet/BulletFull/classbtCollisionWorld.html#aaac6675c8134f6695fecb431c72b0a6a) queries
   - [x] One-time (async) ray-tests
   - [ ] Continuous queries trough a fixed scene component to mitigate worker latency (TODO: check if necessary)

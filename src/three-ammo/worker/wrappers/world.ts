@@ -1,5 +1,5 @@
 import { WorldConfig } from "../../lib/types";
-import { EPS, GRAVITY } from "../../lib/constants";
+import { DEFAULT_TIMESTEP, EPS, GRAVITY } from "../../lib/constants";
 import { AmmoDebugConstants, AmmoDebugDrawer } from "ammo-debug-drawer";
 
 export class World {
@@ -26,7 +26,7 @@ export class World {
     this.debugDrawMode =
       worldConfig.debugDrawMode || AmmoDebugConstants.NoDebug;
     this.maxSubSteps = worldConfig.maxSubSteps || 4;
-    this.fixedTimeStep = worldConfig.fixedTimeStep || 1 / 60;
+    this.fixedTimeStep = worldConfig.fixedTimeStep || DEFAULT_TIMESTEP;
     this.collisionConfiguration = new Ammo.btSoftBodyRigidBodyCollisionConfiguration();
     this.dispatcher = new Ammo.btCollisionDispatcher(
       this.collisionConfiguration
