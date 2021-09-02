@@ -53,7 +53,7 @@ export function useConstraint(props: UseConstraintProps) {
     const uuidA: UUID | undefined =
       props.bodyARef.current?.userData?.useAmmo?.rigidBody?.uuid;
     const uuidB: UUID | undefined =
-      props.bodyARef.current?.userData?.useAmmo?.rigidBody?.uuid;
+      props.bodyBRef?.current?.userData?.useAmmo?.rigidBody?.uuid;
 
     if (props.bodyBRef === undefined && uuidA) {
       const { bodyARef, bodyBRef, ...constraintConfig } = props;
@@ -84,5 +84,5 @@ export function useConstraint(props: UseConstraintProps) {
     }
 
     return () => {};
-  }, []);
+  }, [props.bodyARef.current, props.bodyBRef?.current]);
 }
