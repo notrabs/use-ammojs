@@ -66,6 +66,8 @@ const eventReceivers: Record<MessageType, (eventData: any) => void> = {
 };
 
 onmessage = async (event) => {
+  console.debug("received worker message: ", event);
+
   if (!eventReceivers[event.data?.type]) {
     console.error("unknown event type: ", event.data);
     return;
@@ -82,7 +84,10 @@ onmessage = async (event) => {
       await eventReceivers[MessageType.INIT](event.data);
 
       lastTick = performance.now();
-      tickInterval = self.setInterval(tick, event.data.fixedTimeStep ?? DEFAULT_TIMESTEP);
+      tickInterval = self.setInterval(
+        tick,
+        event.data.fixedTimeStep ?? DEFAULT_TIMESTEP
+      );
     } else {
       console.error("Error: World Not Initialized", event.data);
     }
