@@ -22,6 +22,7 @@ Built on top of [three-ammo](https://github.com/infinitelee/three-ammo) and its 
 
 - [Hello Physics World](https://codesandbox.io/s/oc1op?file=/src/index.js)
 - [Soft Bodies](https://codesandbox.io/s/use-ammojs-softbody-example-k59jz)
+- [Crane (Rope + Attachment)](https://codesandbox.io/s/use-ammojs-rope-example-wb9cg)
 - [Raycast](https://codesandbox.io/s/use-ammojs-raycast-example-cibin?file=/src/index.js)
 
 #### Stress Tests
@@ -45,7 +46,7 @@ At the time of writing however use-cannon is more mature and great for most proj
 - [x] Add Rigid Body support
 - [ ] Add [Soft Body](https://pybullet.org/Bullet/BulletFull/classbtSoftBody.html) support
   - [x] Volumes/Cloth from Triangle Mesh
-  - [ ] Ropes
+  - [x] Ropes
   - [ ] Support textures on Soft Bodies
   - [ ] Deformables
 - [ ] Add Constraints between Rigid Bodies
