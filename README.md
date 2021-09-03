@@ -22,6 +22,7 @@ Built on top of [three-ammo](https://github.com/infinitelee/three-ammo) and its 
 
 - [Hello Physics World](https://codesandbox.io/s/oc1op?file=/src/index.js)
 - [Soft Bodies](https://codesandbox.io/s/use-ammojs-softbody-example-k59jz)
+- [Crane (Constraint)](https://codesandbox.io/s/use-ammojs-rope-example-wb9cg)
 - [Crane (Rope + Attachment)](https://codesandbox.io/s/use-ammojs-rope-example-wb9cg)
 - [Raycast](https://codesandbox.io/s/use-ammojs-raycast-example-cibin?file=/src/index.js)
 
