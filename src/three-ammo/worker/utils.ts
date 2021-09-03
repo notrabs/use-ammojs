@@ -1,5 +1,6 @@
-import { Quaternion, Vector3 } from "three";
+import { Matrix4, Quaternion, Vector3 } from "three";
 import {
+  SerializedQuaternion,
   SoftBodyAnchor,
   SoftBodyAnchorRef,
   SoftBodyRigidBodyAnchor,
@@ -52,8 +53,20 @@ export function toVector3(btVec: Ammo.btVector3) {
   return new Vector3(btVec.x(), btVec.y(), btVec.z());
 }
 
-export function toBtQuaternion(btQuat: Ammo.btQuaternion, vec: Quaternion) {
-  btQuat.setValue(vec.x, vec.y, vec.z, vec.w);
+export function toBtQuaternion(
+  btQuat: Ammo.btQuaternion,
+  quat: Quaternion | SerializedQuaternion
+) {
+  btQuat.setValue(
+    (quat as Quaternion).x ?? (quat as SerializedQuaternion)._x,
+    (quat as Quaternion).y ?? (quat as SerializedQuaternion)._y,
+    (quat as Quaternion).z ?? (quat as SerializedQuaternion)._z,
+    (quat as Quaternion).w ?? (quat as SerializedQuaternion)._w
+  );
+}
+
+export function fromBtQuaternion(btQuat: Ammo.btQuaternion) {
+  return new Quaternion(btQuat.x(), btQuat.y(), btQuat.z(), btQuat.w());
 }
 
 export function toBtTransform(
@@ -64,14 +77,22 @@ export function toBtTransform(
   btTransform
     .getOrigin()
     .setValue(transform.position.x, transform.position.y, transform.position.z);
-  const tmp = new Ammo.btQuaternion(
-    transform.rotation.x,
-    transform.rotation.y,
-    transform.rotation.z,
-    transform.rotation.w
-  );
+  const tmp = new Ammo.btQuaternion(0, 0, 0, 1);
+  toBtQuaternion(tmp, transform.rotation);
   btTransform.setRotation(tmp);
   Ammo.destroy(tmp);
+}
+
+export function fromBtTransform(btTransform: Ammo.btTransform): Transform {
+  const matrix = new Matrix4();
+
+  const position = toVector3(btTransform.getOrigin());
+  const rotation = fromBtQuaternion(btTransform.getRotation());
+
+  return {
+    position,
+    rotation,
+  };
 }
 
 export function notImplementedEventReceiver(data) {

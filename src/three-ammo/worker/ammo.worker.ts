@@ -66,9 +66,9 @@ const eventReceivers: Record<MessageType, (eventData: any) => void> = {
 };
 
 onmessage = async (event) => {
-  if (event.data?.type !== MessageType.TRANSFER_BUFFERS) {
-    console.debug("physics worker received message: ", event.data);
-  }
+  // if (event.data?.type !== MessageType.TRANSFER_BUFFERS) {
+  //   console.debug("physics worker received message: ", event.data);
+  // }
 
   if (!eventReceivers[event.data?.type]) {
     console.error("unknown event type: ", event.data);

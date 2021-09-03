@@ -660,6 +660,9 @@ declare module Ammo {
     setLinearUpperLimit(linearUpper: btVector3): void;
     setAngularLowerLimit(angularLower: btVector3): void;
     setAngularUpperLimit(angularUpper: btVector3): void;
+    setFrames(frameA: btTransform, frameB: btTransform): void;
+    getCalculatedTransformA(): btTransform;
+    getCalculatedTransformB(): btTransform;
     getFrameOffsetA(): btTransform;
   }
   class btGeneric6DofSpringConstraint extends btGeneric6DofConstraint {

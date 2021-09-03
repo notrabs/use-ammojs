@@ -5,8 +5,6 @@ export type UUID = string;
 
 export type WorkerRequestId = number;
 
-export type SerializedVector3 = Vector3 | { x: number; y: number; z: number };
-
 export interface WorldConfig {
   // default = 10e-6
   epsilon?: number;
@@ -356,7 +354,7 @@ interface ConeTwistConstraintDynamicConfig {
 
   maxMotorImpulse?: number;
 
-  motorTarget?: Quaternion;
+  motorTarget?: Quaternion | SerializedQuaternion;
 
   fixThresh?: number;
 }
@@ -451,9 +449,18 @@ export type DynamicConstraintConfig =
   | PointToPointDynamicConfig
   | SliderDynamicConfig;
 
+export type SerializedVector3 = { x: number; y: number; z: number };
+
+export type SerializedQuaternion = {
+  _x: number;
+  _y: number;
+  _z: number;
+  _w: number;
+};
+
 export interface Transform {
-  position: Vector3;
-  rotation: Quaternion;
+  position: Vector3 | SerializedVector3;
+  rotation: Quaternion | SerializedQuaternion;
 }
 
 export type TwoBodyConstraintConfig =
