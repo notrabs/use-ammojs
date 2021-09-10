@@ -39,7 +39,7 @@ import {
   WorldConfig,
 } from "../three-ammo/lib/types";
 import { BUFFER_CONFIG } from "../three-ammo/lib/constants";
-import { BufferGeometryUtils } from "three/examples/jsm/utils/BufferGeometryUtils";
+import { mergeVertices } from "three-stdlib";
 import { PhysicsUpdate } from "./physics-update";
 import { PhysicsDebug } from "./physics-debug";
 
@@ -280,7 +280,7 @@ export function Physics({
           // console.log("before merge ", mesh.geometry.attributes.position.count);
           mesh.geometry.deleteAttribute("normal");
           mesh.geometry.deleteAttribute("uv");
-          mesh.geometry = BufferGeometryUtils.mergeVertices(mesh.geometry);
+          mesh.geometry = mergeVertices(mesh.geometry);
           mesh.geometry.computeVertexNormals();
           // console.log("after merge ", mesh.geometry.attributes.position.count);
 

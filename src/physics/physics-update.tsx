@@ -114,6 +114,8 @@ export function PhysicsUpdate({
               (softBodyMesh.geometry as LineGeometry).setPositions(
                 softBodyBuffers.vertexFloatArray
               );
+              softBodyMesh.geometry.attributes.instanceStart.needsUpdate = true;
+              softBodyMesh.geometry.attributes.instanceEnd.needsUpdate = true;
             } else {
               if (!isSharedArrayBufferSupported) {
                 (softBodyMesh.geometry.attributes
