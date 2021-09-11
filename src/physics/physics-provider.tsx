@@ -90,7 +90,7 @@ export function Physics({
   const threadSafeQueueRef = useRef<(() => void)[]>([]);
 
   const physicsPerformanceInfoRef = useRef<PhysicsPerformanceInfo>({
-    lastTickTime: 0,
+    substepCounter: 0,
     lastTickMs: 0,
   });
 

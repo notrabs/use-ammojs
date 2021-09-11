@@ -7,7 +7,6 @@ import { BufferAttribute, Matrix4, Vector3 } from "three";
 import { MutableRefObject } from "react";
 import { LineGeometry } from "three/examples/jsm/lines/LineGeometry";
 
-
 interface PhysicsUpdateProps {
   physicsState: PhysicsState;
   sharedBuffersRef: MutableRefObject<SharedBuffers>;

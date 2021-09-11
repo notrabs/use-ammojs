@@ -53,9 +53,11 @@ export function PhysicsStats({
 
   useFrame(() => {
     if (
-      lastTickTimeRef.current !== physicsPerformanceInfoRef.current.lastTickTime
+      lastTickTimeRef.current !==
+      physicsPerformanceInfoRef.current.substepCounter
     ) {
-      lastTickTimeRef.current = physicsPerformanceInfoRef.current.lastTickTime;
+      lastTickTimeRef.current =
+        physicsPerformanceInfoRef.current.substepCounter;
 
       if (physicsPerformanceInfoRef.current.lastTickMs > 0) {
         physicsPanel.update(physicsPerformanceInfoRef.current.lastTickMs, 16);
