@@ -52,12 +52,12 @@ export function PhysicsUpdate({
         Atomics.load(sharedBuffers.rigidBodies.headerIntArray, 0) ===
           BufferState.READY)
     ) {
-      const lastLastTickMs = physicsPerformanceInfoRef.current.lastTickMs;
+      const lastSubstep = physicsPerformanceInfoRef.current.substepCounter;
 
       physicsPerformanceInfoRef.current.lastTickMs =
         sharedBuffers.rigidBodies.headerFloatArray[1];
-      physicsPerformanceInfoRef.current.lastTickTime =
-        sharedBuffers.rigidBodies.headerFloatArray[2];
+      physicsPerformanceInfoRef.current.substepCounter =
+        sharedBuffers.rigidBodies.headerIntArray[2];
 
       while (threadSafeQueueRef.current.length) {
         const fn = threadSafeQueueRef.current.shift();
@@ -65,7 +65,7 @@ export function PhysicsUpdate({
       }
 
       // Skip copy if the physics worker didnt update
-      if (lastLastTickMs !== physicsPerformanceInfoRef.current.lastTickMs) {
+      if (lastSubstep !== physicsPerformanceInfoRef.current.substepCounter) {
         for (let i = 0; i < uuids.length; i++) {
           const uuid = uuids[i];
           const type = bodyOptions[uuid].type

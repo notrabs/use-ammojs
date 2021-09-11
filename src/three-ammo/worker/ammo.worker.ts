@@ -20,6 +20,7 @@ import { raycastEventReceivers } from "./managers/raycast-manager";
 import { DEFAULT_TIMESTEP } from "../lib/constants";
 
 let lastTick;
+let substepCounter = 0;
 let tickInterval;
 
 let simulationSpeed = 1 / 1000;
@@ -33,10 +34,11 @@ function tick() {
 
       const stepDuration = performance.now() - now;
       lastTick = now;
+      substepCounter = (substepCounter + numSubsteps) % 2147483647; // limit to 32bit for transfer
 
       if (numSubsteps > 0) {
         sharedBuffers.rigidBodies.headerFloatArray[1] = stepDuration;
-        sharedBuffers.rigidBodies.headerFloatArray[2] = lastTick;
+        sharedBuffers.rigidBodies.headerIntArray[2] = substepCounter;
 
         copyToRigidBodyBuffer();
         copyToSoftBodyBuffers();

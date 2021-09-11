@@ -36,7 +36,7 @@ export interface PhysicsState {
 
 export interface PhysicsPerformanceInfo {
   lastTickMs: number;
-  lastTickTime: number;
+  substepCounter: number;
 }
 
 export interface AmmoPhysicsContext {
