@@ -96,10 +96,10 @@ Automatically parse Shape parameters from the three Mesh (courtesy of [three-to-
 
 ```tsx
 import { Box } from "@react-three/drei";
-import { useRigidbody, ShapeType } from "use-ammojs";
+import { useRigidBody, ShapeType } from "use-ammojs";
 
 function MyBox() {
-  const [ref] = useRigidbody(() => ({
+  const [ref] = useRigidBody(() => ({
     mass: 1,
     position: [0, 2, 4],
     shapeType: ShapeType.BOX,
@@ -116,7 +116,7 @@ function MyBox() {
 or define Collision Shapes manually:
 
 ```tsx
-const [playerCapsuleRef] = useRigidbody(() => ({
+const [playerCapsuleRef] = useRigidBody(() => ({
   bodyType: BodyType.DYNAMIC,
   shapeType: ShapeType.CAPSULE,
   angularFactor: new Vector3(0, 0, 0),
@@ -130,10 +130,10 @@ const [playerCapsuleRef] = useRigidbody(() => ({
 or add collisions to an imported gltf scene:
 
 ```tsx
-useRigidbody(
+useRigidBody(
   () => ({
     shapeType: ShapeType.MESH,
-    type: BodyType.STATIC,
+    bodyType: BodyType.STATIC,
   }),
   gltf.scene
 );
@@ -180,7 +180,7 @@ if (hits.length) {
 ### 3.b Update Motion State
 
 ```tsx
-const [playerRef, api] = useRigidbody(() => ({
+const [playerRef, api] = useRigidBody(() => ({
   bodyType: BodyType.DYNAMIC,
   shapeType: ShapeType.CAPSULE,
   angularFactor: new Vector3(0, 0, 0),
