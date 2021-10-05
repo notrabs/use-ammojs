@@ -1,4 +1,4 @@
-import { Matrix4, Quaternion, Vector3 } from "three";
+import { Euler, Matrix4, Quaternion, Vector3 } from "three";
 import {
   SerializedQuaternion,
   SoftBodyAnchor,
@@ -109,4 +109,16 @@ export function isSoftBodyRigidBodyAnchorRef(
   anchor: SoftBodyAnchorRef
 ): anchor is SoftBodyRigidBodyAnchorRef {
   return !!(anchor as SoftBodyRigidBodyAnchorRef).rigidBodyRef;
+}
+
+export function isVector3(v): v is Vector3 {
+  return v && v.isVector3;
+}
+
+export function isEuler(v): v is Euler {
+  return v && v.isEuler;
+}
+
+export function isQuaternion(q): q is Quaternion {
+  return q && q.isQuaternion;
 }
