@@ -133,7 +133,7 @@ or add collisions to an imported gltf scene:
 useRigidBody(
   () => ({
     shapeType: ShapeType.MESH,
-    type: BodyType.STATIC,
+    bodyType: BodyType.STATIC,
   }),
   gltf.scene
 );
