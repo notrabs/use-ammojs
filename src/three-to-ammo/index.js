@@ -1,6 +1,7 @@
 "use strict";
 /* global Ammo */
 import * as THREE from "three";
+import { toBtQuaternion } from "../three-ammo/worker/utils";
 
 export const TYPE = {
   BOX: "box",
@@ -783,12 +784,8 @@ const _finishCollisionShape = function (collisionShape, options, scale) {
   localTransform
     .getOrigin()
     .setValue(options.offset.x, options.offset.y, options.offset.z);
-  rotation.setValue(
-    options.orientation.x,
-    options.orientation.y,
-    options.orientation.z,
-    options.orientation.w
-  );
+
+  toBtQuaternion(rotation, options.orientation);
 
   localTransform.setRotation(rotation);
   Ammo.destroy(rotation);
