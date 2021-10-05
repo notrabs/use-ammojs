@@ -86,7 +86,7 @@ export function useRigidBody(
           rotation[3]
         );
       } else {
-        throw new Error("invalid position: expected Euler, EulerTuple");
+        throw new Error("invalid rotation: expected Euler or EulerTuple");
       }
 
       objectToUse.updateMatrixWorld();
