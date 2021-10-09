@@ -1,52 +1,29 @@
-"use strict";
-/* global Ammo */
 import * as THREE from "three";
+import { Quaternion, Vector3 } from "three";
 import { toBtQuaternion } from "../three-ammo/worker/utils";
+import { ShapeConfig, ShapeFit, ShapeType } from "../three-ammo/lib/types";
 
-export const TYPE = {
-  BOX: "box",
-  CYLINDER: "cylinder",
-  SPHERE: "sphere",
-  CAPSULE: "capsule",
-  CONE: "cone",
-  HULL: "hull",
-  HACD: "hacd", //Hierarchical Approximate Convex Decomposition
-  VHACD: "vhacd", //Volumetric Hierarchical Approximate Convex Decomposition
-  MESH: "mesh",
-  HEIGHTFIELD: "heightfield",
-};
-
-export const FIT = {
-  ALL: "all", //A single shape is automatically sized to bound all meshes within the entity.
-  MANUAL: "manual", //A single shape is sized manually. Requires halfExtents or sphereRadius.
-};
-
-export const HEIGHTFIELD_DATA_TYPE = {
-  short: "short",
-  float: "float",
-};
-
-export const createCollisionShapes = function (
+export function createCollisionShapes(
   vertices,
   matrices,
   indexes,
   matrixWorld,
-  options = {}
+  options: ShapeConfig
 ) {
   switch (options.type) {
-    case TYPE.BOX:
+    case ShapeType.BOX:
       return [createBoxShape(vertices, matrices, matrixWorld, options)];
-    case TYPE.CYLINDER:
+    case ShapeType.CYLINDER:
       return [createCylinderShape(vertices, matrices, matrixWorld, options)];
-    case TYPE.CAPSULE:
+    case ShapeType.CAPSULE:
       return [createCapsuleShape(vertices, matrices, matrixWorld, options)];
-    case TYPE.CONE:
+    case ShapeType.CONE:
       return [createConeShape(vertices, matrices, matrixWorld, options)];
-    case TYPE.SPHERE:
+    case ShapeType.SPHERE:
       return [createSphereShape(vertices, matrices, matrixWorld, options)];
-    case TYPE.HULL:
+    case ShapeType.HULL:
       return [createHullShape(vertices, matrices, matrixWorld, options)];
-    case TYPE.HACD:
+    case ShapeType.HACD:
       return createHACDShapes(
         vertices,
         matrices,
@@ -54,7 +31,7 @@ export const createCollisionShapes = function (
         matrixWorld,
         options
       );
-    case TYPE.VHACD:
+    case ShapeType.VHACD:
       return createVHACDShapes(
         vertices,
         matrices,
@@ -62,41 +39,41 @@ export const createCollisionShapes = function (
         matrixWorld,
         options
       );
-    case TYPE.MESH:
+    case ShapeType.MESH:
       return [
         createTriMeshShape(vertices, matrices, indexes, matrixWorld, options),
       ];
-    case TYPE.HEIGHTFIELD:
+    case ShapeType.HEIGHTFIELD:
       return [createHeightfieldTerrainShape(options)];
     default:
       console.warn(options.type + " is not currently supported");
       return [];
   }
-};
+}
 
 //TODO: support gimpact (dynamic trimesh) and heightmap
 
-export const createBoxShape = function (
+export function createBoxShape(
   vertices,
   matrices,
   matrixWorld,
-  options = {}
+  options: ShapeConfig
 ) {
-  options.type = TYPE.BOX;
+  options.type = ShapeType.BOX;
   _setOptions(options);
 
-  if (options.fit === FIT.ALL) {
+  if (options.fit === ShapeFit.ALL) {
     options.halfExtents = _computeHalfExtents(
       _computeBounds(vertices, matrices),
-      options.minHalfExtent,
-      options.maxHalfExtent
+      options.minHalfExtents,
+      options.maxHalfExtents
     );
   }
 
   const btHalfExtents = new Ammo.btVector3(
-    options.halfExtents.x,
-    options.halfExtents.y,
-    options.halfExtents.z
+    options.halfExtents!.x,
+    options.halfExtents!.y,
+    options.halfExtents!.z
   );
   const collisionShape = new Ammo.btBoxShape(btHalfExtents);
   Ammo.destroy(btHalfExtents);
@@ -107,29 +84,29 @@ export const createBoxShape = function (
     _computeScale(matrixWorld, options)
   );
   return collisionShape;
-};
+}
 
-export const createCylinderShape = function (
+export function createCylinderShape(
   vertices,
   matrices,
   matrixWorld,
-  options = {}
+  options: ShapeConfig
 ) {
-  options.type = TYPE.CYLINDER;
+  options.type = ShapeType.CYLINDER;
   _setOptions(options);
 
-  if (options.fit === FIT.ALL) {
+  if (options.fit === ShapeFit.ALL) {
     options.halfExtents = _computeHalfExtents(
       _computeBounds(vertices, matrices),
-      options.minHalfExtent,
-      options.maxHalfExtent
+      options.minHalfExtents,
+      options.maxHalfExtents
     );
   }
 
   const btHalfExtents = new Ammo.btVector3(
-    options.halfExtents.x,
-    options.halfExtents.y,
-    options.halfExtents.z
+    options.halfExtents!.x,
+    options.halfExtents!.y,
+    options.halfExtents!.z
   );
   const collisionShape = (() => {
     switch (options.cylinderAxis) {
@@ -150,26 +127,26 @@ export const createCylinderShape = function (
     _computeScale(matrixWorld, options)
   );
   return collisionShape;
-};
+}
 
-export const createCapsuleShape = function (
+export function createCapsuleShape(
   vertices,
   matrices,
   matrixWorld,
-  options = {}
+  options: ShapeConfig
 ) {
-  options.type = TYPE.CAPSULE;
+  options.type = ShapeType.CAPSULE;
   _setOptions(options);
 
-  if (options.fit === FIT.ALL) {
+  if (options.fit === ShapeFit.ALL) {
     options.halfExtents = _computeHalfExtents(
       _computeBounds(vertices, matrices),
-      options.minHalfExtent,
-      options.maxHalfExtent
+      options.minHalfExtents,
+      options.maxHalfExtents
     );
   }
 
-  const { x, y, z } = options.halfExtents;
+  const { x, y, z } = options.halfExtents!;
   const collisionShape = (() => {
     switch (options.cylinderAxis) {
       case "y":
@@ -188,26 +165,26 @@ export const createCapsuleShape = function (
     _computeScale(matrixWorld, options)
   );
   return collisionShape;
-};
+}
 
-export const createConeShape = function (
+export function createConeShape(
   vertices,
   matrices,
   matrixWorld,
-  options = {}
+  options: ShapeConfig
 ) {
-  options.type = TYPE.CONE;
+  options.type = ShapeType.CONE;
   _setOptions(options);
 
-  if (options.fit === FIT.ALL) {
+  if (options.fit === ShapeFit.ALL) {
     options.halfExtents = _computeHalfExtents(
       _computeBounds(vertices, matrices),
-      options.minHalfExtent,
-      options.maxHalfExtent
+      options.minHalfExtents,
+      options.maxHalfExtents
     );
   }
 
-  const { x, y, z } = options.halfExtents;
+  const { x, y, z } = options.halfExtents!;
   const collisionShape = (() => {
     switch (options.cylinderAxis) {
       case "y":
@@ -226,19 +203,19 @@ export const createConeShape = function (
     _computeScale(matrixWorld, options)
   );
   return collisionShape;
-};
+}
 
-export const createSphereShape = function (
+export function createSphereShape(
   vertices,
   matrices,
   matrixWorld,
-  options = {}
+  options: ShapeConfig
 ) {
-  options.type = TYPE.SPHERE;
+  options.type = ShapeType.SPHERE;
   _setOptions(options);
 
   let radius;
-  if (options.fit === FIT.MANUAL && !isNaN(options.sphereRadius)) {
+  if (options.fit === ShapeFit.MANUAL && !isNaN(options.sphereRadius!)) {
     radius = options.sphereRadius;
   } else {
     radius = _computeRadius(
@@ -256,17 +233,17 @@ export const createSphereShape = function (
   );
 
   return collisionShape;
-};
+}
 
 export const createHullShape = (function () {
   const vertex = new THREE.Vector3();
   const center = new THREE.Vector3();
   const matrix = new THREE.Matrix4();
-  return function (vertices, matrices, matrixWorld, options = {}) {
-    options.type = TYPE.HULL;
+  return function (vertices, matrices, matrixWorld, options: ShapeConfig) {
+    options.type = ShapeType.HULL;
     _setOptions(options);
 
-    if (options.fit === FIT.MANUAL) {
+    if (options.fit === ShapeFit.MANUAL) {
       console.warn("cannot use fit: manual with type: hull");
       return null;
     }
@@ -275,7 +252,7 @@ export const createHullShape = (function () {
 
     const btVertex = new Ammo.btVector3();
     const originalHull = new Ammo.btConvexHullShape();
-    originalHull.setMargin(options.margin);
+    originalHull.setMargin(options.margin ?? 0);
     center.addVectors(bounds.max, bounds.min).multiplyScalar(0.5);
 
     let vertexCount = 0;
@@ -314,9 +291,10 @@ export const createHullShape = (function () {
     if (originalHull.getNumVertices() >= 100) {
       //Bullet documentation says don't use convexHulls with 100 verts or more
       const shapeHull = new Ammo.btShapeHull(originalHull);
-      shapeHull.buildHull(options.margin);
+      shapeHull.buildHull(options.margin ?? 0);
       Ammo.destroy(originalHull);
       collisionShape = new Ammo.btConvexHullShape(
+        // @ts-ignore
         Ammo.getPointer(shapeHull.getVertexPointer()),
         shapeHull.numVertices()
       );
@@ -338,11 +316,17 @@ export const createHACDShapes = (function () {
   const vector = new THREE.Vector3();
   const center = new THREE.Vector3();
   const matrix = new THREE.Matrix4();
-  return function (vertices, matrices, indexes, matrixWorld, options = {}) {
-    options.type = TYPE.HACD;
+  return function (
+    vertices,
+    matrices,
+    indexes,
+    matrixWorld,
+    options: ShapeConfig
+  ) {
+    options.type = ShapeType.HACD;
     _setOptions(options);
 
-    if (options.fit === FIT.MANUAL) {
+    if (options.fit === ShapeFit.MANUAL) {
       console.warn("cannot use fit: manual with type: hacd");
       return [];
     }
@@ -370,6 +354,7 @@ export const createHACDShapes = (function () {
       }
     }
 
+    // @ts-ignore
     const hacd = new Ammo.HACD();
     if (options.hasOwnProperty("compacityWeight"))
       hacd.SetCompacityWeight(options.compacityWeight);
@@ -424,10 +409,10 @@ export const createHACDShapes = (function () {
     Ammo._free(triangles);
     const nClusters = hacd.GetNClusters();
 
-    const shapes = [];
+    const shapes: Ammo.btConvexHullShape[] = [];
     for (let i = 0; i < nClusters; i++) {
       const hull = new Ammo.btConvexHullShape();
-      hull.setMargin(options.margin);
+      hull.setMargin(options.margin ?? 0);
       const nPoints = hacd.GetNPointsCH(i);
       const nTriangles = hacd.GetNTrianglesCH(i);
       const hullPoints = Ammo._malloc(nPoints * 3 * 8);
@@ -457,11 +442,17 @@ export const createVHACDShapes = (function () {
   const vector = new THREE.Vector3();
   const center = new THREE.Vector3();
   const matrix = new THREE.Matrix4();
-  return function (vertices, matrices, indexes, matrixWorld, options = {}) {
-    options.type = TYPE.VHACD;
+  return function (
+    vertices,
+    matrices,
+    indexes,
+    matrixWorld,
+    options: ShapeConfig
+  ) {
+    options.type = ShapeType.VHACD;
     _setOptions(options);
 
-    if (options.fit === FIT.MANUAL) {
+    if (options.fit === ShapeFit.MANUAL) {
       console.warn("cannot use fit: manual with type: vhacd");
       return [];
     }
@@ -489,7 +480,9 @@ export const createVHACDShapes = (function () {
       }
     }
 
+    // @ts-ignore
     const vhacd = new Ammo.VHACD();
+    // @ts-ignore
     const params = new Ammo.Parameters();
     //https://kmamou.blogspot.com/2014/12/v-hacd-20-parameters-description.html
     if (options.hasOwnProperty("resolution"))
@@ -552,7 +545,8 @@ export const createVHACDShapes = (function () {
     Ammo._free(triangles);
     const nHulls = vhacd.GetNConvexHulls();
 
-    const shapes = [];
+    const shapes: Ammo.btConvexHullShape[] = [];
+    // @ts-ignore
     const ch = new Ammo.ConvexHull();
     for (let i = 0; i < nHulls; i++) {
       vhacd.GetConvexHull(i, ch);
@@ -560,7 +554,7 @@ export const createVHACDShapes = (function () {
       const hullPoints = ch.get_m_points();
 
       const hull = new Ammo.btConvexHullShape();
-      hull.setMargin(options.margin);
+      hull.setMargin(options.margin ?? 0);
 
       for (let pi = 0; pi < nPoints; pi++) {
         const btVertex = new Ammo.btVector3();
@@ -587,11 +581,17 @@ export const createTriMeshShape = (function () {
   const vb = new THREE.Vector3();
   const vc = new THREE.Vector3();
   const matrix = new THREE.Matrix4();
-  return function (vertices, matrices, indexes, matrixWorld, options = {}) {
-    options.type = TYPE.MESH;
+  return function (
+    vertices,
+    matrices,
+    indexes,
+    matrixWorld,
+    options: ShapeConfig
+  ) {
+    options.type = ShapeType.MESH;
     _setOptions(options);
 
-    if (options.fit === FIT.MANUAL) {
+    if (options.fit === ShapeFit.MANUAL) {
       console.warn("cannot use fit: manual with type: mesh");
       return null;
     }
@@ -662,6 +662,7 @@ export const createTriMeshShape = (function () {
     Ammo.destroy(localScale);
 
     const collisionShape = new Ammo.btBvhTriangleMeshShape(triMesh, true, true);
+    // @ts-ignore
     collisionShape.resources = [triMesh];
 
     Ammo.destroy(bta);
@@ -673,24 +674,27 @@ export const createTriMeshShape = (function () {
   };
 })();
 
-export const createHeightfieldTerrainShape = function (options = {}) {
+export function createHeightfieldTerrainShape(options: ShapeConfig) {
   _setOptions(options);
 
-  if (options.fit === FIT.ALL) {
+  if (options.fit === ShapeFit.ALL) {
     console.warn("cannot use fit: all with type: heightfield");
     return null;
   }
   const heightfieldDistance = options.heightfieldDistance || 1;
   const heightfieldData = options.heightfieldData || [];
   const heightScale = options.heightScale || 0;
-  const upAxis = options.hasOwnProperty("upAxis") ? options.upAxis : 1; // x = 0; y = 1; z = 2
+  const upAxis = options.upAxis ?? 1; // x = 0; y = 1; z = 2
   const hdt = (() => {
     switch (options.heightDataType) {
       case "short":
+        // @ts-ignore
         return Ammo.PHY_SHORT;
       case "float":
+        // @ts-ignore
         return Ammo.PHY_FLOAT;
       default:
+        // @ts-ignore
         return Ammo.PHY_FLOAT;
     }
   })();
@@ -727,33 +731,27 @@ export const createHeightfieldTerrainShape = function (options = {}) {
     maxHeight,
     upAxis,
     hdt,
-    flipQuadEdges
+    flipQuadEdges ?? false
   );
 
   const scale = new Ammo.btVector3(heightfieldDistance, 1, heightfieldDistance);
   collisionShape.setLocalScaling(scale);
   Ammo.destroy(scale);
-
+  // @ts-ignore
   collisionShape.heightfieldData = data;
 
   _finishCollisionShape(collisionShape, options);
   return collisionShape;
-};
+}
 
-function _setOptions(options) {
-  options.fit = options.hasOwnProperty("fit") ? options.fit : FIT.ALL;
-  options.type = options.type || TYPE.HULL;
-  options.minHalfExtent = options.hasOwnProperty("minHalfExtent")
-    ? options.minHalfExtent
-    : 0;
-  options.maxHalfExtent = options.hasOwnProperty("maxHalfExtent")
-    ? options.maxHalfExtent
-    : Number.POSITIVE_INFINITY;
+function _setOptions(options: ShapeConfig) {
+  options.fit = options.fit ?? ShapeFit.ALL;
+  options.type = options.type || ShapeType.HULL;
+  options.minHalfExtents = options.minHalfExtents ?? 0;
+  options.maxHalfExtents = options.maxHalfExtents ?? Number.POSITIVE_INFINITY;
   options.cylinderAxis = options.cylinderAxis || "y";
-  options.margin = options.hasOwnProperty("margin") ? options.margin : 0.01;
-  options.includeInvisible = options.hasOwnProperty("includeInvisible")
-    ? options.includeInvisible
-    : false;
+  options.margin = options.margin ?? 0.01;
+  options.includeInvisible = options.includeInvisible ?? false;
 
   if (!options.offset) {
     options.offset = new THREE.Vector3();
@@ -764,7 +762,11 @@ function _setOptions(options) {
   }
 }
 
-const _finishCollisionShape = function (collisionShape, options, scale) {
+const _finishCollisionShape = function (
+  collisionShape,
+  options: ShapeConfig,
+  scale?: Vector3
+) {
   collisionShape.type = options.type;
   collisionShape.setMargin(options.margin);
   collisionShape.destroy = () => {
@@ -778,14 +780,16 @@ const _finishCollisionShape = function (collisionShape, options, scale) {
   };
 
   const localTransform = new Ammo.btTransform();
-  const rotation = new Ammo.btQuaternion();
+  const rotation = new Ammo.btQuaternion(0, 0, 0, 1);
   localTransform.setIdentity();
 
-  localTransform
-    .getOrigin()
-    .setValue(options.offset.x, options.offset.y, options.offset.z);
+  if (options.offset) {
+    localTransform
+      .getOrigin()
+      .setValue(options.offset.x, options.offset.y, options.offset.z);
+  }
 
-  toBtQuaternion(rotation, options.orientation);
+  toBtQuaternion(rotation, options.orientation ?? new Quaternion());
 
   localTransform.setRotation(rotation);
   Ammo.destroy(rotation);
@@ -836,9 +840,9 @@ export const iterateGeometries = (function () {
 
 const _computeScale = (function () {
   const matrix = new THREE.Matrix4();
-  return function (matrixWorld, options = {}) {
+  return function (matrixWorld, options: Pick<ShapeConfig, "fit"> = {}) {
     const scale = new THREE.Vector3(1, 1, 1);
-    if (options.fit === FIT.ALL) {
+    if (options.fit === ShapeFit.ALL) {
       matrix.fromArray(matrixWorld);
       scale.setFromMatrixScale(matrix);
     }

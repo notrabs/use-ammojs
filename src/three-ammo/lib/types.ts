@@ -199,7 +199,11 @@ export enum ShapeType {
   CAPSULE = "capsule",
   CONE = "cone",
   HULL = "hull",
+
+  // Hierarchical Approximate Convex Decomposition
   HACD = "hacd",
+
+  //Volumetric Hierarchical Approximate Convex Decomposition
   VHACD = "vhacd",
   MESH = "mesh",
   HEIGHTFIELD = "heightfield",
