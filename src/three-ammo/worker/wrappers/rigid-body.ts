@@ -154,7 +154,10 @@ export class RigidBody {
     this.msTransform.getOrigin().setValue(pos.x, pos.y, pos.z);
     this.msTransform.setRotation(this.rotation);
 
-    this.motionState = new Ammo.btDefaultMotionState(this.msTransform);
+    this.motionState = new Ammo.btDefaultMotionState(
+      this.msTransform,
+      this.physicsShape.localTransform
+    );
 
     this.localInertia = new Ammo.btVector3(0, 0, 0);
 
@@ -449,13 +452,12 @@ export class RigidBody {
    * Updates the scene object's position and rotation, based on the physics simulation.
    */
   syncFromPhysics() {
-    this.motionState!.getWorldTransform(this.msTransform!);
-    const position = this.msTransform!.getOrigin();
-    const quaternion = this.msTransform!.getRotation();
+    const graphicsTransform = this.motionState!.get_m_graphicsWorldTrans();
+    const position = graphicsTransform.getOrigin();
+    const quaternion = graphicsTransform.getRotation();
 
-    const body = this.physicsBody;
+    if (!this.physicsBody) return;
 
-    if (!body) return;
     this.matrix.decompose(pos, quat, scale);
     pos.set(position.x(), position.y(), position.z());
     quat.set(quaternion.x(), quaternion.y(), quaternion.z(), quaternion.w());
@@ -463,7 +465,7 @@ export class RigidBody {
   }
 
   setShapesOffset(offset: SerializedVector3) {
-    this.tmpVec.setValue(offset.x, offset.y, offset.z);
+    this.tmpVec.setValue(-offset.x, -offset.y, -offset.z);
 
     this.physicsShape.localTransform.setOrigin(this.tmpVec);
   }

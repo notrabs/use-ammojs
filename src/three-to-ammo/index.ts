@@ -683,10 +683,15 @@ export const createTriMeshShape = (function () {
     const collisionShape = new Ammo.btBvhTriangleMeshShape(triMesh, true, true);
 
     const triangleInfoMap = new Ammo.btTriangleInfoMap();
-    collisionShape.generateInternalEdgeInfo(triangleInfoMap);
 
-    // @ts-ignore
-    collisionShape.resources = [triMesh, triangleInfoMap];
+    if (options.computeInternalEdgeInfo ?? true) {
+      collisionShape.generateInternalEdgeInfo(triangleInfoMap);
+    }
+
+    ((collisionShape as unknown) as FinalizedShape).resources = [
+      triMesh,
+      triangleInfoMap,
+    ];
 
     Ammo.destroy(bta);
     Ammo.destroy(btb);
@@ -769,20 +774,8 @@ export function createHeightfieldTerrainShape(options: ShapeConfig) {
 
 function _setOptions(options: ShapeConfig) {
   options.fit = options.fit ?? ShapeFit.ALL;
-  options.type = options.type || ShapeType.HULL;
   options.minHalfExtents = options.minHalfExtents ?? 0;
   options.maxHalfExtents = options.maxHalfExtents ?? Number.POSITIVE_INFINITY;
-  options.cylinderAxis = options.cylinderAxis || "y";
-  options.margin = options.margin ?? 0.01;
-  options.includeInvisible = options.includeInvisible ?? false;
-
-  if (!options.offset) {
-    options.offset = new THREE.Vector3();
-  }
-
-  if (!options.orientation) {
-    options.orientation = new THREE.Quaternion();
-  }
 }
 
 function finishCollisionShape(
@@ -799,13 +792,15 @@ function finishCollisionShape(
   if (options.offset) {
     localTransform
       .getOrigin()
-      .setValue(options.offset.x, options.offset.y, options.offset.z);
+      .setValue(-options.offset.x, -options.offset.y, -options.offset.z);
   }
 
   toBtQuaternion(rotation, options.orientation ?? new Quaternion());
+  const invertedRotation = rotation.inverse();
+  localTransform.setRotation(invertedRotation);
 
-  localTransform.setRotation(rotation);
   Ammo.destroy(rotation);
+  Ammo.destroy(invertedRotation);
 
   if (scale) {
     const localScale = new Ammo.btVector3(scale.x, scale.y, scale.z);

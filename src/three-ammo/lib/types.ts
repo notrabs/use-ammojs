@@ -222,7 +222,7 @@ export enum ShapeFit {
 export interface ShapeConfig {
   type: ShapeType;
 
-  // default 0.01
+  // default 0
   margin?: number;
 
   // default false
@@ -240,6 +240,10 @@ export interface ShapeConfig {
   // Only used with fit=ALL
   minHalfExtents?: number;
   maxHalfExtents?: number;
+
+  // Only used with ShapeType mesh. Improves collisions when sliding over its internal edges.
+  // default = true
+  computeInternalEdgeInfo?: boolean;
 
   // Only used with ShapeType cylinder/capsule/cone
   // default: y
