@@ -1,28 +1,14 @@
-import {
-  BufferAttribute,
-  BufferGeometry,
-  DynamicDrawUsage,
-  Mesh,
-  Object3D,
-  Vector3,
-} from "three";
+import { BufferAttribute, BufferGeometry, DynamicDrawUsage, Mesh, Object3D, Vector3, } from "three";
 import React, { PropsWithChildren, useEffect, useRef, useState } from "react";
 import { DefaultBufferSize } from "ammo-debug-drawer";
-import {
-  AmmoPhysicsContext,
-  PhysicsPerformanceInfo,
-  PhysicsState,
-} from "./physics-context";
+import { AmmoPhysicsContext, PhysicsPerformanceInfo, PhysicsState, ShapeDescriptor, } from "./physics-context";
 import {
   allocateCompatibleBuffer,
   AmmoDebugOptions,
   ammoDebugOptionsToNumber,
   isSharedArrayBufferSupported,
 } from "../utils/utils";
-import {
-  createAmmoWorker,
-  WorkerHelpers,
-} from "../three-ammo/lib/worker-helper";
+import { createAmmoWorker, WorkerHelpers, } from "../three-ammo/lib/worker-helper";
 import {
   BodyConfig,
   BufferState,
@@ -240,7 +226,12 @@ export function Physics({
 
     workerInitPromise.then(setPhysicsState);
 
-    function addRigidBody(uuid, mesh, options: BodyConfig = {}) {
+    function addRigidBody(
+      uuid,
+      mesh,
+      shape: ShapeDescriptor,
+      options: BodyConfig = {}
+    ) {
       bodyOptions[uuid] = options;
       object3Ds[uuid] = mesh;
 
@@ -252,7 +243,7 @@ export function Physics({
         uuid,
       };
 
-      workerHelpers.addRigidBody(uuid, mesh, options);
+      workerHelpers.addRigidBody(uuid, mesh, shape, options);
     }
 
     function removeRigidBody(uuid: string) {

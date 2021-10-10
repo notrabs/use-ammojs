@@ -1,12 +1,15 @@
 import {
+  BodyConfig,
   BodyType,
   ClientMessageType,
   MessageType,
+  SerializedMesh,
+  ShapeConfig,
   ShapeType,
   UUID,
 } from "../../lib/types";
 import { RigidBody } from "../wrappers/rigid-body";
-import { BUFFER_CONFIG } from "../../lib/constants";
+import { BUFFER_CONFIG, IDENTITY_MATRIX } from "../../lib/constants";
 import { notImplementedEventReceiver } from "../utils";
 import { Matrix4 } from "three";
 import {
@@ -20,7 +23,6 @@ import {
 import { createCollisionShapes } from "../../../three-to-ammo";
 
 export const bodies: Record<UUID, RigidBody> = {};
-export const shapes: Record<UUID, any> = {};
 export const matrices: Record<UUID, Matrix4> = {};
 export const indexes: Record<UUID, number> = {};
 export const ptrToIndex: Record<number, number> = {};
@@ -31,7 +33,19 @@ let freeIndex = 0;
 
 export const uuids: UUID[] = [];
 
-function addBody({ uuid, matrix, options }) {
+function addBody({
+  uuid,
+  matrix,
+  serializedMesh,
+  shapeConfig,
+  options,
+}: {
+  uuid: UUID;
+  matrix: number[];
+  serializedMesh?: SerializedMesh;
+  shapeConfig: ShapeConfig;
+  options: BodyConfig;
+}) {
   if (freeIndex !== -1) {
     const nextFreeIndex = freeIndexArray[freeIndex];
     freeIndexArray[freeIndex] = -1;
@@ -46,7 +60,25 @@ function addBody({ uuid, matrix, options }) {
     //   transform.elements,
     //   freeIndex * BUFFER_CONFIG.BODY_DATA_SIZE
     // );
-    bodies[uuid] = new RigidBody(options || {}, transform, world);
+
+    const physicsShape = createCollisionShapes(
+      serializedMesh?.vertices,
+      serializedMesh?.matrices,
+      serializedMesh?.indexes,
+      serializedMesh?.matrixWorld ?? IDENTITY_MATRIX,
+      shapeConfig || { type: ShapeType.BOX }
+    );
+
+    if (!physicsShape) {
+      console.error(
+        "could not create physicsShape",
+        shapeConfig,
+        serializedMesh
+      );
+      throw new Error("could not create physicsShape");
+    }
+
+    bodies[uuid] = new RigidBody(options || {}, transform, physicsShape, world);
     const ptr = Ammo.getPointer(bodies[uuid].physicsBody);
     ptrToIndex[ptr] = freeIndex;
     ptrToRigidBody[ptr] = uuid;
@@ -142,52 +174,11 @@ function removeBody({ uuid }) {
   bodies[uuid].destroy();
   delete bodies[uuid];
   delete matrices[uuid];
-  delete shapes[uuid];
   const index = indexes[uuid];
   freeIndexArray[index] = freeIndex;
   freeIndex = index;
   delete indexes[uuid];
   uuids.splice(uuids.indexOf(uuid), 1);
-}
-
-const IDENTITY_MATRIX = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
-
-function addShapes({
-  bodyUuid,
-  shapesUuid,
-  vertices,
-  matrices,
-  indexes,
-  matrixWorld,
-  options,
-}) {
-  if (!bodies[bodyUuid]) return;
-
-  if (!matrixWorld) {
-    matrixWorld = IDENTITY_MATRIX;
-  }
-
-  const physicsShapes = createCollisionShapes(
-    vertices,
-    matrices,
-    indexes,
-    matrixWorld,
-    options || { type: ShapeType.BOX }
-  );
-  for (let i = 0; i < physicsShapes.length; i++) {
-    const shape = physicsShapes[i];
-    bodies[bodyUuid].addShape(shape);
-  }
-  shapes[shapesUuid] = physicsShapes;
-}
-
-function removeShapes({ bodyUuid, shapesUuid }) {
-  if (bodies[bodyUuid] && shapes[shapesUuid]) {
-    for (let i = 0; i < shapes[shapesUuid].length; i++) {
-      const shape = shapes[shapesUuid][i];
-      bodies[bodyUuid].removeShape(shape);
-    }
-  }
 }
 
 function setShapesOffset({ bodyUuid, offset }) {
@@ -322,8 +313,6 @@ export const rigidBodyEventReceivers = {
   [MessageType.ADD_RIGIDBODY]: addBody,
   [MessageType.UPDATE_RIGIDBODY]: updateBody,
   [MessageType.REMOVE_RIGIDBODY]: removeBody,
-  [MessageType.ADD_SHAPES]: addShapes,
-  [MessageType.REMOVE_SHAPES]: removeShapes,
   [MessageType.SET_SHAPES_OFFSET]: setShapesOffset,
   [MessageType.RESET_DYNAMIC_BODY]: resetDynamicBody,
   [MessageType.ACTIVATE_BODY]: activateBody,

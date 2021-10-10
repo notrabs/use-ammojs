@@ -40,10 +40,9 @@ export function useRigidBody(
   const ref = useRef<Object3D>();
 
   const physicsContext = useAmmoPhysicsContext();
-  const { addRigidBody, addShapes, removeRigidBody } = physicsContext;
+  const { addRigidBody, removeRigidBody } = physicsContext;
 
   const [bodyUUID] = useState(() => MathUtils.generateUUID());
-  const [shapesUUID] = useState(() => MathUtils.generateUUID());
 
   useEffect(() => {
     const objectToUse = object3D ? object3D : ref.current!;
@@ -96,21 +95,30 @@ export function useRigidBody(
       throw new Error("useRigidBody ref does not contain a object");
     }
 
-    addRigidBody(bodyUUID, objectToUse, { type: bodyType, ...rest });
-
     const meshToUse = mesh ? mesh : objectToUse;
 
-    addShapes(bodyUUID, shapesUUID, meshToUse, {
-      type: shapeType,
-      ...shapeConfig,
-    });
+    addRigidBody(
+      bodyUUID,
+      objectToUse,
+      {
+        meshToUse,
+        shapeConfig: {
+          type: shapeType,
+          ...shapeConfig,
+        },
+      },
+      {
+        type: bodyType,
+        ...rest,
+      }
+    );
 
     return () => {
       removeRigidBody(bodyUUID);
     };
   }, []);
 
-  return [ref, createRigidBodyApi(physicsContext, bodyUUID, shapesUUID)];
+  return [ref, createRigidBodyApi(physicsContext, bodyUUID)];
 }
 
 /**

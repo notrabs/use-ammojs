@@ -4,15 +4,13 @@ import {
   BodyConfig,
   BodyType,
   CollisionFlag,
+  SerializedVector3,
   ShapeType,
   UpdateBodyOptions,
 } from "../../lib/types";
 import { World } from "./world";
-import {
-  almostEqualsBtVector3,
-  almostEqualsQuaternion,
-  almostEqualsVector3,
-} from "../utils";
+import { almostEqualsBtVector3, almostEqualsQuaternion, almostEqualsVector3, } from "../utils";
+import { FinalizedShape } from "../../../three-to-ammo";
 
 enum RigidBodyFlags {
   NONE = 0,
@@ -51,7 +49,7 @@ export class RigidBody {
   collisionFilterMask: number;
   scaleAutoUpdate: boolean;
   matrix: Matrix4;
-  shapes: Ammo.btCollisionShape[];
+  // shapes: Ammo.btCollisionShape[];
   world: World;
   disableCollision: boolean;
   physicsBody: Ammo.btRigidBody;
@@ -62,7 +60,8 @@ export class RigidBody {
   rotation?: Ammo.btQuaternion;
   motionState?: Ammo.btDefaultMotionState;
   localInertia?: Ammo.btVector3;
-  compoundShape?: Ammo.btCompoundShape;
+  physicsShape: FinalizedShape;
+  // compoundShape?: Ammo.btCompoundShape;
   rbInfo?: Ammo.btRigidBodyConstructionInfo;
   shapesChanged?: boolean;
   polyHedralFeaturesInitialized?: boolean;
@@ -75,7 +74,12 @@ export class RigidBody {
   tmpTransform1: Ammo.btTransform;
   tmpTransform2: Ammo.btTransform;
 
-  constructor(bodyConfig: BodyConfig, matrix: Matrix4, world: World) {
+  constructor(
+    bodyConfig: BodyConfig,
+    matrix: Matrix4,
+    physicsShape: FinalizedShape,
+    world: World
+  ) {
     this.loadedEvent = bodyConfig.loadedEvent ? bodyConfig.loadedEvent : "";
     this.mass = bodyConfig.mass ?? 1;
     const worldGravity = world.physicsWorld.getGravity();
@@ -114,13 +118,21 @@ export class RigidBody {
 
     this.matrix = matrix;
     this.world = world;
-    this.shapes = [];
+    // this.shapes = [];
 
     this.tmpVec = new Ammo.btVector3();
     this.tmpTransform1 = new Ammo.btTransform();
     this.tmpTransform2 = new Ammo.btTransform();
 
+    this.physicsShape = physicsShape;
+    if (physicsShape.type === ShapeType.MESH && this.type !== BodyType.STATIC) {
+      throw new Error("non-static mesh colliders not supported");
+    }
+
     this.physicsBody = this._initBody();
+
+    this.shapesChanged = true;
+    this.updateShapes();
   }
 
   /**
@@ -146,13 +158,12 @@ export class RigidBody {
 
     this.localInertia = new Ammo.btVector3(0, 0, 0);
 
-    this.compoundShape = new Ammo.btCompoundShape(true);
-    this.compoundShape.setLocalScaling(this.localScaling);
+    this.physicsShape.setLocalScaling(this.localScaling);
 
     this.rbInfo = new Ammo.btRigidBodyConstructionInfo(
       this.mass,
       this.motionState,
-      this.compoundShape,
+      this.physicsShape,
       this.localInertia
     );
 
@@ -181,7 +192,6 @@ export class RigidBody {
       )
     ) {
       this.physicsBody.setGravity(this.gravity);
-      // @ts-ignore
       this.physicsBody.setFlags(RigidBodyFlags.DISABLE_WORLD_GRAVITY);
     }
 
@@ -221,7 +231,7 @@ export class RigidBody {
         this.prevScale.y,
         this.prevScale.z
       );
-      this.compoundShape!.setLocalScaling(this.localScaling!);
+      this.physicsShape.setLocalScaling(this.localScaling!);
     }
 
     if (this.shapesChanged) {
@@ -239,12 +249,14 @@ export class RigidBody {
       this.world.isDebugEnabled() &&
       (updated || !this.polyHedralFeaturesInitialized)
     ) {
-      for (let i = 0; i < this.shapes.length; i++) {
-        const collisionShape = this.shapes[i];
-        // @ts-ignore
+      const shapes = this.physicsShape.shapes || [this.physicsShape];
+
+      for (let i = 0; i < shapes.length; i++) {
+        const collisionShape = shapes[i];
         if (needsPolyhedralInitialization.indexOf(collisionShape.type) !== -1) {
-          // @ts-ignore
-          collisionShape.initializePolyhedralFeatures(0);
+          ((collisionShape as unknown) as Ammo.btConvexHullShape).initializePolyhedralFeatures(
+            0
+          );
         }
       }
       this.polyHedralFeaturesInitialized = true;
@@ -332,10 +344,8 @@ export class RigidBody {
             this.world.physicsWorld.getGravity()
           )
         ) {
-          // @ts-ignore
           this.physicsBody.setFlags(RigidBodyFlags.DISABLE_WORLD_GRAVITY);
         } else {
-          // @ts-ignore
           this.physicsBody.setFlags(RigidBodyFlags.NONE);
         }
         this.physicsBody!.setGravity(this.gravity);
@@ -352,7 +362,7 @@ export class RigidBody {
         this.linearSleepingThreshold = bodyConfig.linearSleepingThreshold;
       if (bodyConfig.angularSleepingThreshold)
         this.angularSleepingThreshold = bodyConfig.angularSleepingThreshold;
-      this.physicsBody!.setSleepingThresholds(
+      this.physicsBody.setSleepingThresholds(
         this.linearSleepingThreshold,
         this.angularSleepingThreshold
       );
@@ -368,7 +378,7 @@ export class RigidBody {
         this.angularFactor.y,
         this.angularFactor.z
       );
-      this.physicsBody!.setAngularFactor(angularFactor);
+      this.physicsBody.setAngularFactor(angularFactor);
       Ammo.destroy(angularFactor);
     }
 
@@ -382,11 +392,7 @@ export class RigidBody {
     if (this.triMesh) Ammo.destroy(this.triMesh);
     if (this.localScaling) Ammo.destroy(this.localScaling);
 
-    for (let i = 0; i < this.shapes.length; i++) {
-      // @ts-ignore
-      this.compoundShape.removeChildShape([i]);
-    }
-    if (this.compoundShape) Ammo.destroy(this.compoundShape);
+    this.physicsShape.destroy();
 
     this.world.removeRigidBody(this.physicsBody);
     Ammo.destroy(this.physicsBody);
@@ -456,57 +462,17 @@ export class RigidBody {
     this.matrix.compose(pos, quat, scale);
   }
 
-  addShape(collisionShape) {
-    if (
-      collisionShape.type === ShapeType.MESH &&
-      this.type !== BodyType.STATIC
-    ) {
-      console.warn("non-static mesh colliders not supported");
-      return;
-    }
-
-    this.shapes.push(collisionShape);
-    this.compoundShape!.addChildShape(
-      collisionShape.localTransform,
-      collisionShape
-    );
-    this.shapesChanged = true;
-    this.updateShapes();
-  }
-
-  setShapesOffset(offset) {
+  setShapesOffset(offset: SerializedVector3) {
     this.tmpVec.setValue(offset.x, offset.y, offset.z);
 
-    this.tmpTransform1.setIdentity();
-    this.tmpTransform1.setOrigin(this.tmpVec);
-
-    for (let i = 0; i < this.shapes.length; i++) {
-      const child = this.shapes[i];
-
-      this.tmpTransform2.setIdentity();
-      // @ts-ignore
-      this.tmpTransform2.op_mul(child.localTransform);
-      this.tmpTransform2.op_mul(this.tmpTransform1);
-
-      this.compoundShape!.updateChildTransform(i, this.tmpTransform2);
-    }
-  }
-
-  removeShape(collisionShape) {
-    const index = this.shapes.indexOf(collisionShape);
-    if (this.compoundShape && index !== -1) {
-      this.compoundShape.removeChildShape(this.shapes[index]);
-      this.shapesChanged = true;
-      this.shapes.splice(index, 1);
-      this.updateShapes();
-    }
+    this.physicsShape.localTransform.setOrigin(this.tmpVec);
   }
 
   updateMass() {
     const mass = this.type === BodyType.STATIC ? 0 : this.mass;
-    this.compoundShape!.calculateLocalInertia(mass, this.localInertia!);
-    this.physicsBody!.setMassProps(mass, this.localInertia!);
-    this.physicsBody!.updateInertiaTensor();
+    this.physicsShape.calculateLocalInertia(mass, this.localInertia!);
+    this.physicsBody.setMassProps(mass, this.localInertia!);
+    this.physicsBody.updateInertiaTensor();
   }
 
   updateCollisionFlags() {
@@ -522,6 +488,12 @@ export class RigidBody {
         this.physicsBody!.applyGravity();
         break;
     }
+
+    if (this.physicsShape.type === ShapeType.MESH) {
+      // Enables callback to improve internal-edge collisions
+      flags |= CollisionFlag.CUSTOM_MATERIAL_CALLBACK;
+    }
+
     this.physicsBody!.setCollisionFlags(flags);
 
     this.updateMass();

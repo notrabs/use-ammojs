@@ -3,52 +3,80 @@ import { Quaternion, Vector3 } from "three";
 import { toBtQuaternion } from "../three-ammo/worker/utils";
 import { ShapeConfig, ShapeFit, ShapeType } from "../three-ammo/lib/types";
 
+export interface FinalizedShape extends Ammo.btCollisionShape {
+  type: ShapeType;
+  destroy(): void;
+  localTransform: Ammo.btTransform;
+
+  // Ammo objects destroyed when shape is destroyed
+  resources?: any[];
+
+  // adress of allocated memory
+  heightfieldData?: number;
+
+  // Children in a compound shape
+  shapes?: FinalizedShape[];
+}
+
 export function createCollisionShapes(
   vertices,
   matrices,
   indexes,
   matrixWorld,
   options: ShapeConfig
-) {
+): FinalizedShape | null {
   switch (options.type) {
     case ShapeType.BOX:
-      return [createBoxShape(vertices, matrices, matrixWorld, options)];
+      return createBoxShape(vertices, matrices, matrixWorld, options);
     case ShapeType.CYLINDER:
-      return [createCylinderShape(vertices, matrices, matrixWorld, options)];
+      return createCylinderShape(vertices, matrices, matrixWorld, options);
     case ShapeType.CAPSULE:
-      return [createCapsuleShape(vertices, matrices, matrixWorld, options)];
+      return createCapsuleShape(vertices, matrices, matrixWorld, options);
     case ShapeType.CONE:
-      return [createConeShape(vertices, matrices, matrixWorld, options)];
+      return createConeShape(vertices, matrices, matrixWorld, options);
     case ShapeType.SPHERE:
-      return [createSphereShape(vertices, matrices, matrixWorld, options)];
+      return createSphereShape(vertices, matrices, matrixWorld, options);
     case ShapeType.HULL:
-      return [createHullShape(vertices, matrices, matrixWorld, options)];
+      return createHullShape(vertices, matrices, matrixWorld, options);
     case ShapeType.HACD:
-      return createHACDShapes(
-        vertices,
-        matrices,
-        indexes,
-        matrixWorld,
+      return createCompoundShape(
+        createHACDShapes(vertices, matrices, indexes, matrixWorld, options),
         options
       );
     case ShapeType.VHACD:
-      return createVHACDShapes(
+      return createCompoundShape(
+        createVHACDShapes(vertices, matrices, indexes, matrixWorld, options),
+        options
+      );
+    case ShapeType.MESH:
+      return createTriMeshShape(
         vertices,
         matrices,
         indexes,
         matrixWorld,
         options
       );
-    case ShapeType.MESH:
-      return [
-        createTriMeshShape(vertices, matrices, indexes, matrixWorld, options),
-      ];
     case ShapeType.HEIGHTFIELD:
-      return [createHeightfieldTerrainShape(options)];
+      return createHeightfieldTerrainShape(options);
     default:
       console.warn(options.type + " is not currently supported");
-      return [];
+      return null;
   }
+}
+
+export function createCompoundShape(
+  shapes: FinalizedShape[],
+  options: ShapeConfig
+): FinalizedShape {
+  const compoundShape = new Ammo.btCompoundShape(true);
+
+  for (const shape of shapes) {
+    compoundShape.addChildShape(shape.localTransform, shape);
+  }
+
+  ((compoundShape as unknown) as FinalizedShape).shapes = shapes;
+
+  return finishCollisionShape(compoundShape, options);
 }
 
 //TODO: support gimpact (dynamic trimesh) and heightmap
@@ -78,12 +106,11 @@ export function createBoxShape(
   const collisionShape = new Ammo.btBoxShape(btHalfExtents);
   Ammo.destroy(btHalfExtents);
 
-  _finishCollisionShape(
+  return finishCollisionShape(
     collisionShape,
     options,
     _computeScale(matrixWorld, options)
   );
-  return collisionShape;
 }
 
 export function createCylinderShape(
@@ -110,23 +137,22 @@ export function createCylinderShape(
   );
   const collisionShape = (() => {
     switch (options.cylinderAxis) {
-      case "y":
-        return new Ammo.btCylinderShape(btHalfExtents);
       case "x":
         return new Ammo.btCylinderShapeX(btHalfExtents);
       case "z":
         return new Ammo.btCylinderShapeZ(btHalfExtents);
+      case "y":
+      default:
+        return new Ammo.btCylinderShape(btHalfExtents);
     }
-    return null;
   })();
   Ammo.destroy(btHalfExtents);
 
-  _finishCollisionShape(
+  return finishCollisionShape(
     collisionShape,
     options,
     _computeScale(matrixWorld, options)
   );
-  return collisionShape;
 }
 
 export function createCapsuleShape(
@@ -149,22 +175,21 @@ export function createCapsuleShape(
   const { x, y, z } = options.halfExtents!;
   const collisionShape = (() => {
     switch (options.cylinderAxis) {
-      case "y":
-        return new Ammo.btCapsuleShape(Math.max(x, z), y * 2);
       case "x":
         return new Ammo.btCapsuleShapeX(Math.max(y, z), x * 2);
       case "z":
         return new Ammo.btCapsuleShapeZ(Math.max(x, y), z * 2);
+      case "y":
+      default:
+        return new Ammo.btCapsuleShape(Math.max(x, z), y * 2);
     }
-    return null;
   })();
 
-  _finishCollisionShape(
+  return finishCollisionShape(
     collisionShape,
     options,
     _computeScale(matrixWorld, options)
   );
-  return collisionShape;
 }
 
 export function createConeShape(
@@ -187,22 +212,21 @@ export function createConeShape(
   const { x, y, z } = options.halfExtents!;
   const collisionShape = (() => {
     switch (options.cylinderAxis) {
-      case "y":
-        return new Ammo.btConeShape(Math.max(x, z), y * 2);
       case "x":
         return new Ammo.btConeShapeX(Math.max(y, z), x * 2);
       case "z":
         return new Ammo.btConeShapeZ(Math.max(x, y), z * 2);
+      case "y":
+      default:
+        return new Ammo.btConeShape(Math.max(x, z), y * 2);
     }
-    return null;
   })();
 
-  _finishCollisionShape(
+  return finishCollisionShape(
     collisionShape,
     options,
     _computeScale(matrixWorld, options)
   );
-  return collisionShape;
 }
 
 export function createSphereShape(
@@ -226,13 +250,11 @@ export function createSphereShape(
   }
 
   const collisionShape = new Ammo.btSphereShape(radius);
-  _finishCollisionShape(
+  return finishCollisionShape(
     collisionShape,
     options,
     _computeScale(matrixWorld, options)
   );
-
-  return collisionShape;
 }
 
 export const createHullShape = (function () {
@@ -303,12 +325,11 @@ export const createHullShape = (function () {
 
     Ammo.destroy(btVertex);
 
-    _finishCollisionShape(
+    return finishCollisionShape(
       collisionShape,
       options,
       _computeScale(matrixWorld, options)
     );
-    return collisionShape;
   };
 })();
 
@@ -409,7 +430,7 @@ export const createHACDShapes = (function () {
     Ammo._free(triangles);
     const nClusters = hacd.GetNClusters();
 
-    const shapes: Ammo.btConvexHullShape[] = [];
+    const shapes: FinalizedShape[] = [];
     for (let i = 0; i < nClusters; i++) {
       const hull = new Ammo.btConvexHullShape();
       hull.setMargin(options.margin ?? 0);
@@ -430,8 +451,7 @@ export const createHACDShapes = (function () {
         Ammo.destroy(btVertex);
       }
 
-      _finishCollisionShape(hull, options, scale);
-      shapes.push(hull);
+      shapes.push(finishCollisionShape(hull, options, scale));
     }
 
     return shapes;
@@ -545,7 +565,7 @@ export const createVHACDShapes = (function () {
     Ammo._free(triangles);
     const nHulls = vhacd.GetNConvexHulls();
 
-    const shapes: Ammo.btConvexHullShape[] = [];
+    const shapes: FinalizedShape[] = [];
     // @ts-ignore
     const ch = new Ammo.ConvexHull();
     for (let i = 0; i < nHulls; i++) {
@@ -566,8 +586,7 @@ export const createVHACDShapes = (function () {
         Ammo.destroy(btVertex);
       }
 
-      _finishCollisionShape(hull, options, scale);
-      shapes.push(hull);
+      shapes.push(finishCollisionShape(hull, options, scale));
     }
     Ammo.destroy(ch);
     Ammo.destroy(vhacd);
@@ -662,15 +681,20 @@ export const createTriMeshShape = (function () {
     Ammo.destroy(localScale);
 
     const collisionShape = new Ammo.btBvhTriangleMeshShape(triMesh, true, true);
+
+    const triangleInfoMap = new Ammo.btTriangleInfoMap();
+    collisionShape.generateInternalEdgeInfo(triangleInfoMap);
+
     // @ts-ignore
-    collisionShape.resources = [triMesh];
+    collisionShape.resources = [triMesh, triangleInfoMap];
 
     Ammo.destroy(bta);
     Ammo.destroy(btb);
     Ammo.destroy(btc);
 
-    _finishCollisionShape(collisionShape, options);
-    return collisionShape;
+    const finalizedShape = finishCollisionShape(collisionShape, options);
+    finalizedShape.setMargin(0);
+    return finalizedShape;
   };
 })();
 
@@ -740,8 +764,7 @@ export function createHeightfieldTerrainShape(options: ShapeConfig) {
   // @ts-ignore
   collisionShape.heightfieldData = data;
 
-  _finishCollisionShape(collisionShape, options);
-  return collisionShape;
+  return finishCollisionShape(collisionShape, options);
 }
 
 function _setOptions(options: ShapeConfig) {
@@ -762,22 +785,12 @@ function _setOptions(options: ShapeConfig) {
   }
 }
 
-const _finishCollisionShape = function (
-  collisionShape,
+function finishCollisionShape(
+  collisionShape: Ammo.btCollisionShape,
   options: ShapeConfig,
   scale?: Vector3
-) {
-  collisionShape.type = options.type;
-  collisionShape.setMargin(options.margin);
-  collisionShape.destroy = () => {
-    for (let res of collisionShape.resources || []) {
-      Ammo.destroy(res);
-    }
-    if (collisionShape.heightfieldData) {
-      Ammo._free(collisionShape.heightfieldData);
-    }
-    Ammo.destroy(collisionShape);
-  };
+): FinalizedShape {
+  collisionShape.setMargin(options.margin ?? 0);
 
   const localTransform = new Ammo.btTransform();
   const rotation = new Ammo.btQuaternion(0, 0, 0, 1);
@@ -800,8 +813,30 @@ const _finishCollisionShape = function (
     Ammo.destroy(localScale);
   }
 
-  collisionShape.localTransform = localTransform;
-};
+  return Object.assign(collisionShape, {
+    type: options.type,
+    localTransform,
+    destroy() {
+      const finalizedShape = collisionShape as FinalizedShape;
+
+      for (let res of finalizedShape.resources || []) {
+        Ammo.destroy(res);
+      }
+
+      if (finalizedShape.heightfieldData) {
+        Ammo._free(finalizedShape.heightfieldData);
+      }
+
+      if (finalizedShape.shapes) {
+        for (const shape of finalizedShape.shapes) {
+          shape.destroy();
+        }
+      }
+
+      Ammo.destroy(collisionShape);
+    },
+  });
+}
 
 export const iterateGeometries = (function () {
   const inverse = new THREE.Matrix4();

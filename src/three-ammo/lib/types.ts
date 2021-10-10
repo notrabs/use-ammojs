@@ -207,6 +207,8 @@ export enum ShapeType {
   VHACD = "vhacd",
   MESH = "mesh",
   HEIGHTFIELD = "heightfield",
+
+  COMPOUND = "compound",
 }
 
 export enum ShapeFit {
@@ -240,6 +242,7 @@ export interface ShapeConfig {
   maxHalfExtents?: number;
 
   // Only used with ShapeType cylinder/capsule/cone
+  // default: y
   cylinderAxis?: "x" | "y" | "z";
 
   // Only used with ShapeType sphere and manual fit
@@ -577,8 +580,6 @@ export enum MessageType {
   ADD_RIGIDBODY,
   UPDATE_RIGIDBODY,
   REMOVE_RIGIDBODY,
-  ADD_SHAPES,
-  REMOVE_SHAPES,
   ADD_SOFTBODY,
   REMOVE_SOFTBODY,
   ADD_CONSTRAINT,
@@ -707,4 +708,11 @@ export interface RaycastHit {
   hitPosition: Vector3;
 
   normal: Vector3;
+}
+
+export interface SerializedMesh {
+  vertices: any[];
+  matrices: any[];
+  indexes: any[];
+  matrixWorld: number[];
 }

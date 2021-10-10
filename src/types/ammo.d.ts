@@ -462,12 +462,19 @@ declare module Ammo {
     constructor(planeNormal: btVector3, planeConstant: number);
   }
   class btTriangleMeshShape extends btConcaveShape {}
+
+  class btTriangleInfoMap {
+    constructor();
+  }
+
   class btBvhTriangleMeshShape extends btTriangleMeshShape {
     constructor(
       meshInterface: btStridingMeshInterface,
       useQuantizedAabbCompression: boolean,
       buildBvh?: boolean
     );
+
+    generateInternalEdgeInfo(triangleInfoMap: btTriangleInfoMap): void;
   }
   class btHeightfieldTerrainShape extends btConcaveShape {
     constructor(
@@ -606,6 +613,8 @@ declare module Ammo {
     setGravity(acceleration: btVector3): void;
     getBroadphaseProxy(): btBroadphaseProxy;
     clearForces(): void;
+    setFlags(flags: number): void;
+    getFlags(): number;
   }
   class btConstraintSetting {
     constructor();

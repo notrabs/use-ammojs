@@ -1,8 +1,10 @@
-import { Matrix4 } from "three";
+import { Matrix4, Object3D } from "three";
 import { iterateGeometries } from "../../three-to-ammo";
 import AmmoWorker from "web-worker:../worker/ammo.worker";
 import {
+  BodyConfig,
   MessageType,
+  SerializedMesh,
   SharedBuffers,
   SharedSoftBodyBuffers,
   SoftBodyConfig,
@@ -11,6 +13,7 @@ import {
   WorldConfig,
 } from "./types";
 import { isSharedArrayBufferSupported } from "../../utils/utils";
+import { ShapeDescriptor } from "../../physics";
 
 export function createAmmoWorker(): Worker {
   return new AmmoWorker();
@@ -84,13 +87,44 @@ export function WorkerHelpers(ammoWorker: Worker) {
       );
     },
 
-    addRigidBody(uuid, mesh, options = {}) {
-      inverse.copy(mesh.parent.matrixWorld).invert();
+    addRigidBody(
+      uuid: UUID,
+      mesh: Object3D,
+      shapeDescriptor: ShapeDescriptor,
+      options: BodyConfig
+    ) {
+      let serializedMesh: SerializedMesh | undefined = undefined;
+
+      if (shapeDescriptor.meshToUse) {
+        inverse.copy(mesh.parent!.matrix).invert();
+        transform.multiplyMatrices(inverse, mesh.parent!.matrix);
+        const vertices: any[] = [];
+        const matrices: any[] = [];
+        const indexes: any[] = [];
+
+        mesh.updateMatrixWorld(true);
+        iterateGeometries(mesh, options, (vertexArray, matrix, index) => {
+          vertices.push(vertexArray);
+          matrices.push(matrix);
+          indexes.push(index);
+        });
+
+        serializedMesh = {
+          vertices,
+          matrices,
+          indexes,
+          matrixWorld: mesh.matrixWorld.elements,
+        };
+      }
+
+      inverse.copy(mesh.parent!.matrixWorld).invert();
       transform.multiplyMatrices(inverse, mesh.matrixWorld);
       ammoWorker.postMessage({
         type: MessageType.ADD_RIGIDBODY,
         uuid,
         matrix: transform.elements,
+        serializedMesh,
+        shapeConfig: shapeDescriptor.shapeConfig,
         options,
       });
     },
@@ -142,54 +176,11 @@ export function WorkerHelpers(ammoWorker: Worker) {
       });
     },
 
-    addShapes(bodyUuid, shapesUuid, mesh, options = {}) {
-      if (mesh) {
-        inverse.copy(mesh.parent.matrix).invert();
-        transform.multiplyMatrices(inverse, mesh.parent.matrix);
-        const vertices: any[] = [];
-        const matrices: any[] = [];
-        const indexes: any[] = [];
-
-        mesh.updateMatrixWorld(true);
-        iterateGeometries(mesh, options, (vertexArray, matrix, index) => {
-          vertices.push(vertexArray);
-          matrices.push(matrix);
-          indexes.push(index);
-        });
-
-        ammoWorker.postMessage({
-          type: MessageType.ADD_SHAPES,
-          bodyUuid,
-          shapesUuid,
-          vertices,
-          matrices,
-          indexes,
-          matrixWorld: mesh.matrixWorld.elements,
-          options,
-        });
-      } else {
-        ammoWorker.postMessage({
-          type: MessageType.ADD_SHAPES,
-          bodyUuid,
-          shapesUuid,
-          options,
-        });
-      }
-    },
-
     bodySetShapesOffset(bodyUuid, offset) {
       ammoWorker.postMessage({
         type: MessageType.SET_SHAPES_OFFSET,
         bodyUuid,
         offset,
-      });
-    },
-
-    removeShapes(bodyUuid, shapesUuid) {
-      ammoWorker.postMessage({
-        type: MessageType.REMOVE_SHAPES,
-        bodyUuid,
-        shapesUuid,
       });
     },
 

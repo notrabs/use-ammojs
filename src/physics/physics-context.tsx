@@ -27,7 +27,12 @@ export interface PhysicsState {
   sharedBuffersRef: MutableRefObject<SharedBuffers>;
   uuidToIndex: Record<UUID, number>;
   debugIndex: Uint32Array;
-  addRigidBody(uuid: UUID, mesh: Object3D, options?: BodyConfig);
+  addRigidBody(
+    uuid: UUID,
+    mesh: Object3D,
+    shape: ShapeDescriptor,
+    options?: BodyConfig
+  );
   removeRigidBody(uuid: UUID);
   addSoftBody(uuid: UUID, mesh: Object3D, options?: SoftBodyConfig);
   removeSoftBody(uuid: UUID);
@@ -39,17 +44,19 @@ export interface PhysicsPerformanceInfo {
   substepCounter: number;
 }
 
-export interface AmmoPhysicsContext {
-  addRigidBody(uuid: UUID, mesh: Object3D, options?: BodyConfig);
-  removeRigidBody(uuid: UUID);
+export interface ShapeDescriptor {
+  meshToUse: Object3D;
+  shapeConfig?: ShapeConfig;
+}
 
-  addShapes(
-    bodyUuid: UUID,
-    shapesUuid: UUID,
+export interface AmmoPhysicsContext {
+  addRigidBody(
+    uuid: UUID,
     mesh: Object3D,
-    options?: ShapeConfig
+    shape: ShapeDescriptor,
+    options?: BodyConfig
   );
-  removeShapes(bodyUuid: UUID, shapesUuid: UUID);
+  removeRigidBody(uuid: UUID);
 
   addSoftBody(uuid: UUID, mesh: Object3D, options?: SoftBodyConfig);
   removeSoftBody(uuid: string);

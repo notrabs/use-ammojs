@@ -22,8 +22,7 @@ export interface RigidbodyApi {
 
 export function createRigidBodyApi(
   physicsContext: AmmoPhysicsContext,
-  bodyUUID: UUID,
-  shapesUUID: UUID
+  bodyUUID: UUID
 ) {
   return {
     updateBodyOptions(options: UpdateBodyOptions) {
