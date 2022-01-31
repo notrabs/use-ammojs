@@ -15,7 +15,7 @@ import {
 } from "../../three-ammo/worker/utils";
 import { useForwardedRef } from "../../utils/useForwardedRef";
 
-type UseRigidBodyOptions = Omit<BodyConfig, "type"> & {
+export type UseRigidBodyOptions = Omit<BodyConfig, "type"> & {
   shapeType: ShapeType;
   bodyType?: BodyType;
 
