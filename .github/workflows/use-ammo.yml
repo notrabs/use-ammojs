@@ -34,7 +34,10 @@ jobs:
         node-version: ${{ matrix.node-version }}
         cache: 'yarn'
     - run: yarn install --frozen-lockfile
-    - run: yarn build
+    - uses: andresz1/size-limit-action@v1
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        skip_step: install
     - run: echo "🖥️ The workflow is now ready to test your code on the runner."
     - name: List files in the repository
       run: |
