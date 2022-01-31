@@ -31,6 +31,15 @@ function enableDebug({ enable, debugSharedArrayBuffer }) {
   }
 }
 
+function updateDebugMode({ debugMode }) {
+  if (!world.debugDrawer) {
+    console.warn("Debug drawer not initialized");
+  }
+
+  world.debugDrawer.setDebugMode(debugMode);
+}
+
 export const debugEventReceivers = {
   [MessageType.ENABLE_DEBUG]: enableDebug,
+  [MessageType.UPDATE_DEBUG_MODE]: updateDebugMode,
 };

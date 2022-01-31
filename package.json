@@ -14,7 +14,8 @@
     "build": "tsdx build --format esm",
     "prepare": "tsdx build",
     "size": "size-limit",
-    "analyze": "size-limit --why"
+    "analyze": "size-limit --why",
+    "build:ammo": "cd src/three-ammo/lib/ammo.js/ && docker-compose up --build"
   },
   "husky": {
     "hooks": {
@@ -58,7 +59,7 @@
   },
   "dependencies": {
     "ammo-debug-drawer": "^1.0.1",
-    "ammo.js": "kripken/ammo.js",
+    "ammo.js": "glavin001/ammo.js#use-ammo",
     "stats.js": "^0.17.0",
     "three-stdlib": "^2.4.0"
   },

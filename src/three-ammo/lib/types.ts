@@ -55,6 +55,9 @@ export interface BodyConfig {
   // e.g. 0.5
   ccdSweptSphereRadius?: number;
 
+  // default = 0.5
+  friction?: number;
+
   // default = 0.1
   linearDamping?: number;
   // default = 0.1
@@ -184,6 +187,7 @@ export type UpdateBodyOptions = Pick<
   | "activationState"
   | "collisionFilterGroup"
   | "collisionFilterMask"
+  | "friction"
   | "linearDamping"
   | "angularDamping"
   | "gravity"
@@ -378,7 +382,7 @@ interface Generic6DOFDynamicConfig {
   angularLowerLimit?: Vector3;
   angularUpperLimit?: Vector3;
 }
-interface Generic6DOFSpringDynamicConfig {
+interface Generic6DOFSpringDynamicConfig extends Omit<Generic6DOFDynamicConfig, 'type'> {
   type: ConstraintType.GENERIC_6_DOF_SPRING;
 
   springEnabled?: [boolean, boolean, boolean, boolean, boolean, boolean];
@@ -580,6 +584,7 @@ export enum MessageType {
   INIT,
   TRANSFER_BUFFERS,
   SET_SIMULATION_SPEED,
+  SET_GRAVITY,
 
   ADD_RIGIDBODY,
   UPDATE_RIGIDBODY,
@@ -590,6 +595,7 @@ export enum MessageType {
   UPDATE_CONSTRAINT,
   REMOVE_CONSTRAINT,
   ENABLE_DEBUG,
+  UPDATE_DEBUG_MODE,
   RESET_DYNAMIC_BODY,
   ACTIVATE_BODY,
   SET_SHAPES_OFFSET,

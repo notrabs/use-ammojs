@@ -43,16 +43,7 @@ export class World {
     );
     // this.physicsWorld.setForceUpdateAllAabbs(false);
 
-    const gravity = new Ammo.btVector3(0, GRAVITY, 0);
-    if (worldConfig.gravity) {
-      gravity.setValue(
-        worldConfig.gravity.x,
-        worldConfig.gravity.y,
-        worldConfig.gravity.z
-      );
-    }
-    this.physicsWorld.setGravity(gravity);
-    Ammo.destroy(gravity);
+    this.setGravity(worldConfig.gravity);
 
     this.physicsWorld
       .getSolverInfo()
@@ -165,5 +156,18 @@ export class World {
     }
 
     return this.debugDrawer;
+  }
+
+  setGravity(gravityConfig) {
+    const gravity = new Ammo.btVector3(0, GRAVITY, 0);
+    if (gravityConfig) {
+      gravity.setValue(
+        gravityConfig.x,
+        gravityConfig.y,
+        gravityConfig.z
+      );
+    }
+    this.physicsWorld.setGravity(gravity);
+    Ammo.destroy(gravity);
   }
 }

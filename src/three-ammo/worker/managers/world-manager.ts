@@ -99,7 +99,12 @@ export function releaseBuffer() {
   }
 }
 
+function setGravity({ gravity }) {
+  world.setGravity(gravity);
+}
+
 export const worldEventReceivers = {
   [MessageType.INIT]: initWorld,
   [MessageType.TRANSFER_BUFFERS]: transferBuffers,
+  [MessageType.SET_GRAVITY]: setGravity,
 };

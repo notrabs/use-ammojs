@@ -1694,9 +1694,9 @@ ammo-debug-drawer@^1.0.1:
   resolved "https://registry.yarnpkg.com/ammo-debug-drawer/-/ammo-debug-drawer-1.0.1.tgz#c1d84d0342905cf7c08301e6551892a23c13955d"
   integrity sha512-oPvQh5CQKgFQpIuBMMKxT019aYoONOEnBLn91dAg3CrMWdSP/Om8rLWRX0VkAk45SEK/B0ybXB7nsjXsz8QEBw==
 
-ammo.js@kripken/ammo.js:
+ammo.js@glavin001/ammo.js#use-ammo:
   version "0.0.2"
-  resolved "https://codeload.github.com/kripken/ammo.js/tar.gz/a32e94b553e22cf80d6a7775bfdd1ede2ac229b2"
+  resolved "https://codeload.github.com/glavin001/ammo.js/tar.gz/0c022d12f2812505a80d5625cd8aa900ab6d1b53"
 
 ammojs-typed@^1.0.6:
   version "1.0.6"

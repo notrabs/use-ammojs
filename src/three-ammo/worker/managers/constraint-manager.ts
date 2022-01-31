@@ -20,8 +20,8 @@ function addConstraint({ constraintId, bodyAUuid, bodyBUuid, options }) {
 
 function updateConstraint({
   constraintId,
-  ...config
-}: ConstraintConfig & { constraintId: UUID }) {
+  options: config,
+}: { constraintId: UUID, options: ConstraintConfig }) {
   if (constraints[constraintId]) {
     constraints[constraintId].applyDynamicConfig(config);
   }

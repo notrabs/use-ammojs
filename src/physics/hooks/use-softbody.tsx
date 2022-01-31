@@ -1,9 +1,10 @@
-import { MathUtils, Mesh } from "three";
-import React, { MutableRefObject, useEffect, useRef, useState } from "react";
+import { MathUtils, Mesh, Object3D } from "three";
+import React, { DependencyList, MutableRefObject, Ref, useEffect, useRef, useState } from "react";
 import { useAmmoPhysicsContext } from "../physics-context";
 import { SoftBodyAnchorRef, SoftBodyConfig } from "../../three-ammo/lib/types";
 import { createSoftbodyApi, SoftbodyApi } from "../api/softbody-api";
 import { isSoftBodyRigidBodyAnchorRef } from "../../three-ammo/worker/utils";
+import { useForwardedRef } from "../../utils/useForwardedRef";
 
 type UseSoftBodyOptions = Omit<SoftBodyConfig, "anchors"> & {
   anchors?: SoftBodyAnchorRef[];
@@ -11,9 +12,11 @@ type UseSoftBodyOptions = Omit<SoftBodyConfig, "anchors"> & {
 
 export function useSoftBody(
   options: UseSoftBodyOptions | (() => UseSoftBodyOptions),
-  mesh?: Mesh
-): [MutableRefObject<Mesh | undefined>, SoftbodyApi] {
-  const ref = useRef<Mesh>();
+  mesh?: Mesh,
+  fwdRef?: Ref<Mesh>,
+  deps: DependencyList = []
+): [MutableRefObject<Mesh | null>, SoftbodyApi] {
+  const ref = useForwardedRef<Mesh>(fwdRef);
 
   const physicsContext = useAmmoPhysicsContext();
   const { addSoftBody, removeSoftBody } = physicsContext;
@@ -54,7 +57,7 @@ export function useSoftBody(
     return () => {
       removeSoftBody(bodyUUID);
     };
-  }, []);
+  }, deps);
 
   return [ref, createSoftbodyApi(physicsContext, bodyUUID)];
 }

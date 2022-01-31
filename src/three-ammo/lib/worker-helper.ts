@@ -217,6 +217,13 @@ export function WorkerHelpers(ammoWorker: Worker) {
       });
     },
 
+    updateDebugMode(debugMode) {
+      ammoWorker.postMessage({
+        type: MessageType.UPDATE_DEBUG_MODE,
+        debugMode,
+      });
+    },
+
     resetDynamicBody(uuid) {
       ammoWorker.postMessage({
         type: MessageType.RESET_DYNAMIC_BODY,
@@ -286,6 +293,13 @@ export function WorkerHelpers(ammoWorker: Worker) {
       ammoWorker.postMessage({
         type: MessageType.SET_SIMULATION_SPEED,
         simulationSpeed,
+      });
+    },
+
+    setGravity(gravity: WorldConfig['gravity']) {
+      ammoWorker.postMessage({
+        type: MessageType.SET_GRAVITY,
+        gravity,
       });
     },
   };

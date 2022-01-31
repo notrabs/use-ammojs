@@ -1,5 +1,5 @@
 import { Euler, MathUtils, Object3D, Quaternion, Vector3 } from "three";
-import React, { MutableRefObject, useEffect, useRef, useState } from "react";
+import React, { DependencyList, MutableRefObject, Ref, useEffect, useState } from "react";
 import { useAmmoPhysicsContext } from "../physics-context";
 import {
   BodyConfig,
@@ -13,6 +13,7 @@ import {
   isQuaternion,
   isVector3,
 } from "../../three-ammo/worker/utils";
+import { useForwardedRef } from "../../utils/useForwardedRef";
 
 type UseRigidBodyOptions = Omit<BodyConfig, "type"> & {
   shapeType: ShapeType;
@@ -35,9 +36,11 @@ type UseRigidBodyOptions = Omit<BodyConfig, "type"> & {
 
 export function useRigidBody(
   options: UseRigidBodyOptions | (() => UseRigidBodyOptions),
-  object3D?: Object3D
-): [MutableRefObject<Object3D | undefined>, RigidbodyApi] {
-  const ref = useRef<Object3D>();
+  object3D?: Object3D,
+  fwdRef?: Ref<Object3D>,
+  deps: DependencyList = []
+): [MutableRefObject<Object3D | null>, RigidbodyApi] {
+  const ref = useForwardedRef<Object3D>(fwdRef);
 
   const physicsContext = useAmmoPhysicsContext();
   const { addRigidBody, removeRigidBody } = physicsContext;
@@ -116,7 +119,7 @@ export function useRigidBody(
     return () => {
       removeRigidBody(bodyUUID);
     };
-  }, []);
+  }, deps);
 
   return [ref, createRigidBodyApi(physicsContext, bodyUUID)];
 }

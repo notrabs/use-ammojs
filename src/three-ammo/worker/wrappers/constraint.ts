@@ -298,6 +298,26 @@ export class Constraint {
         const constraint = this
           .physicsConstraint as Ammo.btGeneric6DofSpringConstraint;
 
+        if (constraintConfig.linearLowerLimit !== undefined) {
+          toBtVector3(tmp, constraintConfig.linearLowerLimit);
+          constraint.setLinearLowerLimit(tmp);
+        }
+
+        if (constraintConfig.linearUpperLimit !== undefined) {
+          toBtVector3(tmp, constraintConfig.linearUpperLimit);
+          constraint.setLinearUpperLimit(tmp);
+        }
+
+        if (constraintConfig.angularLowerLimit !== undefined) {
+          toBtVector3(tmp, constraintConfig.angularLowerLimit);
+          constraint.setAngularLowerLimit(tmp);
+        }
+
+        if (constraintConfig.angularUpperLimit !== undefined) {
+          toBtVector3(tmp, constraintConfig.angularUpperLimit);
+          constraint.setAngularUpperLimit(tmp);
+        }
+
         if (constraintConfig.springEnabled !== undefined) {
           for (let i = 0; i < 6; i++) {
             constraint.enableSpring(i, constraintConfig.springEnabled[i]);
@@ -324,6 +344,8 @@ export class Constraint {
             constraint.setDamping(i, constraintConfig.damping[i]);
           }
         }
+
+        constraint.setEquilibriumPoint();
 
         break;
       }

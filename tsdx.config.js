@@ -32,7 +32,7 @@ module.exports = {
       return oldExternal(id);
     };
 
-    console.log("rollup config: ", config, options);
+    // console.log("rollup config: ", config, options);
 
     return config;
   },

@@ -37,6 +37,7 @@ export class RigidBody {
   loadedEvent: string;
   mass: number;
   gravity: Ammo.btVector3;
+  friction: number;
   linearDamping: number;
   angularDamping: number;
   linearSleepingThreshold: number;
@@ -95,6 +96,7 @@ export class RigidBody {
         bodyConfig.gravity.z
       );
     }
+    this.friction = bodyConfig.friction ?? 0.5;
     this.linearDamping = bodyConfig.linearDamping ?? 0.01;
     this.angularDamping = bodyConfig.angularDamping ?? 0.01;
     this.linearSleepingThreshold = bodyConfig.linearSleepingThreshold ?? 1.6;
@@ -178,6 +180,8 @@ export class RigidBody {
     );
 
     this.physicsBody.setDamping(this.linearDamping, this.angularDamping);
+
+    this.physicsBody.setFriction(this.friction);
 
     const angularFactor = new Ammo.btVector3(
       this.angularFactor.x,
@@ -312,6 +316,15 @@ export class RigidBody {
           broadphaseProxy,
           this.world.dispatcher
         );
+    }
+
+    if (
+      (bodyConfig.friction &&
+        bodyConfig.friction != this.friction)
+    ) {
+      if (bodyConfig.friction)
+        this.friction = bodyConfig.friction;
+      this.physicsBody.setFriction(this.friction);
     }
 
     if (
